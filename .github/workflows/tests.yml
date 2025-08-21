@@ -1,0 +1,40 @@
+name: Tests Automatisés
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pillow
+    
+    - name: Run syntax validation
+      run: python validate_tests_auto.py
+    
+    - name: Run integration tests
+      run: python run_tests.py test_integration_simple
+      continue-on-error: true
+    
+    - name: Run specific tests
+      run: |
+        python run_tests.py test_simple
+        python run_tests.py test_lua_integrity
+      continue-on-error: true
+    
+    - name: Generate test report
+      run: echo "Tests terminés - voir les logs ci-dessus"

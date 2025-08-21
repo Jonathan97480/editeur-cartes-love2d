@@ -1,0 +1,46 @@
+{
+    "test_config": {
+        "version": "1.0",
+        "created": "2025-08-21",
+        "description": "Configuration automatisée des tests"
+    },
+    "hooks": {
+        "pre_commit": {
+            "enabled": true,
+            "timeout": 30,
+            "tests": ["validate_tests_auto.py"]
+        },
+        "post_commit": {
+            "enabled": true,
+            "timeout": 60,
+            "tests": ["validate_tests_auto.py"]
+        }
+    },
+    "test_suites": {
+        "quick": {
+            "description": "Tests rapides (syntaxe + imports)",
+            "script": "validate_tests_auto.py",
+            "timeout": 30
+        },
+        "integration": {
+            "description": "Tests d'intégration simplifiés", 
+            "script": "run_tests.py test_integration_simple",
+            "timeout": 60
+        },
+        "full": {
+            "description": "Suite complète de tests",
+            "scripts": [
+                "validate_tests_auto.py",
+                "run_tests.py test_integration_simple",
+                "run_tests.py test_simple",
+                "run_tests.py test_lua_integrity"
+            ],
+            "timeout": 120
+        }
+    },
+    "reporting": {
+        "format": "console",
+        "log_file": "test_results.log",
+        "email_notifications": false
+    }
+}
