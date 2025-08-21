@@ -137,14 +137,36 @@ def get_card_image_for_export(card) -> str:
     """
     Retourne le chemin de l'image à utiliser pour l'export Lua.
     Priorité : image fusionnée > image originale
+    Retourne un chemin relatif adapté pour Love2D.
     """
     # Essayer d'abord l'image fusionnée
     fused_path = get_fused_card_image_path(card.name)
     if fused_path:
+        # Convertir en chemin relatif depuis le dossier 'images'
+        if 'images' in fused_path:
+            parts = fused_path.replace('\\', '/').split('/')
+            try:
+                idx = parts.index('images')
+                relative_path = '/'.join(parts[idx:])
+                return relative_path
+            except ValueError:
+                pass
         return fused_path.replace('\\', '/')
     
     # Sinon utiliser l'image originale
-    return card.img if card.img else ''
+    if card.img:
+        # Convertir en chemin relatif
+        if 'images' in card.img:
+            parts = card.img.replace('\\', '/').split('/')
+            try:
+                idx = parts.index('images')
+                relative_path = '/'.join(parts[idx:])
+                return relative_path
+            except ValueError:
+                pass
+        return card.img.replace('\\', '/')
+    
+    return ''
 
 def copy_templates_to_folder() -> dict:
     """

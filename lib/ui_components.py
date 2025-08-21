@@ -193,15 +193,43 @@ class CardForm(ttk.Frame):
 
     def _update_preview(self):
         # Définir les chemins disponibles
-        original_path = None
+        current_img_path = None
         generated_path = getattr(self, 'generated_image_path', None)
         
         try:
-            path = self.img_var.get().strip()
+            current_img_path = self.img_var.get().strip()
         except Exception:
-            path = ''
-        if path and os.path.exists(path):
-            original_path = path
+            current_img_path = ''
+        
+        # Déterminer si l'image actuelle est fusionnée ou originale
+        is_fused_image = False
+        if current_img_path:
+            # Une image est considérée comme fusionnée si elle est dans le dossier cards/
+            is_fused_image = ("cards/" in current_img_path or 
+                            os.path.sep + "cards" + os.path.sep in current_img_path or
+                            current_img_path.endswith(os.path.join("cards", os.path.basename(current_img_path))))
+        
+        # Si on a une image fusionnée chargée depuis la base, l'utiliser comme image générée
+        if is_fused_image and not generated_path:
+            generated_path = current_img_path
+            self.generated_image_path = current_img_path
+        
+        # Chercher l'image originale correspondante
+        original_path = None
+        if current_img_path and os.path.exists(current_img_path):
+            if is_fused_image:
+                # Chercher l'image originale correspondante
+                from .utils import ensure_images_subfolders
+                subfolders = ensure_images_subfolders()
+                filename = os.path.basename(current_img_path)
+                potential_original = os.path.join(subfolders['originals'], filename)
+                if os.path.exists(potential_original):
+                    original_path = potential_original
+                else:
+                    # Si pas d'original trouvé, utiliser l'image fusionnée comme original pour l'affichage
+                    original_path = current_img_path
+            else:
+                original_path = current_img_path
         
         if generated_path and os.path.exists(generated_path):
             generated_path = generated_path
@@ -242,7 +270,10 @@ class CardForm(ttk.Frame):
         self._preview_img = img
         
         # Indiquer quel type d'image est affiché
-        if preview_path == getattr(self, 'generated_image_path', None):
+        if preview_path and generated_path and preview_path == generated_path:
+            image_type = "✅ Image finale avec template"
+            type_color = 'green'
+        elif preview_path and is_fused_image and preview_path == current_img_path:
             image_type = "✅ Image finale avec template"
             type_color = 'green'
         else:
@@ -255,10 +286,15 @@ class CardForm(ttk.Frame):
         
         # Mettre à jour le bouton de basculement
         if hasattr(self, 'toggle_image_btn'):
-            if preview_path == getattr(self, 'generated_image_path', None):
-                self.toggle_image_btn.config(text="Voir original", state='normal')
+            if preview_path and generated_path and preview_path == generated_path:
+                # On affiche l'image finale, proposer de voir l'original
+                if original_path and original_path != generated_path:
+                    self.toggle_image_btn.config(text="Voir original", state='normal')
+                else:
+                    self.toggle_image_btn.config(text="Image unique", state='disabled')
             else:
-                if getattr(self, 'generated_image_path', None) and os.path.exists(getattr(self, 'generated_image_path', '')):
+                # On affiche l'original, proposer de voir la finale
+                if generated_path and os.path.exists(generated_path):
                     self.toggle_image_btn.config(text="Voir finale", state='normal')
                 else:
                     self.toggle_image_btn.config(text="Pas de finale", state='disabled')

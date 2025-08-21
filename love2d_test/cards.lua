@@ -18,10 +18,10 @@ local Cards = {
     --[[ CARTE 2 ]]
     {
         name = 'calisse e la mort',
-        ImgIlustration = 'images/originals/calisse_e_la_mort.png',
+        ImgIlustration = 'images/cards/calisse_e_la_mort.png',
         Description = 'quand le hero bois dans ce caliise lui inflige des dégat mais il gagne en froce',
         PowerBlow = 2,
-        Rarete = 'commun',
+        Rarete = 'legendaire',
         Type = { 'attaque' },
         Effect = {
             hero = { heal = 0, shield = 0, Epine = 0, attack = 4, AttackReduction = 0, shield_pass = 0, bleeding = { value = 0, number_turns = 0 }, force_augmented = { value = 3, number_turns = 2 }, chancePassedTour = 0, energyCostIncrease = 0, energyCostDecrease = 0 },

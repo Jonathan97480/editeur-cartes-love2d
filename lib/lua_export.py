@@ -116,7 +116,7 @@ def build_card_lua(card) -> str:
         f"            action = {action_fn}\n"
         f"        }},\n"
         f"        Cards = {{}}\n"
-        "    )"
+        "    }"
     )
 
 def export_lua(repo: CardRepo, side: str, filepath: str) -> None:
