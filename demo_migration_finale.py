@@ -38,4 +38,139 @@ def demo_migration_complete():
                 f.write(png_header)
             
             user_templates[rarity] = os.path.abspath(file_path)
-            print(f"   📁 {rarity}: {filename} (configuré par l'utilisateur)")\n        \n        # 2. Configurer ces templates comme si l'utilisateur l'avait fait\n        load_settings()\n        original_templates = APP_SETTINGS.get(\"rarity_templates\", {}).copy()\n        \n        APP_SETTINGS[\"rarity_templates\"] = user_templates\n        save_settings()\n        \n        print(f\"\\n💾 Templates configurés dans les paramètres (comme dans les réglages)\")\n        \n        # 3. Simuler une base de données v3 (avant la migration)\n        db_path = \"cartes.db\"\n        if os.path.exists(db_path):\n            set_db_version(db_path, 3)\n            print(f\"\\n🔄 Base de données réinitialisée en version 3 (simule situation avant migration)\")\n        \n        # 4. Vérifier l'état avant\n        templates_folder = \"images/templates\"\n        files_before = os.listdir(templates_folder) if os.path.exists(templates_folder) else []\n        \n        print(f\"\\n📂 ÉTAT AVANT le démarrage de l'application :\")\n        print(f\"   Dossier templates : {len(files_before)} fichiers\")\n        if files_before:\n            for file in files_before:\n                print(f\"   - {file}\")\n        else:\n            print(f\"   (vide - les templates sont configurés mais pas encore importés)\")\n        \n        print(f\"\\n   Templates configurés par l'utilisateur :\")\n        for rarity, path in user_templates.items():\n            print(f\"   - {rarity}: {os.path.basename(path)}\")\n        \n        # 5. Simuler le démarrage de l'application (qui déclenche la migration)\n        print(f\"\\n🚀 DÉMARRAGE DE L'APPLICATION...\")\n        print(f\"   (La migration v3→v4 va se déclencher automatiquement)\")\n        \n        from lib.database import ensure_db\n        ensure_db()  # Ceci déclenche la migration automatique\n        \n        # 6. Vérifier l'état après\n        files_after = os.listdir(templates_folder) if os.path.exists(templates_folder) else []\n        \n        print(f\"\\n📂 ÉTAT APRÈS le démarrage :\")\n        print(f\"   Dossier templates : {len(files_after)} fichiers\")\n        for file in files_after:\n            print(f\"   - {file}\")\n        \n        # Recharger les paramètres pour voir les mises à jour\n        load_settings()\n        updated_templates = APP_SETTINGS.get(\"rarity_templates\", {})\n        \n        print(f\"\\n   Paramètres mis à jour automatiquement :\")\n        for rarity, path in updated_templates.items():\n            if path:\n                print(f\"   - {rarity}: {os.path.basename(path)} (maintenant dans images/templates/)\")\n        \n        # 7. Validation\n        success = len(files_after) == 4 and all(f\"template_{r}.png\" in files_after for r in ['commun', 'rare', 'legendaire', 'mythique'])\n        \n        print(f\"\\n🏆 RÉSULTAT :\")\n        if success:\n            print(f\"   ✅ SUCCÈS ! Migration automatique réussie\")\n            print(f\"   ✅ {len(files_after)} templates automatiquement importés\")\n            print(f\"   ✅ Paramètres mis à jour avec les nouveaux chemins\")\n            print(f\"   ✅ L'utilisateur n'a rien eu à faire !\")\n        else:\n            print(f\"   ❌ Échec de la migration automatique\")\n        \n        # 8. Nettoyer\n        print(f\"\\n🧹 Nettoyage...\")\n        for file_path in user_templates.values():\n            try:\n                os.remove(file_path)\n            except:\n                pass\n        \n        try:\n            os.rmdir(demo_folder)\n        except:\n            pass\n        \n        # Restaurer les paramètres\n        APP_SETTINGS[\"rarity_templates\"] = original_templates\n        save_settings()\n        \n        return success\n        \n    except Exception as e:\n        print(f\"❌ Erreur lors de la démonstration : {e}\")\n        import traceback\n        traceback.print_exc()\n        return False\n\ndef main():\n    \"\"\"Point d'entrée principal.\"\"\"\n    try:\n        success = demo_migration_complete()\n        \n        print(f\"\\n{'='*70}\")\n        print(f\"🎉 DÉMONSTRATION TERMINÉE\")\n        \n        if success:\n            print(f\"\\n✨ FONCTIONNALITÉ IMPLÉMENTÉE :\")\n            print(f\"   📦 Migration automatique des templates (v3→v4)\")\n            print(f\"   🔄 Déclenchée automatiquement au démarrage de l'application\")\n            print(f\"   📁 Importe les templates configurés vers images/templates/\")\n            print(f\"   📝 Met à jour automatiquement les paramètres\")\n            print(f\"   🎯 Résout le problème 'dossier template reste vide'\")\n            \n            print(f\"\\n🎮 UTILISATION POUR L'UTILISATEUR :\")\n            print(f\"   1. Configurer les templates dans Réglages > Configuration des images\")\n            print(f\"   2. Redémarrer l'application (ou attendre le prochain démarrage)\")\n            print(f\"   3. Les templates sont automatiquement importés !\")\n            print(f\"   4. Plus besoin de cliquer sur 'Organiser templates'\")\n        else:\n            print(f\"\\n❌ La démonstration a échoué\")\n        \n        return success\n        \n    except Exception as e:\n        print(f\"❌ Erreur inattendue : {e}\")\n        import traceback\n        traceback.print_exc()\n        return False\n\nif __name__ == \"__main__\":\n    try:\n        success = main()\n        print(f\"\\n{'='*70}\")\n        print(\"Appuyez sur Entrée pour fermer...\")\n        input()\n        sys.exit(0 if success else 1)\n    except KeyboardInterrupt:\n        print(\"\\n❌ Démonstration interrompue par l'utilisateur\")\n        sys.exit(1)
+            print(f"   📁 {rarity}: {filename} (configuré par l'utilisateur)")
+        
+        # 2. Configurer ces templates comme si l'utilisateur l'avait fait
+        load_settings()
+        original_templates = APP_SETTINGS.get("rarity_templates", {}).copy()
+        
+        APP_SETTINGS["rarity_templates"] = user_templates
+        save_settings()
+        
+        print(f"\n💾 Templates configurés dans les paramètres (comme dans les réglages)")
+        
+        # 3. Simuler une base de données v3 (avant la migration)
+        db_path = "cartes.db"
+        if os.path.exists(db_path):
+            set_db_version(db_path, 3)
+            print(f"\n🔄 Base de données réinitialisée en version 3 (simule situation avant migration)")
+        
+        # 4. Vérifier l'état avant
+        templates_folder = "images/templates"
+        files_before = os.listdir(templates_folder) if os.path.exists(templates_folder) else []
+        
+        print(f"\n📂 ÉTAT AVANT le démarrage de l'application :")
+        print(f"   Dossier templates : {len(files_before)} fichiers")
+        if files_before:
+            for file in files_before:
+                print(f"   - {file}")
+        else:
+            print(f"   (vide - les templates sont configurés mais pas encore importés)")
+        
+        print(f"\n   Templates configurés par l'utilisateur :")
+        for rarity, path in user_templates.items():
+            print(f"   - {rarity}: {os.path.basename(path)}")
+        
+        # 5. Simuler le démarrage de l'application (qui déclenche la migration)
+        print(f"\n🚀 DÉMARRAGE DE L'APPLICATION...")
+        print(f"   (La migration v3→v4 va se déclencher automatiquement)")
+        
+        from lib.database import ensure_db
+        ensure_db(db_path)  # Ceci déclenche la migration automatique
+        
+        # 6. Vérifier l'état après
+        files_after = os.listdir(templates_folder) if os.path.exists(templates_folder) else []
+        
+        print(f"\n📂 ÉTAT APRÈS le démarrage :")
+        print(f"   Dossier templates : {len(files_after)} fichiers")
+        for file in files_after:
+            print(f"   - {file}")
+        
+        # Recharger les paramètres pour voir les mises à jour
+        load_settings()
+        updated_templates = APP_SETTINGS.get("rarity_templates", {})
+        
+        print(f"\n   Paramètres mis à jour automatiquement :")
+        for rarity, path in updated_templates.items():
+            if path:
+                print(f"   - {rarity}: {os.path.basename(path)} (maintenant dans images/templates/)")
+        
+        # 7. Validation
+        success = len(files_after) == 4 and all(f"template_{r}.png" in files_after for r in ['commun', 'rare', 'legendaire', 'mythique'])
+        
+        print(f"\n🏆 RÉSULTAT :")
+        if success:
+            print(f"   ✅ SUCCÈS ! Migration automatique réussie")
+            print(f"   ✅ {len(files_after)} templates automatiquement importés")
+            print(f"   ✅ Paramètres mis à jour avec les nouveaux chemins")
+            print(f"   ✅ L'utilisateur n'a rien eu à faire !")
+        else:
+            print(f"   ❌ Échec de la migration automatique")
+        
+        # 8. Nettoyer
+        print(f"\n🧹 Nettoyage...")
+        for file_path in user_templates.values():
+            try:
+                os.remove(file_path)
+            except:
+                pass
+        
+        try:
+            os.rmdir(demo_folder)
+        except:
+            pass
+        
+        # Restaurer les paramètres
+        APP_SETTINGS["rarity_templates"] = original_templates
+        save_settings()
+        
+        return success
+        
+    except Exception as e:
+        print(f"❌ Erreur lors de la démonstration : {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+def main():
+    """Point d'entrée principal."""
+    try:
+        success = demo_migration_complete()
+        
+        print(f"\n{'='*70}")
+        print(f"🎉 DÉMONSTRATION TERMINÉE")
+        
+        if success:
+            print(f"\n✨ FONCTIONNALITÉ IMPLÉMENTÉE :")
+            print(f"   📦 Migration automatique des templates (v3→v4)")
+            print(f"   🔄 Déclenchée automatiquement au démarrage de l'application")
+            print(f"   📁 Importe les templates configurés vers images/templates/")
+            print(f"   📝 Met à jour automatiquement les paramètres")
+            print(f"   🎯 Résout le problème 'dossier template reste vide'")
+            
+            print(f"\n🎮 UTILISATION POUR L'UTILISATEUR :")
+            print(f"   1. Configurer les templates dans Réglages > Configuration des images")
+            print(f"   2. Redémarrer l'application (ou attendre le prochain démarrage)")
+            print(f"   3. Les templates sont automatiquement importés !")
+            print(f"   4. Plus besoin de cliquer sur 'Organiser templates'")
+        else:
+            print(f"\n❌ La démonstration a échoué")
+        
+        return success
+        
+    except Exception as e:
+        print(f"❌ Erreur inattendue : {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+if __name__ == "__main__":
+    try:
+        success = main()
+        print(f"\n{'='*70}")
+        print("Appuyez sur Entrée pour fermer...")
+        input()
+        sys.exit(0 if success else 1)
+    except KeyboardInterrupt:
+        print("\n❌ Démonstration interrompue par l'utilisateur")
+        sys.exit(1)
