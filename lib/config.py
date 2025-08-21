@@ -37,7 +37,13 @@ TYPE_ORDER = ['attaque','defense','soin','soutien','carte_jumelle','cimetiere']
 
 # ---------- Configuration globale ----------
 APP_SETTINGS = {
-    "template_image": "",
+    "template_image": "",  # Image template par défaut (legacy)
+    "rarity_templates": {  # Images template par rareté
+        "commun": "",
+        "rare": "",
+        "legendaire": "",
+        "mythique": ""
+    },
     "output_folder": IMAGES_FOLDER,
     "theme": "auto"  # "auto", "light", "dark"
 }

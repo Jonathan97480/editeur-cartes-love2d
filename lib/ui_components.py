@@ -480,13 +480,29 @@ class CardForm(ttk.Frame):
 
     # ---------- Card Image Generation ----------
     def generate_card_image(self):
-        """Génère l'image fusionnée de la carte si possible."""
-        if not APP_SETTINGS.get("template_image") or not self.img_var.get().strip():
+        """Génère l'image fusionnée de la carte selon sa rareté."""
+        if not self.img_var.get().strip():
             return None
         
         card_name = self.name_var.get().strip() or "carte_sans_nom"
-        template_path = APP_SETTINGS["template_image"]
         card_image_path = self.img_var.get().strip()
+        
+        # Récupérer la rareté de la carte
+        rarity_label = self.rarity_var.get()
+        from .config import RARITY_FROM_LABEL
+        rarity_key = RARITY_FROM_LABEL.get(rarity_label, 'commun')
+        
+        # Récupérer le template pour cette rareté
+        rarity_templates = APP_SETTINGS.get("rarity_templates", {})
+        template_path = rarity_templates.get(rarity_key, "")
+        
+        # Si pas de template pour cette rareté, essayer le template par défaut (legacy)
+        if not template_path:
+            template_path = APP_SETTINGS.get("template_image", "")
+        
+        # Si toujours pas de template, retourner None
+        if not template_path:
+            return None
         
         return create_card_image(card_image_path, template_path, card_name)
 

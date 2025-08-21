@@ -62,37 +62,49 @@ class SimpleSettingsWindow:
         main_frame.pack(fill='both', expand=True)
         
         # Titre principal
-        title_label = ttk.Label(main_frame, text="CONFIGURATION DES IMAGES", 
+        title_label = ttk.Label(main_frame, text="CONFIGURATION DES IMAGES PAR RARETE", 
                                font=('TkDefaultFont', 14, 'bold'))
         title_label.pack(anchor='w', pady=(0, 20))
         
-        # Section Template
-        template_section = ttk.LabelFrame(main_frame, text="IMAGE TEMPLATE", padding=15)
-        template_section.pack(fill='x', pady=(0, 20))
+        # Variables pour stocker les chemins des templates
+        self.rarity_vars = {}
         
-        ttk.Label(template_section, text="Selectionnez l'image template (zones de texte et contours) :", 
-                 font=('TkDefaultFont', 10, 'bold')).pack(anchor='w', pady=(0, 10))
+        # Créer une section pour chaque rareté
+        from .config import RARITY_VALUES, RARITY_LABELS
         
-        template_frame = ttk.Frame(template_section)
-        template_frame.pack(fill='x', pady=(0, 10))
-        
-        self.template_var = tk.StringVar()
-        entry = ttk.Entry(template_frame, textvariable=self.template_var, state='readonly', 
-                         font=('TkDefaultFont', 10), width=60)
-        entry.pack(side='left', fill='x', expand=True, padx=(0, 15))
-        
-        browse_btn = ttk.Button(template_frame, text="PARCOURIR...", 
-                               command=self._browse_template, width=15)
-        browse_btn.pack(side='right')
-        
-        # Affichage du chemin actuel
-        current_label = ttk.Label(template_section, text="Fichier actuel :", 
-                                 font=('TkDefaultFont', 9))
-        current_label.pack(anchor='w', pady=(5, 0))
-        
-        self.current_path_label = ttk.Label(template_section, text="Aucun fichier selectionne", 
-                                           font=('TkDefaultFont', 9), foreground='gray')
-        self.current_path_label.pack(anchor='w', pady=(0, 10))
+        for rarity in RARITY_VALUES:
+            rarity_section = ttk.LabelFrame(main_frame, text=f"TEMPLATE {RARITY_LABELS[rarity].upper()}", padding=15)
+            rarity_section.pack(fill='x', pady=(0, 15))
+            
+            # Description
+            desc_label = ttk.Label(rarity_section, 
+                                 text=f"Image superposee pour les cartes {RARITY_LABELS[rarity].lower()}s :", 
+                                 font=('TkDefaultFont', 10))
+            desc_label.pack(anchor='w', pady=(0, 8))
+            
+            # Frame pour l'entrée et le bouton
+            template_frame = ttk.Frame(rarity_section)
+            template_frame.pack(fill='x', pady=(0, 8))
+            
+            # Variable pour cette rareté
+            self.rarity_vars[rarity] = tk.StringVar()
+            
+            # Entrée
+            entry = ttk.Entry(template_frame, textvariable=self.rarity_vars[rarity], 
+                            state='readonly', font=('TkDefaultFont', 9), width=50)
+            entry.pack(side='left', fill='x', expand=True, padx=(0, 15))
+            
+            # Bouton parcourir
+            browse_btn = ttk.Button(template_frame, text="PARCOURIR", 
+                                  command=lambda r=rarity: self._browse_rarity_template(r), 
+                                  width=12)
+            browse_btn.pack(side='right', padx=(0, 8))
+            
+            # Bouton effacer
+            clear_btn = ttk.Button(template_frame, text="EFFACER", 
+                                 command=lambda r=rarity: self.rarity_vars[r].set(""), 
+                                 width=10)
+            clear_btn.pack(side='right')
         
         # Section Information
         info_section = ttk.LabelFrame(main_frame, text="COMMENT CA MARCHE", padding=15)
@@ -135,8 +147,8 @@ class SimpleSettingsWindow:
         ttk.Button(action_frame1, text="OUVRIR DOSSIER IMAGES", 
                   command=self._open_images_folder, width=25).pack(side='left', padx=(0, 15))
         
-        ttk.Button(action_frame1, text="EFFACER SELECTION", 
-                  command=self._clear_template, width=20).pack(side='left')
+        ttk.Button(action_frame1, text="EFFACER TOUTES SELECTIONS", 
+                  command=self._clear_all_templates, width=25).pack(side='left')
         
         # Section Boutons principaux
         btn_section = ttk.Frame(main_frame)
@@ -149,20 +161,17 @@ class SimpleSettingsWindow:
                   command=self._apply_settings, width=20).pack(side='right')
 
     def _load_current_settings(self):
-        current_template = APP_SETTINGS.get("template_image", "")
-        self.template_var.set(current_template)
-        
-        if current_template:
-            if os.path.exists(current_template):
-                self.current_path_label.config(text=f"✓ {current_template}", foreground='green')
-            else:
-                self.current_path_label.config(text=f"✗ Fichier introuvable: {current_template}", foreground='red')
-        else:
-            self.current_path_label.config(text="Aucun fichier selectionne", foreground='gray')
+        """Charge les paramètres actuels depuis la configuration."""
+        # Charger les templates par rareté
+        rarity_templates = APP_SETTINGS.get("rarity_templates", {})
+        for rarity in self.rarity_vars:
+            self.rarity_vars[rarity].set(rarity_templates.get(rarity, ""))
 
-    def _browse_template(self):
+    def _browse_rarity_template(self, rarity):
+        """Ouvre le dialogue de sélection pour un template de rareté spécifique."""
+        from .config import RARITY_LABELS
         path = filedialog.askopenfilename(
-            title="Choisir l'image template",
+            title=f"Choisir l'image template pour {RARITY_LABELS[rarity]}",
             filetypes=[
                 ("Images PNG", "*.png"),
                 ("Images", "*.png *.jpg *.jpeg *.gif *.bmp"),
@@ -170,18 +179,23 @@ class SimpleSettingsWindow:
             ]
         )
         if path:
-            self.template_var.set(path)
-            self.current_path_label.config(text=f"Nouveau: {path}", foreground='blue')
-
-    def _clear_template(self):
-        self.template_var.set("")
-        self.current_path_label.config(text="Selection effacee", foreground='orange')
+            self.rarity_vars[rarity].set(path)
 
     def _apply_settings(self):
-        APP_SETTINGS["template_image"] = self.template_var.get()
+        """Applique et sauvegarde les paramètres."""
+        # Sauvegarder les templates par rareté
+        APP_SETTINGS["rarity_templates"] = {}
+        for rarity, var in self.rarity_vars.items():
+            APP_SETTINGS["rarity_templates"][rarity] = var.get()
+        
         save_settings()
         messagebox.showinfo("Reglages", "Parametres sauvegardes avec succes !")
         self._on_close()
+
+    def _clear_all_templates(self):
+        """Efface toutes les sélections de templates."""
+        for var in self.rarity_vars.values():
+            var.set("")
 
     def _open_images_folder(self):
         folder_path = ensure_images_folder()

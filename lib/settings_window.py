@@ -46,43 +46,89 @@ class SettingsWindow:
         main_frame.pack(fill='both', expand=True)
         
         # Titre principal
-        title_label = ttk.Label(main_frame, text="Configuration des Images", 
+        title_label = ttk.Label(main_frame, text="Configuration des Images par Rareté", 
                                font=('TkDefaultFont', 12, 'bold'))
         title_label.pack(anchor='w', pady=(0, 15))
         
-        # Section Template
-        template_section = ttk.LabelFrame(main_frame, text="Image Template", padding=10)
-        template_section.pack(fill='x', pady=(0, 15))
+        # Frame scrollable pour les templates
+        canvas = tk.Canvas(main_frame, height=250)
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
         
-        ttk.Label(template_section, text="Sélectionnez l'image template (zones de texte et contours) :", 
-                 font=('TkDefaultFont', 9, 'bold')).pack(anchor='w', pady=(0, 8))
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
         
-        template_frame = ttk.Frame(template_section)
-        template_frame.pack(fill='x', pady=(0, 5))
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
         
-        self.template_var = tk.StringVar()
-        entry = ttk.Entry(template_frame, textvariable=self.template_var, state='readonly', width=50)
-        entry.pack(side='left', fill='x', expand=True, padx=(0, 10))
+        # Variables pour stocker les chemins des templates
+        self.rarity_vars = {}
         
-        browse_btn = ttk.Button(template_frame, text="📁 Parcourir...", command=self._browse_template, width=15)
-        browse_btn.pack(side='right')
+        # Créer une section pour chaque rareté
+        from .config import RARITY_VALUES, RARITY_LABELS
+        
+        for rarity in RARITY_VALUES:
+            rarity_section = ttk.LabelFrame(scrollable_frame, text=f"Template {RARITY_LABELS[rarity]}", padding=10)
+            rarity_section.pack(fill='x', pady=(0, 10), padx=5)
+            
+            # Description
+            desc_label = ttk.Label(rarity_section, 
+                                 text=f"Image superposée pour les cartes {RARITY_LABELS[rarity].lower()}s :", 
+                                 font=('TkDefaultFont', 9))
+            desc_label.pack(anchor='w', pady=(0, 5))
+            
+            # Frame pour l'entrée et le bouton
+            template_frame = ttk.Frame(rarity_section)
+            template_frame.pack(fill='x', pady=(0, 5))
+            
+            # Variable pour cette rareté
+            self.rarity_vars[rarity] = tk.StringVar()
+            
+            # Entrée
+            entry = ttk.Entry(template_frame, textvariable=self.rarity_vars[rarity], 
+                            state='readonly', width=40)
+            entry.pack(side='left', fill='x', expand=True, padx=(0, 10))
+            
+            # Bouton parcourir
+            browse_btn = ttk.Button(template_frame, text="📁", 
+                                  command=lambda r=rarity: self._browse_rarity_template(r), 
+                                  width=5)
+            browse_btn.pack(side='right', padx=(0, 5))
+            
+            # Bouton effacer
+            clear_btn = ttk.Button(template_frame, text="🗑️", 
+                                 command=lambda r=rarity: self.rarity_vars[r].set(""), 
+                                 width=5)
+            clear_btn.pack(side='right')
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
         
         # Section Information
         info_section = ttk.LabelFrame(main_frame, text="Comment ça marche", padding=10)
-        info_section.pack(fill='both', expand=True, pady=(0, 15))
+        info_section.pack(fill='both', expand=True, pady=(15, 15))
         
-        info_text = """1. Sélectionnez une image template qui contient les zones de texte et contours de carte
-        
-2. Cette image doit avoir un fond transparent (PNG avec transparence recommandé)
+        info_text = """1. Sélectionnez une image template pour chaque rareté de carte :
+   • Commun : Image superposée pour les cartes communes
+   • Rare : Image superposée pour les cartes rares  
+   • Légendaire : Image superposée pour les cartes légendaires
+   • Mythique : Image superposée pour les cartes mythiques
+
+2. Ces images doivent avoir un fond transparent (PNG avec transparence recommandé)
 
 3. Quand vous sauvegardez une carte, l'application :
    • Prend l'image de la carte (illustration)
    • La redimensionne pour correspondre au template
-   • Superpose le template par-dessus
+   • Sélectionne le template selon la rareté de la carte
+   • Superpose le template correspondant par-dessus
    • Sauvegarde le résultat dans le dossier 'images'
    • Nomme le fichier avec le nom de la carte (espaces remplacés par _)
    
-4. Le fichier final peut être utilisé dans votre jeu Love2D"""
+4. Si aucun template n'est défini pour une rareté, l'image originale est utilisée
+
+5. Le fichier final peut être utilisé dans votre jeu Love2D"""
         
         # Utiliser un Text widget avec scrollbar pour le texte d'information
         text_frame = ttk.Frame(info_section)
@@ -122,11 +168,17 @@ class SettingsWindow:
                   command=self._apply_settings, width=12).pack(side='right')
 
     def _load_current_settings(self):
-        self.template_var.set(APP_SETTINGS.get("template_image", ""))
+        """Charge les paramètres actuels depuis la configuration."""
+        # Charger les templates par rareté
+        rarity_templates = APP_SETTINGS.get("rarity_templates", {})
+        for rarity in self.rarity_vars:
+            self.rarity_vars[rarity].set(rarity_templates.get(rarity, ""))
 
-    def _browse_template(self):
+    def _browse_rarity_template(self, rarity):
+        """Ouvre le dialogue de sélection pour un template de rareté spécifique."""
+        from .config import RARITY_LABELS
         path = filedialog.askopenfilename(
-            title="Choisir l'image template",
+            title=f"Choisir l'image template pour {RARITY_LABELS[rarity]}",
             filetypes=[
                 ("Images PNG", "*.png"),
                 ("Images", "*.png *.jpg *.jpeg *.gif *.bmp"),
@@ -134,10 +186,15 @@ class SettingsWindow:
             ]
         )
         if path:
-            self.template_var.set(path)
+            self.rarity_vars[rarity].set(path)
 
     def _apply_settings(self):
-        APP_SETTINGS["template_image"] = self.template_var.get()
+        """Applique et sauvegarde les paramètres."""
+        # Sauvegarder les templates par rareté
+        APP_SETTINGS["rarity_templates"] = {}
+        for rarity, var in self.rarity_vars.items():
+            APP_SETTINGS["rarity_templates"][rarity] = var.get()
+        
         save_settings()
         messagebox.showinfo("Réglages", "Paramètres sauvegardés avec succès !")
         self._on_close()
