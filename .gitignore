@@ -9,8 +9,17 @@ build/
 dist/
 *.spec
 
-# Base de données (optionnel - décommentez si vous voulez l'ignorer)
-# cartes.db
+# Base de données locale (contient des données utilisateur)
+cartes.db
+*.db
+
+# Sauvegardes automatiques
+*.backup*
+cartes.db.backup.*
+
+# Fichiers temporaires des tests
+test_integration_basic.lua
+tests/cartes.db
 
 # Fichiers temporaires Python
 __pycache__/
