@@ -1,0 +1,2 @@
+# Éditeur de cartes Love2D - Dépendances
+Pillow>=9.0.0

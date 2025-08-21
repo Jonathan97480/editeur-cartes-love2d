@@ -1,0 +1,322 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Utilitaires pour l'éditeur de cartes Love2D
+"""
+import os
+import re
+import sys
+from tkinter import messagebox
+from .config import APP_SETTINGS, IMAGES_FOLDER, APP_TITLE
+
+try:
+    from PIL import Image
+    PILLOW_AVAILABLE = True
+except ImportError:
+    PILLOW_AVAILABLE = False
+
+# ======================= Utilitaires généraux =======================
+
+def default_db_path() -> str:
+    """Chemin par défaut de la BDD.
+    - Exécutable (PyInstaller, sys.frozen) : %APPDATA%/EditeurCartesLove2D/cartes.db
+    - Script : ./cartes.db
+    """
+    if getattr(sys, 'frozen', False):
+        base = os.environ.get('APPDATA') or os.path.expanduser('~')
+        folder = os.path.join(base, 'EditeurCartesLove2D')
+        try:
+            os.makedirs(folder, exist_ok=True)
+        except Exception:
+            folder = os.path.expanduser('~')
+        return os.path.join(folder, 'cartes.db')
+    return "cartes.db"
+
+def to_int(x) -> int:
+    """Convertit une valeur en entier, retourne 0 si impossible."""
+    try:
+        return int(x)
+    except Exception:
+        return 0
+
+def lua_escape(s: str) -> str:
+    """Échapper une chaîne pour Lua (quotes simples + newlines)."""
+    if s is None:
+        return ''
+    return (
+        s.replace("\\", "\\\\")
+         .replace("'", "\\'")
+         .replace("\r\n", "\n")
+         .replace("\r", "\n")
+         .replace("\n", "\\n")
+    )
+
+# ======================= Gestion des images =======================
+
+def sanitize_filename(name: str) -> str:
+    """Nettoie un nom de fichier en remplaçant les caractères interdits par des underscores."""
+    # Remplace les espaces et caractères spéciaux par des underscores
+    cleaned = re.sub(r'[^\w\-_.]', '_', name)
+    # Évite les underscores multiples
+    cleaned = re.sub(r'_{2,}', '_', cleaned)
+    return cleaned.strip('_')
+
+def ensure_images_folder() -> str:
+    """Crée le dossier images s'il n'existe pas et retourne son chemin."""
+    folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', IMAGES_FOLDER)
+    folder_path = os.path.normpath(folder_path)
+    os.makedirs(folder_path, exist_ok=True)
+    return folder_path
+
+def create_card_image(card_image_path: str, template_image_path: str, card_name: str) -> str | None:
+    """
+    Fusionne l'image de la carte avec le template et sauvegarde le résultat.
+    Retourne le chemin de l'image créée ou None en cas d'erreur.
+    """
+    if not PILLOW_AVAILABLE:
+        messagebox.showwarning(APP_TITLE, 
+            "Pillow n'est pas installé. Installez-le avec :\npip install Pillow")
+        return None
+    
+    if not os.path.exists(card_image_path) or not os.path.exists(template_image_path):
+        return None
+    
+    try:
+        # Charge les images
+        card_img = Image.open(card_image_path)
+        template_img = Image.open(template_image_path)
+        
+        # Redimensionne l'image de la carte pour qu'elle s'adapte au template
+        template_size = template_img.size
+        card_img = card_img.resize(template_size, Image.Resampling.LANCZOS)
+        
+        # Crée l'image finale
+        if template_img.mode == 'RGBA':
+            # Le template a de la transparence, on le superpose à la carte
+            final_img = Image.new('RGBA', template_size)
+            final_img.paste(card_img, (0, 0))
+            final_img.paste(template_img, (0, 0), template_img)
+        else:
+            # Le template est opaque, on le convertit en RGBA pour simuler la transparence
+            final_img = card_img.copy()
+            if template_img.mode != 'RGBA':
+                template_img = template_img.convert('RGBA')
+            final_img.paste(template_img, (0, 0), template_img)
+        
+        # Sauvegarde l'image
+        output_folder = ensure_images_folder()
+        filename = f"{sanitize_filename(card_name)}.png"
+        output_path = os.path.join(output_folder, filename)
+        
+        # Convertit en RGB si nécessaire pour PNG
+        if final_img.mode == 'RGBA':
+            # Crée un fond blanc pour remplacer la transparence
+            rgb_img = Image.new('RGB', final_img.size, (255, 255, 255))
+            rgb_img.paste(final_img, mask=final_img.split()[-1])  # Utilise le canal alpha comme masque
+            final_img = rgb_img
+        
+        final_img.save(output_path, 'PNG')
+        return output_path
+        
+    except Exception as e:
+        messagebox.showerror(APP_TITLE, f"Erreur lors de la création de l'image :\n{e}")
+        return None
+
+# ======================= Scripts Windows =======================
+
+def write_bat_scripts():
+    """Crée `run.bat` et `build.bat` dans le dossier du script."""
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    run_bat_path = os.path.join(base, 'run.bat')
+    build_bat_path = os.path.join(base, 'build.bat')
+
+    run_bat = r"""@echo off
+setlocal
+SET SCRIPT=%~dp0test.py
+SET VENV_DIR=%~dp0venv
+SET REQUIREMENTS=%~dp0requirements.txt
+
+echo ========================================
+echo   Editeur de Cartes Love2D - Launcher
+echo ========================================
+
+REM Verification de Python
+where python >nul 2>nul || where py >nul 2>nul || (
+  echo [ERREUR] Python introuvable. Installez-le depuis https://www.python.org/
+  echo Assurez-vous d'ajouter Python au PATH lors de l'installation.
+  pause
+  exit /b 1
+)
+
+REM Creation de l'environnement virtuel s'il n'existe pas
+if not exist "%VENV_DIR%" (
+  echo Creation de l'environnement virtuel...
+  python -m venv "%VENV_DIR%" 2>nul || (
+    echo Tentative avec py...
+    py -m venv "%VENV_DIR%" || (
+      echo [ERREUR] Impossible de creer l'environnement virtuel.
+      pause
+      exit /b 1
+    )
+  )
+  echo Environnement virtuel cree avec succes.
+)
+
+REM Activation de l'environnement virtuel
+echo Activation de l'environnement virtuel...
+call "%VENV_DIR%\Scripts\activate.bat" || (
+  echo [ERREUR] Impossible d'activer l'environnement virtuel.
+  pause
+  exit /b 1
+)
+
+REM Mise a jour de pip
+echo Mise a jour de pip...
+python -m pip install --upgrade pip >nul 2>nul
+
+REM Installation des dependances si requirements.txt existe
+if exist "%REQUIREMENTS%" (
+  echo Installation des dependances...
+  pip install -r "%REQUIREMENTS%" || (
+    echo [ERREUR] Echec de l'installation des dependances.
+    pause
+    exit /b 1
+  )
+  echo Dependances installees avec succes.
+) else (
+  echo Installation manuelle de Pillow...
+  pip install Pillow || (
+    echo [ERREUR] Echec de l'installation de Pillow.
+    pause
+    exit /b 1
+  )
+)
+
+REM Lancement de l'application
+echo Lancement de l'application...
+echo.
+python "%SCRIPT%" %*
+
+REM En cas d'erreur, afficher un message et attendre
+if errorlevel 1 (
+  echo.
+  echo [ERREUR] L'application s'est fermee de maniere inattendue.
+  echo Tentative de lancement en mode compatibilite...
+  echo.
+  python "%~dp0test_compat.py" --compat
+  if errorlevel 1 (
+    echo.
+    echo [ERREUR] Echec du mode compatibilite.
+    echo Verifiez que tous les modules sont presents dans le dossier lib/
+    pause
+  )
+)
+
+REM Desactivation de l'environnement virtuel
+deactivate 2>nul
+"""
+
+    build_bat = r"""@echo off
+setlocal
+set NAME=EditeurCartesLove2D
+set SCRIPT=test.py
+set ICON=icon.ico
+set VENV_DIR=%~dp0venv
+set REQUIREMENTS=%~dp0requirements.txt
+
+echo ========================================
+echo   Build Editeur de Cartes Love2D
+echo ========================================
+
+REM Verification de Python
+where python >nul 2>nul || where py >nul 2>nul || (
+  echo [ERREUR] Python introuvable. Installez-le depuis https://www.python.org/
+  pause
+  exit /b 1
+)
+
+REM Creation de l'environnement virtuel s'il n'existe pas
+if not exist "%VENV_DIR%" (
+  echo Creation de l'environnement virtuel pour le build...
+  python -m venv "%VENV_DIR%" 2>nul || py -m venv "%VENV_DIR%" || (
+    echo [ERREUR] Impossible de creer l'environnement virtuel.
+    pause
+    exit /b 1
+  )
+)
+
+REM Activation de l'environnement virtuel
+call "%VENV_DIR%\Scripts\activate.bat" || (
+  echo [ERREUR] Impossible d'activer l'environnement virtuel.
+  pause
+  exit /b 1
+)
+
+REM Mise a jour de pip
+python -m pip install --upgrade pip >nul 2>nul
+
+REM Installation des dependances
+if exist "%REQUIREMENTS%" (
+  echo Installation des dependances...
+  pip install -r "%REQUIREMENTS%"
+) else (
+  echo Installation manuelle de Pillow...
+  pip install Pillow
+)
+
+REM Installation de PyInstaller
+echo Installation de PyInstaller...
+pip install --upgrade pyinstaller || (
+  echo [ERREUR] Echec de l'installation de PyInstaller.
+  pause
+  exit /b 1
+)
+
+REM Nettoyage des builds precedents
+if exist build rmdir /s /q build
+if exist dist rmdir /s /q dist
+
+REM Configuration de l'icone
+if exist "%ICON%" (
+  set ICON_ARG=--icon "%ICON%"
+) else (
+  set ICON_ARG=
+)
+
+REM Build interface graphique
+echo Build de l'executable avec interface graphique...
+pyinstaller --noconfirm --windowed --name "%NAME%" %ICON_ARG% --add-data "lib;lib" "%SCRIPT%" || (
+  echo [ERREUR] Echec du build GUI.
+  pause
+  exit /b 1
+)
+
+REM Build console
+echo Build de l'executable console...
+pyinstaller --noconfirm --onefile --name "%NAME%_console" --add-data "lib;lib" "%SCRIPT%" || (
+  echo [ERREUR] Echec du build console.
+  pause
+  exit /b 1
+)
+
+echo.
+echo ========================================
+echo   Build termine avec succes !
+echo ========================================
+echo Executables disponibles dans le dossier 'dist':
+echo - %NAME%.exe (interface graphique)
+echo - %NAME%_console.exe (console)
+echo.
+
+REM Desactivation de l'environnement virtuel
+deactivate 2>nul
+
+pause
+"""
+
+    with open(run_bat_path, 'w', encoding='utf-8') as f:
+        f.write(run_bat)
+    with open(build_bat_path, 'w', encoding='utf-8') as f:
+        f.write(build_bat)
+
+    return run_bat_path, build_bat_path

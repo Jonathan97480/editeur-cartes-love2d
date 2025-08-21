@@ -1,0 +1,34 @@
+# Environnement virtuel Python
+venv/
+env/
+.venv/
+.env/
+
+# Fichiers de build PyInstaller
+build/
+dist/
+*.spec
+
+# Base de données (optionnel - décommentez si vous voulez l'ignorer)
+# cartes.db
+
+# Fichiers temporaires Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Images générées (optionnel)
+images/
+
+# Fichiers de configuration utilisateur
+settings.json
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
