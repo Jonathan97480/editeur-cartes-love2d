@@ -24,7 +24,7 @@ class SimpleMainApp(tk.Tk):
         super().__init__()
         self.repo = repo
         self.title(APP_TITLE + " - Mode Compatibilité")
-        self.geometry('1200x700')
+        self.geometry('1281x879')
         self.setup_ui()
     
     def setup_ui(self):

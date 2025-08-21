@@ -19,7 +19,7 @@ class MainApp(tk.Tk):
         super().__init__()
         self.repo = repo
         self.title(APP_TITLE)
-        self.geometry('1280x780')
+        self.geometry('1281x879')
         
         # Tentative d'initialisation du gestionnaire de thèmes
         try:
