@@ -22,7 +22,7 @@ class SettingsWindow:
             
         self.window = tk.Toplevel(self.parent)
         self.window.title("Réglages")
-        self.window.geometry("650x450")
+        self.window.geometry("800x650")
         self.window.resizable(True, True)
         self.window.transient(self.parent)
         self.window.grab_set()
@@ -51,7 +51,7 @@ class SettingsWindow:
         title_label.pack(anchor='w', pady=(0, 15))
         
         # Frame scrollable pour les templates
-        canvas = tk.Canvas(main_frame, height=250)
+        canvas = tk.Canvas(main_frame, height=350)
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
         
@@ -70,37 +70,37 @@ class SettingsWindow:
         from .config import RARITY_VALUES, RARITY_LABELS
         
         for rarity in RARITY_VALUES:
-            rarity_section = ttk.LabelFrame(scrollable_frame, text=f"Template {RARITY_LABELS[rarity]}", padding=10)
-            rarity_section.pack(fill='x', pady=(0, 10), padx=5)
+            rarity_section = ttk.LabelFrame(scrollable_frame, text=f"Template {RARITY_LABELS[rarity]}", padding=15)
+            rarity_section.pack(fill='x', pady=(0, 15), padx=8)
             
             # Description
             desc_label = ttk.Label(rarity_section, 
                                  text=f"Image superposée pour les cartes {RARITY_LABELS[rarity].lower()}s :", 
                                  font=('TkDefaultFont', 9))
-            desc_label.pack(anchor='w', pady=(0, 5))
+            desc_label.pack(anchor='w', pady=(0, 8))
             
             # Frame pour l'entrée et le bouton
             template_frame = ttk.Frame(rarity_section)
-            template_frame.pack(fill='x', pady=(0, 5))
+            template_frame.pack(fill='x', pady=(0, 8))
             
             # Variable pour cette rareté
             self.rarity_vars[rarity] = tk.StringVar()
             
             # Entrée
             entry = ttk.Entry(template_frame, textvariable=self.rarity_vars[rarity], 
-                            state='readonly', width=40)
-            entry.pack(side='left', fill='x', expand=True, padx=(0, 10))
+                            state='readonly', width=50)
+            entry.pack(side='left', fill='x', expand=True, padx=(0, 12))
             
             # Bouton parcourir
-            browse_btn = ttk.Button(template_frame, text="📁", 
+            browse_btn = ttk.Button(template_frame, text="📁 Parcourir", 
                                   command=lambda r=rarity: self._browse_rarity_template(r), 
-                                  width=5)
-            browse_btn.pack(side='right', padx=(0, 5))
+                                  width=12)
+            browse_btn.pack(side='right', padx=(0, 8))
             
             # Bouton effacer
-            clear_btn = ttk.Button(template_frame, text="🗑️", 
+            clear_btn = ttk.Button(template_frame, text="🗑️ Effacer", 
                                  command=lambda r=rarity: self.rarity_vars[r].set(""), 
-                                 width=5)
+                                 width=10)
             clear_btn.pack(side='right')
         
         canvas.pack(side="left", fill="both", expand=True)

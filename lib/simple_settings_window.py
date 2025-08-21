@@ -22,7 +22,7 @@ class SimpleSettingsWindow:
             
         self.window = tk.Toplevel(self.parent)
         self.window.title("Reglages - Configuration des Images")
-        self.window.geometry("700x500")
+        self.window.geometry("850x700")
         self.window.resizable(True, True)
         self.window.transient(self.parent)
         self.window.grab_set()
