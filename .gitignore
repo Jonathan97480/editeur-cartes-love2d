@@ -9,6 +9,13 @@ build/
 dist/
 *.spec
 
+# Archives et fichiers compressés
+*.zip
+*.tar.gz
+*.tar.bz2
+*.7z
+*.rar
+
 # Base de données locale (contient des données utilisateur)
 cartes.db
 *.db

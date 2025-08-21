@@ -168,6 +168,58 @@ def get_card_image_for_export(card) -> str:
     
     return ''
 
+def convert_to_relative_path(absolute_path: str) -> str:
+    """
+    Convertit un chemin absolu en chemin relatif par rapport au dossier 'images'.
+    Si le chemin ne contient pas 'images', retourne le chemin tel quel.
+    
+    Exemple:
+    C:/Users/berou/Downloads/Nouveau dossier/images/originals/carte.png
+    -> images/originals/carte.png
+    """
+    if not absolute_path:
+        return ''
+    
+    # Normaliser les séparateurs
+    normalized_path = absolute_path.replace('\\', '/')
+    
+    # Chercher 'images' dans le chemin
+    if 'images' in normalized_path:
+        parts = normalized_path.split('/')
+        try:
+            idx = parts.index('images')
+            relative_path = '/'.join(parts[idx:])
+            return relative_path
+        except ValueError:
+            pass
+    
+    # Si pas de dossier 'images' trouvé, retourner le chemin normalisé
+    return normalized_path
+
+def resolve_relative_path(relative_path: str) -> str:
+    """
+    Convertit un chemin relatif (commençant par 'images/') en chemin absolu.
+    Si le chemin est déjà absolu ou ne commence pas par 'images/', le retourne tel quel.
+    
+    Exemple:
+    images/originals/carte.png -> C:/Users/berou/Downloads/Nouveau dossier/images/originals/carte.png
+    """
+    if not relative_path:
+        return ''
+    
+    # Normaliser les séparateurs
+    normalized_path = relative_path.replace('\\', '/')
+    
+    # Si le chemin commence par 'images/', le convertir en absolu
+    if normalized_path.startswith('images/'):
+        from .config import IMAGES_FOLDER
+        # Remplacer 'images/' par le chemin absolu du dossier images
+        absolute_path = os.path.join(IMAGES_FOLDER, normalized_path[7:])  # Supprimer 'images/'
+        return absolute_path.replace('\\', '/')
+    
+    # Si c'est déjà un chemin absolu ou un autre format, le retourner tel quel
+    return normalized_path
+
 def copy_templates_to_folder() -> dict:
     """
     Copie les templates configurés vers le dossier templates/ et retourne les nouveaux chemins.

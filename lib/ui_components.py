@@ -248,6 +248,10 @@ class CardForm(ttk.Frame):
         except Exception:
             current_img_path = ''
         
+        # Résoudre le chemin relatif en absolu pour les vérifications d'existence
+        from .utils import resolve_relative_path
+        resolved_img_path = resolve_relative_path(current_img_path) if current_img_path else ''
+        
         # Déterminer si l'image actuelle est fusionnée ou originale
         is_fused_image = False
         if current_img_path:
@@ -263,22 +267,25 @@ class CardForm(ttk.Frame):
         
         # Chercher l'image originale correspondante
         original_path = None
-        if current_img_path and os.path.exists(current_img_path):
+        if current_img_path and os.path.exists(resolved_img_path):
             if is_fused_image:
                 # Chercher l'image originale correspondante
                 from .utils import ensure_images_subfolders
                 subfolders = ensure_images_subfolders()
-                filename = os.path.basename(current_img_path)
+                filename = os.path.basename(resolved_img_path)
                 potential_original = os.path.join(subfolders['originals'], filename)
                 if os.path.exists(potential_original):
                     original_path = potential_original
                 else:
                     # Si pas d'original trouvé, utiliser l'image fusionnée comme original pour l'affichage
-                    original_path = current_img_path
+                    original_path = resolved_img_path
             else:
-                original_path = current_img_path
+                original_path = resolved_img_path
         
-        if generated_path and os.path.exists(generated_path):
+        # Résoudre aussi le chemin généré s'il existe
+        resolved_generated_path = resolve_relative_path(generated_path) if generated_path else ''
+        
+        if generated_path and os.path.exists(resolved_generated_path):
             generated_path = generated_path
         else:
             generated_path = None
@@ -286,11 +293,11 @@ class CardForm(ttk.Frame):
         # Choisir quelle image afficher selon le mode
         preview_path = None
         if hasattr(self, 'show_generated') and self.show_generated and generated_path:
-            preview_path = generated_path
+            preview_path = resolve_relative_path(generated_path)
         elif original_path:
             preview_path = original_path
         elif generated_path:  # Fallback sur l'image générée si pas d'original
-            preview_path = generated_path
+            preview_path = resolve_relative_path(generated_path)
         
         # Afficher l'image
         if not preview_path:
@@ -341,7 +348,7 @@ class CardForm(ttk.Frame):
                     self.toggle_image_btn.config(text="Image unique", state='disabled')
             else:
                 # On affiche l'original, proposer de voir la finale
-                if generated_path and os.path.exists(generated_path):
+                if generated_path and os.path.exists(resolved_generated_path):
                     self.toggle_image_btn.config(text="Voir finale", state='normal')
                 else:
                     self.toggle_image_btn.config(text="Pas de finale", state='disabled')
@@ -381,21 +388,23 @@ class CardForm(ttk.Frame):
         if path:
             # Copier l'image dans le dossier originals avec le nom de la carte
             card_name = self.name_var.get().strip() or "carte_sans_nom"
-            from .utils import copy_image_to_originals
+            from .utils import copy_image_to_originals, convert_to_relative_path
             
             # Copier l'image vers le dossier originals
             local_image_path = copy_image_to_originals(path, card_name)
             
             if local_image_path:
-                # Utiliser la copie locale au lieu du fichier original
-                self.img_var.set(local_image_path.replace('\\', '/'))
+                # Convertir en chemin relatif pour la sauvegarde
+                relative_path = convert_to_relative_path(local_image_path)
+                self.img_var.set(relative_path)
                 messagebox.showinfo("Image copiée", 
-                    f"Image copiée dans :\n{local_image_path}\n\nLa carte utilisera maintenant cette copie locale.")
+                    f"Image copiée dans :\n{local_image_path}\n\nChemin sauvegardé : {relative_path}")
             else:
-                # En cas d'échec de copie, utiliser le chemin original (fallback)
-                self.img_var.set(path.replace('\\', '/'))
+                # En cas d'échec de copie, essayer de convertir le chemin original en relatif
+                relative_path = convert_to_relative_path(path)
+                self.img_var.set(relative_path)
                 messagebox.showwarning("Copie échouée", 
-                    "La copie de l'image a échoué. Le chemin original sera utilisé.")
+                    f"La copie de l'image a échoué. Chemin sauvegardé : {relative_path}")
             
             self._update_preview()
 
