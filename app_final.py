@@ -18,6 +18,7 @@ from lib.utils import write_bat_scripts
 from lib.tests import run_tests
 from lib.ui_components import CardForm, CardList
 from lib.settings_window import SettingsWindow
+from lib.deck_viewer import open_deck_viewer
 from lib.utils import ensure_images_folder
 
 def default_db_path() -> str:
@@ -119,6 +120,8 @@ class FinalMainApp(tk.Tk):
         # Menu Affichage
         view_menu = tk.Menu(menubar, tearoff=0)
         view_menu.add_command(label="🔄 Actualiser", command=self.refresh_all_tabs, accelerator="F5")
+        view_menu.add_separator()
+        view_menu.add_command(label="🃏 Voir le deck", command=self.show_deck_viewer, accelerator="Ctrl+V")
         menubar.add_cascade(label="👁️ Affichage", menu=view_menu)
         
         # Menu Réglages
@@ -142,6 +145,7 @@ class FinalMainApp(tk.Tk):
         self.bind_all("<Control-n>", lambda e: self.new_card())
         self.bind_all("<Control-s>", lambda e: self.save_card())
         self.bind_all("<Control-d>", lambda e: self.duplicate_card())
+        self.bind_all("<Control-v>", lambda e: self.show_deck_viewer())
         self.bind_all("<Control-q>", lambda e: self.destroy())
         self.bind_all("<Delete>", lambda e: self.delete_card())
         self.bind_all("<F5>", lambda e: self.refresh_all_tabs())
@@ -371,6 +375,13 @@ class FinalMainApp(tk.Tk):
             
         except Exception as e:
             messagebox.showerror("Erreur d'organisation", f"Erreur lors de l'organisation :\n{e}")
+    
+    def show_deck_viewer(self):
+        """Ouvre la fenêtre de visualisation du deck."""
+        try:
+            open_deck_viewer(self, self.repo)
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Impossible d'ouvrir le visualiseur de deck :\n{e}")
     
     def show_about(self):
         """Affiche la fenêtre À propos."""
