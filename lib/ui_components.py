@@ -504,6 +504,9 @@ class CardForm(ttk.Frame):
         generated_image = self.generate_card_image()
         if generated_image:
             self.generated_image_path = generated_image
+            # Mettre à jour le chemin de l'image en base de données
+            c.img = generated_image.replace('\\', '/')
+            self.repo.update(c)
             # Actualiser l'aperçu pour montrer l'image générée
             self._update_preview()
         

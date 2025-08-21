@@ -158,6 +158,9 @@ class SettingsWindow:
         ttk.Button(left_btns, text="📂 Ouvrir dossier images", 
                   command=self._open_images_folder, width=20).pack(side='left', padx=(0, 10))
         
+        ttk.Button(left_btns, text="🗂️ Organiser templates", 
+                  command=self._organize_templates, width=18).pack(side='left', padx=(0, 10))
+        
         # Boutons de droite
         right_btns = ttk.Frame(btn_section)
         right_btns.pack(side='right')
@@ -187,6 +190,36 @@ class SettingsWindow:
         )
         if path:
             self.rarity_vars[rarity].set(path)
+
+    def _organize_templates(self):
+        """Organise les templates dans le dossier templates/."""
+        response = messagebox.askyesno(
+            "Organiser les templates",
+            "Cette fonction va :\n\n"
+            "✅ Copier tous les templates configurés vers le dossier 'images/templates/'\n"
+            "✅ Mettre à jour automatiquement les paramètres\n"
+            "✅ Créer une structure organisée\n\n"
+            "⚠️  Les fichiers originaux ne seront pas supprimés.\n\n"
+            "Continuer ?"
+        )
+        
+        if not response:
+            return
+            
+        try:
+            from .utils import organize_all_images
+            
+            # Organiser les images
+            results = organize_all_images()
+            
+            # Recharger les paramètres mis à jour
+            self._load_current_settings()
+            
+            # Afficher le résultat
+            messagebox.showinfo("Organisation terminée", results['summary'])
+            
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors de l'organisation :\n{e}")
 
     def _apply_settings(self):
         """Applique et sauvegarde les paramètres."""

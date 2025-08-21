@@ -146,6 +146,105 @@ def get_card_image_for_export(card) -> str:
     # Sinon utiliser l'image originale
     return card.img if card.img else ''
 
+def copy_templates_to_folder() -> dict:
+    """
+    Copie les templates configurés vers le dossier templates/ et retourne les nouveaux chemins.
+    Retourne un dictionnaire {rareté: nouveau_chemin} pour les templates copiés.
+    """
+    from .config import APP_SETTINGS, save_settings
+    
+    try:
+        subfolders = ensure_images_subfolders()
+        templates_folder = subfolders['templates']
+        rarity_templates = APP_SETTINGS.get("rarity_templates", {})
+        
+        copied_templates = {}
+        updated_settings = False
+        
+        for rarity, template_path in rarity_templates.items():
+            if not template_path or not os.path.exists(template_path):
+                continue
+                
+            # Vérifier si le template est déjà dans le bon dossier
+            if templates_folder in template_path:
+                copied_templates[rarity] = template_path
+                continue
+            
+            # Générer le nom de fichier cible
+            _, ext = os.path.splitext(template_path)
+            if not ext:
+                ext = '.png'
+            
+            target_filename = f"template_{rarity}{ext}"
+            target_path = os.path.join(templates_folder, target_filename)
+            
+            # Copier le fichier
+            import shutil
+            shutil.copy2(template_path, target_path)
+            
+            # Mettre à jour les paramètres
+            APP_SETTINGS["rarity_templates"][rarity] = target_path.replace('\\', '/')
+            copied_templates[rarity] = target_path
+            updated_settings = True
+            
+            print(f"✅ Template {rarity} copié : {target_path}")
+        
+        # Sauvegarder les nouveaux chemins
+        if updated_settings:
+            save_settings()
+            print("📝 Paramètres mis à jour avec les nouveaux chemins")
+        
+        return copied_templates
+        
+    except Exception as e:
+        print(f"Erreur lors de la copie des templates : {e}")
+        return {}
+
+def organize_all_images() -> dict:
+    """
+    Organise toutes les images : templates vers templates/, originaux vers originals/.
+    Retourne un dictionnaire avec les résultats de l'organisation.
+    """
+    results = {
+        'templates_copied': 0,
+        'templates_errors': 0,
+        'originals_migrated': 0,
+        'originals_errors': 0,
+        'templates_details': {},
+        'summary': ''
+    }
+    
+    print("🗂️ Organisation complète des images...")
+    print("=" * 50)
+    
+    # 1. Organiser les templates
+    print("📁 Organisation des templates...")
+    copied_templates = copy_templates_to_folder()
+    results['templates_copied'] = len(copied_templates)
+    results['templates_details'] = copied_templates
+    
+    if copied_templates:
+        print(f"✅ {len(copied_templates)} templates organisés")
+        for rarity, path in copied_templates.items():
+            print(f"   - {rarity}: {os.path.basename(path)}")
+    else:
+        print("ℹ️  Aucun template à organiser")
+    
+    # 2. Organiser les originaux (si nécessaire)
+    print("\n📁 Vérification des images originales...")
+    # Cette partie peut être étendue si nécessaire
+    
+    # Résumé
+    print(f"\n📊 Résumé de l'organisation :")
+    print(f"   Templates copiés : {results['templates_copied']}")
+    
+    summary = f"Organisation terminée !\n"
+    summary += f"✅ Templates organisés : {results['templates_copied']}\n"
+    summary += f"📁 Dossier templates : images/templates/"
+    
+    results['summary'] = summary
+    return results
+
 def create_card_image(card_image_path: str, template_image_path: str, card_name: str) -> str | None:
     """
     Fusionne l'image de la carte avec le template et sauvegarde le résultat.

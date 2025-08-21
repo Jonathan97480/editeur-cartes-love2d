@@ -127,6 +127,7 @@ class FinalMainApp(tk.Tk):
         settings_menu.add_separator()
         settings_menu.add_command(label="📂 Ouvrir dossier images", command=self.open_images_folder)
         settings_menu.add_command(label="🗂️ Organiser les images...", command=self.migrate_images)
+        settings_menu.add_command(label="📋 Organiser les templates...", command=self.organize_templates)
         menubar.add_cascade(label="🔧 Réglages", menu=settings_menu)
         
         # Menu Aide
@@ -343,6 +344,33 @@ class FinalMainApp(tk.Tk):
             
         except Exception as e:
             messagebox.showerror("Erreur de migration", f"Erreur lors de la migration :\n{e}")
+    
+    def organize_templates(self):
+        """Organise les templates dans le dossier templates/."""
+        response = messagebox.askyesno(
+            "Organiser les templates",
+            "Cette fonction va :\n\n"
+            "✅ Copier tous les templates configurés vers 'images/templates/'\n"
+            "✅ Mettre à jour automatiquement les paramètres\n"
+            "✅ Créer des noms de fichiers organisés\n\n"
+            "ℹ️  Utile pour centraliser vos templates par rareté.\n\n"
+            "Continuer ?"
+        )
+        
+        if not response:
+            return
+            
+        try:
+            from lib.utils import organize_all_images
+            
+            # Organiser les templates
+            results = organize_all_images()
+            
+            # Afficher le résultat
+            messagebox.showinfo("Organisation terminée", results['summary'])
+            
+        except Exception as e:
+            messagebox.showerror("Erreur d'organisation", f"Erreur lors de l'organisation :\n{e}")
     
     def show_about(self):
         """Affiche la fenêtre À propos."""

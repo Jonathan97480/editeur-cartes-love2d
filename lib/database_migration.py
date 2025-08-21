@@ -12,7 +12,7 @@ from .config import RARITY_VALUES
 # ======================= Constantes =======================
 
 # Version actuelle de la base de données
-CURRENT_DB_VERSION = 3
+CURRENT_DB_VERSION = 4
 
 # Schéma requis pour la table cards
 REQUIRED_SCHEMA = {
@@ -243,6 +243,72 @@ def migrate_v2_to_v3(db_path: str) -> None:
     else:
         print("   ✅ Toutes les données sont valides")
 
+def migrate_v3_to_v4(db_path: str) -> None:
+    """Migration de la version 3 à la version 4 - Import automatique des templates configurés."""
+    print("🔄 Migration v3 → v4 : Import automatique des templates configurés...")
+    
+    try:
+        # Importer les modules nécessaires
+        import os
+        import shutil
+        from .config import APP_SETTINGS, save_settings, load_settings
+        from .utils import ensure_images_subfolders
+        
+        # Charger les paramètres actuels
+        load_settings()
+        
+        # Récupérer les templates configurés
+        rarity_templates = APP_SETTINGS.get("rarity_templates", {})
+        
+        if not any(rarity_templates.values()):
+            print("   ℹ️  Aucun template configuré, migration ignorée")
+            return
+        
+        # Créer le dossier templates si nécessaire
+        subfolders = ensure_images_subfolders()
+        templates_folder = subfolders['templates']
+        
+        imported_count = 0
+        updated_paths = {}
+        
+        for rarity, template_path in rarity_templates.items():
+            if not template_path or not os.path.exists(template_path):
+                print(f"   ⚠️  Template {rarity} : fichier non trouvé ({template_path})")
+                continue
+            
+            # Construire le nouveau nom de fichier
+            file_extension = os.path.splitext(template_path)[1]
+            new_filename = f"template_{rarity}{file_extension}"
+            new_path = os.path.join(templates_folder, new_filename)
+            
+            try:
+                # Copier le fichier vers le dossier templates
+                shutil.copy2(template_path, new_path)
+                updated_paths[rarity] = new_path
+                imported_count += 1
+                print(f"   ✅ Template {rarity} importé : {new_filename}")
+                
+            except Exception as e:
+                print(f"   ❌ Erreur import template {rarity} : {e}")
+        
+        # Mettre à jour les paramètres avec les nouveaux chemins
+        if updated_paths:
+            APP_SETTINGS["rarity_templates"].update(updated_paths)
+            save_settings()
+            print(f"   📝 Paramètres mis à jour avec {len(updated_paths)} nouveaux chemins")
+        
+        if imported_count > 0:
+            print(f"   🎉 {imported_count} templates importés avec succès")
+        else:
+            print("   ⚠️  Aucun template n'a pu être importé")
+            
+    except ImportError as e:
+        print(f"   ⚠️  Erreur d'import, migration des templates ignorée : {e}")
+    except Exception as e:
+        print(f"   ❌ Erreur lors de la migration des templates : {e}")
+        import traceback
+        traceback.print_exc()
+
 def verify_database_integrity(db_path: str) -> bool:
     """Vérifie l'intégrité de la base de données."""
     try:
@@ -303,6 +369,10 @@ def migrate_database(db_path: str) -> bool:
         if current_version < 3:
             migrate_v2_to_v3(db_path)
             set_db_version(db_path, 3)
+        
+        if current_version < 4:
+            migrate_v3_to_v4(db_path)
+            set_db_version(db_path, 4)
         
         print(f"✅ Migration terminée ! Version {current_version} → {CURRENT_DB_VERSION}")
         
