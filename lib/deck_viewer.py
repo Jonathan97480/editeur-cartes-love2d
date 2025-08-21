@@ -33,6 +33,10 @@ class DeckViewerWindow:
         self.card_height = 160
         self.cards_per_row = 5
         
+        # Initialiser l'ActorManager pour le tri par acteur
+        from .actors import ActorManager
+        self.actor_manager = ActorManager(repo.db_file)
+        
         self.create_window()
         
     def create_window(self):
@@ -96,6 +100,15 @@ class DeckViewerWindow:
             )
             rb.pack(anchor="w")
         
+        # Section Acteurs
+        actors_frame = ttk.LabelFrame(sidebar_frame, text="🎭 Acteurs", padding=5)
+        actors_frame.pack(fill="x", pady=(0, 10))
+        
+        self.actor_var = tk.StringVar(value="Tous")
+        
+        # Récupérer la liste des acteurs
+        self.update_actor_options(actors_frame)
+        
         # Section Tri
         sort_frame = ttk.LabelFrame(sidebar_frame, text="📋 Tri", padding=5)
         sort_frame.pack(fill="x", pady=(0, 10))
@@ -105,7 +118,8 @@ class DeckViewerWindow:
             ("Par rareté", "rarity"),
             ("Par nom", "name"),
             ("Par type", "type"),
-            ("Par puissance", "power")
+            ("Par puissance", "power"),
+            ("Par acteur", "actor")
         ]
         
         for text, value in sort_options:
@@ -196,6 +210,40 @@ class DeckViewerWindow:
         self.current_filter = card_type
         self.apply_filters()
         
+    def filter_by_actor(self):
+        """Filtre les cartes par acteur."""
+        actor = self.actor_var.get()
+        self.current_filter = actor
+        self.apply_filters()
+        
+    def update_actor_options(self, actors_frame):
+        """Met à jour les options d'acteurs dans l'interface."""
+        # Supprimer les widgets existants (sauf le premier qui sera "Tous")
+        for widget in actors_frame.winfo_children():
+            widget.destroy()
+        
+        # Option "Tous"
+        rb_all = ttk.Radiobutton(
+            actors_frame, 
+            text="Tous", 
+            variable=self.actor_var, 
+            value="Tous",
+            command=lambda: self.filter_by_actor()
+        )
+        rb_all.pack(anchor="w")
+        
+        # Récupérer tous les acteurs actifs
+        actors = self.actor_manager.list_actors()
+        for actor in actors:
+            rb = ttk.Radiobutton(
+                actors_frame, 
+                text=f"{actor['icon']} {actor['name']}", 
+                variable=self.actor_var, 
+                value=str(actor['id']),
+                command=lambda: self.filter_by_actor()
+            )
+            rb.pack(anchor="w")
+        
     def apply_filters(self):
         """Applique tous les filtres actifs."""
         self.filtered_cards = self.cards.copy()
@@ -210,6 +258,19 @@ class DeckViewerWindow:
         if card_type != "Tous":
             self.filtered_cards = [c for c in self.filtered_cards 
                                  if card_type in (c.types or [])]
+        
+        # Filtre par acteur
+        actor = self.actor_var.get()
+        if actor != "Tous":
+            try:
+                actor_id = int(actor)
+                # Récupérer les cartes de cet acteur
+                actor_cards = self.actor_manager.get_actor_cards(actor_id)
+                actor_card_ids = {card.id for card in actor_cards}
+                self.filtered_cards = [c for c in self.filtered_cards if c.id in actor_card_ids]
+            except ValueError:
+                # Si conversion échoue, ne pas filtrer par acteur
+                pass
         
         self.sort_cards()
         
@@ -227,6 +288,15 @@ class DeckViewerWindow:
             self.filtered_cards.sort(key=lambda c: (c.types or [""])[0] if c.types else "")
         elif sort_by == "power":
             self.filtered_cards.sort(key=lambda c: c.powerblow, reverse=True)
+        elif sort_by == "actor":
+            # Tri par acteur - regrouper les cartes par acteur
+            def get_card_actors(card):
+                actors = self.actor_manager.get_card_actors(card.id)
+                if actors:
+                    return actors[0]['name']  # Premier acteur si plusieurs
+                return "Zzz_Aucun"  # Mettre à la fin les cartes sans acteur
+            
+            self.filtered_cards.sort(key=get_card_actors)
         
         self.update_info_label()
         self.display_cards()
@@ -244,13 +314,23 @@ class DeckViewerWindow:
         # Ajouter info sur le filtre actuel
         rarity = self.rarity_var.get()
         card_type = self.type_var.get()
+        actor = self.actor_var.get()
         
-        if rarity != "Toutes" or card_type != "Tous":
+        if rarity != "Toutes" or card_type != "Tous" or actor != "Tous":
             filters = []
             if rarity != "Toutes":
                 filters.append(f"Rareté: {rarity}")
             if card_type != "Tous":
                 filters.append(f"Type: {card_type}")
+            if actor != "Tous":
+                # Récupérer le nom de l'acteur
+                try:
+                    actor_id = int(actor)
+                    actors = self.actor_manager.list_actors()
+                    actor_name = next((a['name'] for a in actors if a['id'] == actor_id), "Inconnu")
+                    filters.append(f"Acteur: {actor_name}")
+                except ValueError:
+                    pass
             text += f" | {', '.join(filters)}"
         
         self.info_label.config(text=text)
@@ -305,6 +385,16 @@ class DeckViewerWindow:
         if card.types:
             info_text += f"\n🎯 {', '.join(card.types)}"
         info_text += f"\n⚡ {card.powerblow}"
+        
+        # Ajouter les acteurs associés
+        actors = self.actor_manager.get_card_actors(card.id)
+        if actors:
+            actor_names = [f"{actor['icon']} {actor['name']}" for actor in actors[:2]]  # Limiter à 2 acteurs
+            info_text += f"\n🎭 {', '.join(actor_names)}"
+            if len(actors) > 2:
+                info_text += "..."
+        else:
+            info_text += "\n🎭 Aucun acteur"
         
         info_label = ttk.Label(
             card_frame, 
@@ -374,6 +464,15 @@ class DeckViewerWindow:
     def refresh_deck(self):
         """Actualise l'affichage du deck."""
         self.images.clear()  # Vider le cache d'images
+        
+        # Trouver le frame des acteurs et le mettre à jour
+        for widget in self.window.winfo_children():
+            if isinstance(widget, ttk.Frame):
+                for subwidget in widget.winfo_children():
+                    if isinstance(subwidget, ttk.LabelFrame) and "Acteurs" in subwidget.cget("text"):
+                        self.update_actor_options(subwidget)
+                        break
+        
         self.load_cards()
         
     def on_close(self):
