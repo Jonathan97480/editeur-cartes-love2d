@@ -54,7 +54,7 @@
 - Exportez les cartes par acteur ou par groupe d'acteurs
 
 ### 🃏 **Visualiser le Deck**
-- **Menu Affichage** → **🃏 Voir le deck** (ou Ctrl+V)
+- **Menu Affichage** → **🃏 Voir le deck** (ou Ctrl+Shift+D)
 - Visualisez toutes vos cartes en grille avec images
 - **Filtres disponibles** :
   - Par rareté (Commun, Rare, Épique, Légendaire, Mythique)
@@ -90,7 +90,7 @@
 | `Ctrl+S` | Sauvegarder la carte |
 | `Ctrl+N` | Nouvelle carte |
 | `Ctrl+D` | Dupliquer la carte |
-| `Ctrl+V` | **Visualiser le deck** (nouveau !) |
+| `Ctrl+Shift+D` | **Visualiser le deck** (nouveau !) |
 | `Del` | Supprimer la carte |
 | `F5` | Actualiser les listes |
 
@@ -131,7 +131,7 @@
 
 - **Organisez vos cartes** par rareté pour un meilleur workflow
 - **Créez des acteurs personnalisés** pour organiser vos cartes par thème/faction
-- **Utilisez le visualiseur de deck** (Ctrl+V) pour avoir une vue d'ensemble
+- **Utilisez le visualiseur de deck** (Ctrl+Shift+D) pour avoir une vue d'ensemble
 - **Filtrez par acteur** dans le visualiseur pour voir les cartes d'un personnage
 - **Combinez les filtres** (rareté + type + acteur) pour des recherches précises
 - **Utilisez les types** pour catégoriser vos cartes (Attaque, Défense, etc.)

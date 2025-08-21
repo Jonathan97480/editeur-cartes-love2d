@@ -39,7 +39,7 @@ Dans le formulaire de création/édition de carte :
 
 ### **Ouvrir le Visualiseur**
 - **Menu Affichage** → **🃏 Voir le deck**
-- **Raccourci** : `Ctrl+V`
+- **Raccourci** : `Ctrl+Shift+D`
 - Fenêtre dédiée avec toutes vos cartes en grille
 
 ### **Section 🎭 Acteurs (Nouveau !)**
@@ -184,7 +184,7 @@ return Cards
 1. **Lancez l'application** : `python app_final.py`
 2. **Créez vos premiers acteurs** : Menu 🎭 Acteurs → Gérer les Acteurs
 3. **Assignez vos cartes** : Utilisez la section 🎭 Acteurs du formulaire
-4. **Explorez le visualiseur** : Ctrl+V pour voir le tri par acteur
+4. **Explorez le visualiseur** : Ctrl+Shift+D pour voir le tri par acteur
 5. **Exportez vos cartes** : Menu 🎭 Acteurs → Export par choix
 
 **Profitez de l'organisation thématique parfaite de vos cartes Love2D ! 🎮**

@@ -28,7 +28,7 @@
 #### **Interface Utilisateur**
 - 🔄 **Formulaire carte** : Section 🎭 Acteurs pour liaison
 - 🔄 **Menu Acteurs** : Nouveau menu dédié à la gestion
-- 🔄 **Raccourci Ctrl+V** : Accès rapide au visualiseur de deck
+- 🔄 **Raccourci Ctrl+Shift+D** : Accès rapide au visualiseur de deck
 - 🔄 **Icônes visuelles** : Interface enrichie avec émojis cohérents
 
 #### **Base de Données**

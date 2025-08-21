@@ -123,7 +123,7 @@ class FinalMainApp(tk.Tk):
         view_menu = tk.Menu(menubar, tearoff=0)
         view_menu.add_command(label="🔄 Actualiser", command=self.refresh_all_tabs, accelerator="F5")
         view_menu.add_separator()
-        view_menu.add_command(label="🃏 Voir le deck", command=self.show_deck_viewer, accelerator="Ctrl+V")
+        view_menu.add_command(label="🃏 Voir le deck", command=self.show_deck_viewer, accelerator="Ctrl+Shift+D")
         menubar.add_cascade(label="👁️ Affichage", menu=view_menu)
         
         # Menu Acteurs (NOUVEAU)
@@ -157,7 +157,7 @@ class FinalMainApp(tk.Tk):
         self.bind_all("<Control-n>", lambda e: self.new_card())
         self.bind_all("<Control-s>", lambda e: self.save_card())
         self.bind_all("<Control-d>", lambda e: self.duplicate_card())
-        self.bind_all("<Control-v>", lambda e: self.show_deck_viewer())
+        self.bind_all("<Control-Shift-d>", lambda e: self.show_deck_viewer())
         self.bind_all("<Control-q>", lambda e: self.destroy())
         self.bind_all("<Delete>", lambda e: self.delete_card())
         self.bind_all("<F5>", lambda e: self.refresh_all_tabs())

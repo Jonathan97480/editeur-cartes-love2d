@@ -15,7 +15,7 @@
 - **Filtre par acteur** : Affichez uniquement les cartes d'un acteur spécifique
 - **Tri par acteur** : Regroupez les cartes par acteur/faction
 - **Filtres combinés** : Rareté + Type + Acteur pour recherches précises
-- **Raccourci Ctrl+V** : Accès rapide au visualiseur
+- **Raccourci Ctrl+Shift+D** : Accès rapide au visualiseur
 
 ### �🎨 **Système de Thèmes Moderne**
 - **Mode Automatique** : Suit automatiquement le thème Windows (clair/sombre)
