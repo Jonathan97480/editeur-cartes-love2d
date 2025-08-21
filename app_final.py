@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from pathlib import Path
 import os
+import shutil
 
 # Import des modules de l'application
 from lib.database import CardRepo, ensure_db
@@ -140,6 +141,8 @@ class FinalMainApp(tk.Tk):
         settings_menu.add_command(label="📂 Ouvrir dossier images", command=self.open_images_folder)
         settings_menu.add_command(label="🗂️ Organiser les images...", command=self.migrate_images)
         settings_menu.add_command(label="📋 Organiser les templates...", command=self.organize_templates)
+        settings_menu.add_separator()
+        settings_menu.add_command(label="🗑️ Clear Data (Vider tout)", command=self.clear_all_data)
         menubar.add_cascade(label="🔧 Réglages", menu=settings_menu)
         
         # Menu Aide
@@ -412,6 +415,106 @@ Astuce :
 3. Utilisez les raccourcis clavier pour plus d'efficacité
 """
         messagebox.showinfo("À propos", about_text)
+    
+    def clear_all_data(self):
+        """Vide complètement la base de données et supprime toutes les images."""
+        # Confirmation en plusieurs étapes pour éviter les accidents
+        warning_text = """⚠️ ATTENTION - SUPPRESSION COMPLÈTE ⚠️
+
+Cette action va DÉFINITIVEMENT supprimer :
+• TOUTES les cartes de la base de données
+• TOUS les acteurs et leurs liaisons
+• TOUTES les images dans le dossier images/
+• TOUTES les images générées et templates
+
+Cette action est IRRÉVERSIBLE !
+
+Êtes-vous ABSOLUMENT sûr de vouloir continuer ?"""
+        
+        if not messagebox.askyesno("⚠️ Confirmation - Clear Data", warning_text, icon='warning'):
+            return
+        
+        # Seconde confirmation plus stricte
+        final_text = """🚨 DERNIÈRE CONFIRMATION 🚨
+
+Vous allez perdre TOUTES vos données !
+
+Pour confirmer, tapez exactement : SUPPRIMER TOUT
+
+Cette action ne peut pas être annulée."""
+        
+        from tkinter import simpledialog
+        confirmation = simpledialog.askstring(
+            "🚨 Confirmation finale", 
+            final_text,
+            show='*'  # Masquer le texte
+        )
+        
+        if confirmation != "SUPPRIMER TOUT":
+            messagebox.showinfo("Annulé", "Suppression annulée.")
+            return
+        
+        try:
+            # Supprimer toutes les images
+            images_folder = Path("images")
+            if images_folder.exists():
+                import shutil
+                deleted_files = []
+                for item in images_folder.rglob("*"):
+                    if item.is_file():
+                        deleted_files.append(item)
+                        item.unlink()
+                    elif item.is_dir() and not any(item.iterdir()):
+                        item.rmdir()
+                
+                # Recréer le dossier vide
+                if not images_folder.exists():
+                    images_folder.mkdir(exist_ok=True)
+                
+                print(f"🗑️ {len(deleted_files)} fichiers supprimés du dossier images/")
+            
+            # Vider complètement la base de données
+            import sqlite3
+            with sqlite3.connect(self.repo.db_path) as conn:
+                # Obtenir toutes les tables
+                cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+                tables = [row[0] for row in cursor.fetchall()]
+                
+                # Supprimer toutes les données de toutes les tables
+                for table in tables:
+                    if table != 'sqlite_sequence':  # Table système SQLite
+                        conn.execute(f"DELETE FROM {table}")
+                
+                # Réinitialiser les séquences d'auto-increment
+                conn.execute("DELETE FROM sqlite_sequence")
+                conn.commit()
+                
+                print(f"🗑️ Toutes les données supprimées de {len(tables)} tables")
+            
+            # Actualiser l'interface
+            self.refresh_all_tabs()
+            
+            success_text = """✅ SUPPRESSION TERMINÉE
+
+Toutes les données ont été supprimées :
+• Base de données vidée
+• Dossier images/ nettoyé
+• Interface actualisée
+
+L'application est maintenant dans un état vierge."""
+            
+            messagebox.showinfo("✅ Terminé", success_text)
+            
+        except Exception as e:
+            error_text = f"""❌ ERREUR lors de la suppression
+
+Une erreur s'est produite :
+{str(e)}
+
+Certaines données peuvent ne pas avoir été supprimées.
+Vérifiez manuellement les fichiers si nécessaire."""
+            
+            messagebox.showerror("❌ Erreur", error_text)
     
     def show_guide(self):
         """Ouvre le guide d'utilisation."""

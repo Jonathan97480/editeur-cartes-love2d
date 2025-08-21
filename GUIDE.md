@@ -139,6 +139,37 @@
 - **Testez régulièrement** vos exports dans votre jeu Love2D
 - **Sauvegardez** votre fichier `cartes.db` pour ne pas perdre vos créations
 
+## 🗑️ Clear Data - Remise à Zéro Complète
+
+### **⚠️ Fonctionnalité de Suppression Totale**
+**Localisation** : `Menu 🔧 Réglages → 🗑️ Clear Data (Vider tout)`
+
+Cette fonctionnalité permet de **remettre l'application dans un état complètement vierge**.
+
+### **🗑️ Que supprime Clear Data :**
+- **TOUTES les cartes** (joueur, IA, acteurs)
+- **TOUS les acteurs** créés
+- **TOUTES les liaisons** cartes-acteurs
+- **TOUS les fichiers images** (dossier images/ complet)
+- **Réinitialisation** des compteurs de la base de données
+
+### **🛡️ Système de Sécurité :**
+1. **Premier avertissement** : Fenêtre avec explication détaillée
+2. **Confirmation stricte** : Saisie obligatoire de "SUPPRIMER TOUT"
+3. **Action irréversible** : Aucun retour en arrière possible
+
+### **🎯 Utilisation Recommandée :**
+- **Nouveau projet** : Repartir sur une base vierge
+- **Nettoyage après tests** : Supprimer les données de développement
+- **Résolution de problèmes** : Éliminer les corruptions potentielles
+- **Distribution** : Créer une version propre à partager
+
+### **💾 Précautions Importantes :**
+- **Sauvegardez** vos cartes importantes avant utilisation
+- **Exportez** vos fichiers .lua si nécessaire
+- **Copiez** vos images personnalisées
+- Cette action **ne peut pas être annulée**
+
 ---
 
 🎮 **Bon développement de jeu avec Love2D !**
