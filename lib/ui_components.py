@@ -296,8 +296,53 @@ class CardForm(ttk.Frame):
             ("Images", "*.png *.gif *.jpg *.jpeg *.webp *.bmp"), ("Tous les fichiers", "*.*")
         ])
         if path:
-            self.img_var.set(path.replace('\\', '/'))
+            # Copier l'image dans le dossier originals avec le nom de la carte
+            card_name = self.name_var.get().strip() or "carte_sans_nom"
+            from .utils import copy_image_to_originals
+            
+            # Copier l'image vers le dossier originals
+            local_image_path = copy_image_to_originals(path, card_name)
+            
+            if local_image_path:
+                # Utiliser la copie locale au lieu du fichier original
+                self.img_var.set(local_image_path.replace('\\', '/'))
+                messagebox.showinfo("Image copiée", 
+                    f"Image copiée dans :\n{local_image_path}\n\nLa carte utilisera maintenant cette copie locale.")
+            else:
+                # En cas d'échec de copie, utiliser le chemin original (fallback)
+                self.img_var.set(path.replace('\\', '/'))
+                messagebox.showwarning("Copie échouée", 
+                    "La copie de l'image a échoué. Le chemin original sera utilisé.")
+            
             self._update_preview()
+
+    def _update_image_name_if_needed(self):
+        """Met à jour le nom de l'image dans originals si le nom de la carte a changé."""
+        current_image_path = self.img_var.get().strip()
+        current_card_name = self.name_var.get().strip()
+        
+        if not current_image_path or not current_card_name:
+            return
+            
+        # Vérifier si l'image est dans le dossier originals
+        from .utils import ensure_images_subfolders, sanitize_filename
+        subfolders = ensure_images_subfolders()
+        
+        if subfolders['originals'] in current_image_path:
+            # Générer le nouveau nom de fichier basé sur le nom de carte actuel
+            _, ext = os.path.splitext(current_image_path)
+            new_filename = f"{sanitize_filename(current_card_name)}{ext}"
+            new_path = os.path.join(subfolders['originals'], new_filename)
+            
+            # Renommer le fichier si nécessaire
+            if current_image_path != new_path and os.path.exists(current_image_path):
+                try:
+                    import shutil
+                    shutil.move(current_image_path, new_path)
+                    self.img_var.set(new_path.replace('\\', '/'))
+                    self._update_preview()
+                except Exception as e:
+                    print(f"Erreur lors du renommage de l'image : {e}")
 
     # ---------- Populate / Clear ----------
     def clear_form(self):
@@ -434,6 +479,9 @@ class CardForm(ttk.Frame):
 
     # ---------- Commands ----------
     def save(self):
+        # Mettre à jour le nom de l'image si nécessaire avant la sauvegarde
+        self._update_image_name_if_needed()
+        
         c = self._form_to_card()
         # validations minimales
         if not c.name:

@@ -126,6 +126,7 @@ class FinalMainApp(tk.Tk):
         settings_menu.add_command(label="⚙️ Configuration des images...", command=self.show_settings)
         settings_menu.add_separator()
         settings_menu.add_command(label="📂 Ouvrir dossier images", command=self.open_images_folder)
+        settings_menu.add_command(label="🗂️ Organiser les images...", command=self.migrate_images)
         menubar.add_cascade(label="🔧 Réglages", menu=settings_menu)
         
         # Menu Aide
@@ -267,6 +268,73 @@ class FinalMainApp(tk.Tk):
         except Exception as e:
             messagebox.showerror("Erreur", f"Impossible d'ouvrir le dossier: {e}")
     
+    def migrate_images(self):
+        """Lance la migration des images vers la nouvelle structure organisée."""
+        response = messagebox.askyesno(
+            "Organiser les images", 
+            "Cette fonction va :\n\n"
+            "✅ Créer une structure de dossiers organisée :\n"
+            "   • images/originals/ - Images sources\n"
+            "   • images/cards/ - Images fusionnées finales\n"
+            "   • images/templates/ - Templates par rareté\n\n"
+            "✅ Copier toutes vos images actuelles vers 'originals'\n"
+            "✅ Mettre à jour la base de données\n\n"
+            "⚠️  Cette opération est sûre mais irréversible.\n\n"
+            "Continuer ?"
+        )
+        
+        if not response:
+            return
+            
+        try:
+            from lib.utils import ensure_images_subfolders, copy_image_to_originals
+            
+            # Créer la structure
+            subfolders = ensure_images_subfolders()
+            
+            # Migrer toutes les cartes
+            migrated_count = 0
+            error_count = 0
+            
+            cards = self.repo.list_cards()
+            
+            for card in cards:
+                if not card.img or not os.path.exists(card.img):
+                    continue
+                    
+                # Vérifier si déjà dans originals
+                if subfolders['originals'] in card.img:
+                    continue
+                    
+                # Copier vers originals
+                new_path = copy_image_to_originals(card.img, card.name)
+                
+                if new_path:
+                    # Mettre à jour en base
+                    card.img = new_path.replace('\\', '/')
+                    self.repo.update(card)
+                    migrated_count += 1
+                else:
+                    error_count += 1
+            
+            # Actualiser l'interface
+            self.refresh_all_tabs()
+            
+            # Afficher le résultat
+            result_msg = f"Migration terminée !\n\n"
+            result_msg += f"✅ Images migrées : {migrated_count}\n"
+            if error_count > 0:
+                result_msg += f"❌ Erreurs : {error_count}\n"
+            result_msg += f"\n📁 Structure créée :\n"
+            result_msg += f"   • Originaux : images/originals/\n"
+            result_msg += f"   • Cartes : images/cards/\n"
+            result_msg += f"   • Templates : images/templates/"
+            
+            messagebox.showinfo("Migration terminée", result_msg)
+            
+        except Exception as e:
+            messagebox.showerror("Erreur de migration", f"Erreur lors de la migration :\n{e}")
+    
     def show_about(self):
         """Affiche la fenêtre À propos."""
         about_text = f"""Éditeur de cartes Love2D
@@ -316,16 +384,59 @@ def main(argv=None):
         print("Scripts générés :", paths)
         sys.exit(0)
 
-    # Initialisation de la base de données
+    # Initialisation et vérification de la base de données
+    print("🚀 Démarrage de l'éditeur de cartes Love2D...")
+    print("=" * 50)
+    
     db_path = default_db_path()
-    ensure_db(db_path)
+    
+    try:
+        # Vérification et migration de la base de données
+        ensure_db(db_path)
+        print("✅ Base de données initialisée et vérifiée")
+    except Exception as e:
+        print(f"❌ Erreur lors de l'initialisation de la base de données :")
+        print(f"   {e}")
+        
+        # Demander à l'utilisateur s'il veut continuer avec la version legacy
+        import tkinter as tk
+        from tkinter import messagebox
+        
+        root = tk.Tk()
+        root.withdraw()  # Masquer la fenêtre principale
+        
+        response = messagebox.askyesno(
+            "Erreur de base de données",
+            "Une erreur s'est produite lors de la vérification de la base de données.\n\n"
+            f"Erreur : {e}\n\n"
+            "Voulez-vous essayer de continuer avec le système legacy ?\n"
+            "(Non recommandé, mais peut permettre de récupérer vos données)",
+            icon="warning"
+        )
+        
+        root.destroy()
+        
+        if not response:
+            print("❌ Arrêt de l'application.")
+            sys.exit(1)
+        
+        # Essayer avec le système legacy
+        try:
+            from lib.database import ensure_db_legacy
+            ensure_db_legacy(db_path)
+            print("⚠️  Mode de compatibilité activé (legacy)")
+        except Exception as e2:
+            print(f"❌ Impossible de continuer même en mode legacy : {e2}")
+            sys.exit(1)
+    
     repo = CardRepo(db_path)
     
     # Charge les paramètres de l'application
     load_settings()
+    
+    print("=" * 50)
 
     try:
-        print("Lancement de l'éditeur de cartes Love2D...")
         app = FinalMainApp(repo)
         app.mainloop()
     except Exception as e:

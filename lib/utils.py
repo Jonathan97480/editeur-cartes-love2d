@@ -68,6 +68,53 @@ def ensure_images_folder() -> str:
     os.makedirs(folder_path, exist_ok=True)
     return folder_path
 
+def ensure_images_subfolders() -> dict:
+    """Crée la structure de sous-dossiers pour les images et retourne les chemins."""
+    base_folder = ensure_images_folder()
+    
+    subfolders = {
+        'originals': os.path.join(base_folder, 'originals'),
+        'cards': os.path.join(base_folder, 'cards'), 
+        'templates': os.path.join(base_folder, 'templates')
+    }
+    
+    # Créer tous les sous-dossiers
+    for folder_path in subfolders.values():
+        os.makedirs(folder_path, exist_ok=True)
+    
+    return subfolders
+
+def copy_image_to_originals(source_path: str, card_name: str) -> str | None:
+    """
+    Copie une image source vers le dossier originals avec un nom basé sur la carte.
+    Retourne le chemin de l'image copiée ou None en cas d'erreur.
+    """
+    if not os.path.exists(source_path):
+        return None
+        
+    try:
+        subfolders = ensure_images_subfolders()
+        
+        # Obtenir l'extension du fichier source
+        _, ext = os.path.splitext(source_path)
+        if not ext:
+            ext = '.png'  # Extension par défaut
+            
+        # Générer le nom de fichier cible
+        safe_name = sanitize_filename(card_name)
+        target_filename = f"{safe_name}{ext}"
+        target_path = os.path.join(subfolders['originals'], target_filename)
+        
+        # Copier le fichier
+        import shutil
+        shutil.copy2(source_path, target_path)
+        
+        return target_path
+        
+    except Exception as e:
+        print(f"Erreur lors de la copie d'image : {e}")
+        return None
+
 def create_card_image(card_image_path: str, template_image_path: str, card_name: str) -> str | None:
     """
     Fusionne l'image de la carte avec le template et sauvegarde le résultat.
@@ -103,10 +150,10 @@ def create_card_image(card_image_path: str, template_image_path: str, card_name:
                 template_img = template_img.convert('RGBA')
             final_img.paste(template_img, (0, 0), template_img)
         
-        # Sauvegarde l'image
-        output_folder = ensure_images_folder()
+        # Sauvegarde l'image dans le dossier cards
+        subfolders = ensure_images_subfolders()
         filename = f"{sanitize_filename(card_name)}.png"
-        output_path = os.path.join(output_folder, filename)
+        output_path = os.path.join(subfolders['cards'], filename)
         
         # Convertit en RGB si nécessaire pour PNG
         if final_img.mode == 'RGBA':
