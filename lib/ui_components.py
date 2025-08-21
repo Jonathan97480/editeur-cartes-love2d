@@ -12,6 +12,22 @@ from .database import Card, CardRepo
 from .lua_export import export_lua
 from .utils import to_int, create_card_image
 
+def get_available_actors():
+    """Récupère la liste des acteurs disponibles pour les interfaces."""
+    try:
+        from .actors import ActorManager
+        from .config import DB_FILE
+        
+        manager = ActorManager(DB_FILE)
+        actors = manager.list_actors()
+        
+        # Retourner les noms des acteurs
+        return [actor['name'] for actor in actors]
+    except Exception as e:
+        print(f"Erreur lors de la récupération des acteurs : {e}")
+        # Fallback vers l'ancien système
+        return ['Joueur', 'IA']
+
 class CardForm(ttk.Frame):
     def __init__(self, master, repo: CardRepo, on_saved, **kw):
         super().__init__(master, **kw)
@@ -26,9 +42,11 @@ class CardForm(ttk.Frame):
         pad = dict(padx=8, pady=4)
         # Ligne 1 : côté, nom, power, rareté
         row = ttk.Frame(self); row.pack(fill='x', **pad)
-        ttk.Label(row, text="Côté :").pack(side='left')
+        ttk.Label(row, text="Acteur :").pack(side='left')
         self.side_var = tk.StringVar(value='Joueur')
-        ttk.Combobox(row, textvariable=self.side_var, values=['Joueur', 'IA'], width=8, state='readonly').pack(side='left', padx=6)
+        available_actors = get_available_actors()
+        self.side_combo = ttk.Combobox(row, textvariable=self.side_var, values=available_actors, width=12, state='readonly')
+        self.side_combo.pack(side='left', padx=6)
 
         ttk.Label(row, text="Nom de la carte :").pack(side='left', padx=(12,4))
         self.name_var = tk.StringVar(); ttk.Entry(row, textvariable=self.name_var, width=32).pack(side='left')
@@ -414,10 +432,34 @@ class CardForm(ttk.Frame):
         if callable(self.on_saved):
             self.on_saved()
 
+    def _get_card_actor(self, card_id):
+        """Récupère le nom de l'acteur lié à cette carte."""
+        try:
+            from .actors import ActorManager
+            from .config import DB_FILE
+            
+            manager = ActorManager(DB_FILE)
+            actors = manager.get_card_actors(card_id)
+            
+            if actors:
+                # Prendre le premier acteur lié
+                return actors[0]['name']
+            else:
+                # Fallback : utiliser le système legacy side
+                return 'Joueur'  # Valeur par défaut
+                
+        except Exception as e:
+            print(f"Erreur lors de la récupération de l'acteur : {e}")
+            return 'Joueur'
+
     def load_card(self, card: Card):
         self.current_id = card.id
         self.generated_image_path = None  # Réinitialiser l'image générée lors du chargement
-        self.side_var.set('Joueur' if card.side == 'joueur' else 'IA')
+        
+        # Récupérer l'acteur lié à cette carte
+        actor_name = self._get_card_actor(card.id)
+        self.side_var.set(actor_name)
+        
         self.name_var.set(card.name)
         self.img_var.set(card.img)
         self.desc_txt.delete('1.0', 'end'); self.desc_txt.insert('1.0', card.description)
@@ -514,6 +556,36 @@ class CardForm(ttk.Frame):
         return c
 
     # ---------- Commands ----------
+    def _update_actor_linkage(self, card_id):
+        """Met à jour la liaison entre la carte et l'acteur sélectionné."""
+        try:
+            from .actors import ActorManager
+            from .config import DB_FILE
+            
+            manager = ActorManager(DB_FILE)
+            selected_actor_name = self.side_var.get()
+            
+            # Trouver l'ID de l'acteur sélectionné
+            actors = manager.list_actors()
+            selected_actor_id = None
+            for actor in actors:
+                if actor['name'] == selected_actor_name:
+                    selected_actor_id = actor['id']
+                    break
+            
+            if selected_actor_id:
+                # Supprimer toutes les anciennes liaisons de cette carte
+                all_actors = manager.list_actors()
+                for actor in all_actors:
+                    manager.unlink_card_from_actor(card_id, actor['id'])
+                
+                # Créer la nouvelle liaison
+                manager.link_card_to_actor(card_id, selected_actor_id)
+                print(f"✅ Carte {card_id} liée à l'acteur '{selected_actor_name}'")
+            
+        except Exception as e:
+            print(f"Erreur lors de la liaison avec l'acteur : {e}")
+
     def save(self):
         # Mettre à jour le nom de l'image si nécessaire avant la sauvegarde
         self._update_image_name_if_needed()
@@ -535,6 +607,9 @@ class CardForm(ttk.Frame):
             new_id = self.repo.insert(c); self.current_id = new_id
         else:
             self.repo.update(c)
+        
+        # Gérer la liaison avec l'acteur sélectionné
+        self._update_actor_linkage(c.id if c.id else self.current_id)
         
         # Génère l'image fusionnée si possible
         generated_image = self.generate_card_image()
@@ -606,9 +681,10 @@ class CardList(ttk.Frame):
     def _build_ui(self):
         pad = dict(padx=8, pady=6)
         top = ttk.Frame(self); top.pack(fill='x', **pad)
-        ttk.Label(top, text='Côté :').pack(side='left')
+        ttk.Label(top, text='Acteur :').pack(side='left')
         self.side_filter = tk.StringVar(value='Tous')
-        ttk.Combobox(top, textvariable=self.side_filter, values=['Tous', 'Joueur', 'IA'], width=8, state='readonly').pack(side='left', padx=6)
+        available_actors = ['Tous'] + get_available_actors()
+        ttk.Combobox(top, textvariable=self.side_filter, values=available_actors, width=12, state='readonly').pack(side='left', padx=6)
         self.side_filter.trace_add('write', lambda *_: self.refresh())
 
         # Rareté (fixée par l'onglet ou modifiable)
