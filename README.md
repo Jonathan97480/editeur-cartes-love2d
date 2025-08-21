@@ -4,7 +4,20 @@
 
 ## ✨ Fonctionnalités
 
-### 🎨 **Système de Thèmes Moderne**
+### � **Système d'Acteurs (Nouveau !)**
+- **Acteurs personnalisables** : Créez des personnages, factions, classes
+- **Interface visuelle** : Icônes et couleurs pour chaque acteur
+- **Liaison carte-acteur** : Associez des cartes à un ou plusieurs acteurs
+- **Export par acteur** : Génération de fichiers .lua organisés par acteur
+
+### 🃏 **Visualiseur de Deck avec Tri par Acteur (Nouveau !)**
+- **Vue en grille** : Visualisez toutes vos cartes avec images
+- **Filtre par acteur** : Affichez uniquement les cartes d'un acteur spécifique
+- **Tri par acteur** : Regroupez les cartes par acteur/faction
+- **Filtres combinés** : Rareté + Type + Acteur pour recherches précises
+- **Raccourci Ctrl+V** : Accès rapide au visualiseur
+
+### �🎨 **Système de Thèmes Moderne**
 - **Mode Automatique** : Suit automatiquement le thème Windows (clair/sombre)
 - **Mode Clair** : Interface claire et moderne
 - **Mode Sombre** : Interface sombre pour réduire la fatigue oculaire
@@ -22,9 +35,11 @@
 - Configuration flexible des templates
 
 ### 📤 **Export Love2D**
-- Export Lua optimisé pour Love2D
+- **Export par acteur** : Fichiers .lua séparés par acteur/faction
+- **Export global** : Toutes les cartes organisées par acteur
+- **Format Love2D complet** : Effects Actor/Enemy, illustrations incluses
+- **Export legacy** : Support joueur/IA pour compatibilité
 - Support complet des effets et statistiques
-- Export séparé joueur/IA
 
 ## 🚀 Installation et Lancement
 

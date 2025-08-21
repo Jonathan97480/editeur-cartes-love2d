@@ -41,9 +41,29 @@
 3. Cliquez **Sauvegarder** pour confirmer
 
 ### 📤 **Exporter pour Love2D**
-- **Menu Fichier** → **Exporter Joueur** (cartes du joueur)
-- **Menu Fichier** → **Exporter IA** (cartes de l'intelligence artificielle)
-- Les fichiers `.lua` sont créés automatiquement
+- **Menu 🎭 Acteurs** → **🎭 Exporter Acteur** (cartes d'un acteur spécifique)
+- **Menu 🎭 Acteurs** → **📤 Exporter Tout** (toutes les cartes organisées par acteur)
+- **Menu Fichier** → **Exporter Joueur** (cartes du joueur - ancien système)
+- **Menu Fichier** → **Exporter IA** (cartes de l'intelligence artificielle - ancien système)
+- Les fichiers `.lua` sont créés automatiquement avec le format Love2D complet
+
+### 🎭 **Gérer les Acteurs**
+- **Menu 🎭 Acteurs** → **Gérer les Acteurs**
+- Créez des acteurs personnalisés avec nom, icône et couleur
+- Liez des cartes à des acteurs pour une organisation thématique
+- Exportez les cartes par acteur ou par groupe d'acteurs
+
+### 🃏 **Visualiser le Deck**
+- **Menu Affichage** → **🃏 Voir le deck** (ou Ctrl+V)
+- Visualisez toutes vos cartes en grille avec images
+- **Filtres disponibles** :
+  - Par rareté (Commun, Rare, Épique, Légendaire, Mythique)
+  - Par type (Attaque, Défense, Soutien, Sort, Piège)
+  - **Par acteur** (nouveau !) - Filtrez les cartes d'un acteur spécifique
+- **Options de tri** :
+  - Par rareté, nom, type, puissance
+  - **Par acteur** (nouveau !) - Regroupez les cartes par acteur
+- Combinez les filtres pour des recherches précises
 
 ### 🎨 **Personnaliser l'Apparence**
 - **Menu Affichage** → **Thèmes et Apparence**
@@ -70,6 +90,7 @@
 | `Ctrl+S` | Sauvegarder la carte |
 | `Ctrl+N` | Nouvelle carte |
 | `Ctrl+D` | Dupliquer la carte |
+| `Ctrl+V` | **Visualiser le deck** (nouveau !) |
 | `Del` | Supprimer la carte |
 | `F5` | Actualiser les listes |
 
@@ -109,7 +130,12 @@
 ## 💡 Conseils d'Utilisation
 
 - **Organisez vos cartes** par rareté pour un meilleur workflow
+- **Créez des acteurs personnalisés** pour organiser vos cartes par thème/faction
+- **Utilisez le visualiseur de deck** (Ctrl+V) pour avoir une vue d'ensemble
+- **Filtrez par acteur** dans le visualiseur pour voir les cartes d'un personnage
+- **Combinez les filtres** (rareté + type + acteur) pour des recherches précises
 - **Utilisez les types** pour catégoriser vos cartes (Attaque, Défense, etc.)
+- **Exportez par acteur** pour des fichiers .lua organisés par personnage
 - **Testez régulièrement** vos exports dans votre jeu Love2D
 - **Sauvegardez** votre fichier `cartes.db` pour ne pas perdre vos créations
 
