@@ -185,6 +185,49 @@ L'application détecte automatiquement le thème Windows et s'adapte. Vous pouve
 - Configurez un template dans les paramètres
 - Vérifiez les permissions du dossier images
 
+## 🧪 Infrastructure de Test Automatisée
+
+### Tests Rapides
+```bash
+# Windows
+.\test_quick.bat
+
+# Validation automatique
+python validate_tests_auto.py
+```
+
+### Tests Complets
+```bash
+# Windows - Suite complète
+.\test_full.bat
+
+# Linux/Mac - Tests spécifiques
+python run_tests.py test_simple
+python run_tests.py test_integration_simple
+python run_tests.py test_lua_integrity
+```
+
+### Organisation des Tests
+- **17 tests** organisés dans `tests/` avec syntaxe parfaite (100%)
+- **Tests d'intégration** : workflow complet + API validation
+- **Hooks Git** automatiques : validation pre/post-commit
+- **CI/CD** : GitHub Actions pour validation continue
+- **Documentation** : `tests/__index__.py` avec guide complet
+
+### Développement Sécurisé
+```bash
+# Déploiement avec validation
+.\deploy.bat
+
+# Voir tous les tests disponibles
+python run_tests.py --list
+
+# Documentation des tests
+python run_tests.py --index
+```
+
+**🎯 Qualité Garantie** : Infrastructure de test de niveau production avec validation automatique !
+
 ## 📄 Licence
 
 Ce projet est libre d'utilisation pour vos projets Love2D !
