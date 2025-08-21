@@ -3,7 +3,7 @@
 """
 Export des cartes au format Lua
 """
-from .utils import to_int, lua_escape
+from .utils import to_int, lua_escape, get_card_image_for_export
 from .database import CardRepo
 
 # ======================= Export Lua =======================
@@ -97,7 +97,7 @@ def build_action_lua(action_text: str, param: str) -> str:
 
 def build_card_lua(card) -> str:
     name = lua_escape(card.name)
-    img = lua_escape(card.img)
+    img = lua_escape(get_card_image_for_export(card))  # Utilise l'image fusionnée si disponible
     desc = lua_escape(card.description)
     hero = build_hero_lua(card.hero)
     enemy = build_enemy_lua(card.enemy)

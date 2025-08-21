@@ -115,6 +115,37 @@ def copy_image_to_originals(source_path: str, card_name: str) -> str | None:
         print(f"Erreur lors de la copie d'image : {e}")
         return None
 
+def get_fused_card_image_path(card_name: str) -> str | None:
+    """
+    Retourne le chemin de l'image fusionnée d'une carte si elle existe.
+    Sinon retourne None.
+    """
+    try:
+        subfolders = ensure_images_subfolders()
+        safe_name = sanitize_filename(card_name)
+        fused_image_path = os.path.join(subfolders['cards'], f"{safe_name}.png")
+        
+        if os.path.exists(fused_image_path):
+            return fused_image_path
+        
+        return None
+        
+    except Exception:
+        return None
+
+def get_card_image_for_export(card) -> str:
+    """
+    Retourne le chemin de l'image à utiliser pour l'export Lua.
+    Priorité : image fusionnée > image originale
+    """
+    # Essayer d'abord l'image fusionnée
+    fused_path = get_fused_card_image_path(card.name)
+    if fused_path:
+        return fused_path.replace('\\', '/')
+    
+    # Sinon utiliser l'image originale
+    return card.img if card.img else ''
+
 def create_card_image(card_image_path: str, template_image_path: str, card_name: str) -> str | None:
     """
     Fusionne l'image de la carte avec le template et sauvegarde le résultat.
