@@ -142,14 +142,19 @@ class ActorSelector(ttk.Frame):
 class ActorExportDialog:
     """Dialogue pour exporter les cartes par acteur."""
     
-    def __init__(self, parent, db_path: str):
+    def __init__(self, parent, db_path: str, actor_manager=None, single_actor_mode=False):
         self.parent = parent
         self.db_path = db_path
-        self.actor_manager = ActorManager(db_path)
+        self.actor_manager = actor_manager or ActorManager(db_path)
+        self.single_actor_mode = single_actor_mode
         
         self.window = tk.Toplevel(parent)
-        self.window.title("📤 Export par Acteur")
-        self.window.geometry("600x500")
+        if single_actor_mode:
+            self.window.title("🎭 Exporter un Acteur")
+            self.window.geometry("500x400")
+        else:
+            self.window.title("📤 Export par Acteur")
+            self.window.geometry("600x500")
         self.window.resizable(True, True)
         
         self.build_ui()
@@ -165,14 +170,20 @@ class ActorExportDialog:
         main_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
         
         # Titre
-        title = ttk.Label(main_frame, text="📤 Export des Cartes par Acteur", 
+        if self.single_actor_mode:
+            title_text = "🎭 Export d'un Acteur Spécifique"
+            instructions_text = "Sélectionnez l'acteur dont vous voulez exporter les cartes.\nUn fichier .lua sera créé pour cet acteur."
+        else:
+            title_text = "📤 Export des Cartes par Acteur"
+            instructions_text = "Sélectionnez les acteurs dont vous voulez exporter les cartes.\nUn fichier .lua sera créé pour chaque acteur sélectionné."
+        
+        title = ttk.Label(main_frame, text=title_text, 
                          font=("Segoe UI", 14, "bold"))
         title.pack(pady=(0, 20))
         
         # Instructions
         instructions = ttk.Label(main_frame, 
-                                text="Sélectionnez les acteurs dont vous voulez exporter les cartes.\n"
-                                     "Un fichier .lua sera créé pour chaque acteur sélectionné.",
+                                text=instructions_text,
                                 justify=tk.CENTER, foreground="gray")
         instructions.pack(pady=(0, 15))
         
@@ -205,12 +216,16 @@ class ActorExportDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=tk.X)
         
-        ttk.Button(button_frame, text="✅ Tout Sélectionner", 
-                  command=self.select_all).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="❌ Tout Désélectionner", 
-                  command=self.deselect_all).pack(side=tk.LEFT, padx=(0, 20))
+        if not self.single_actor_mode:
+            ttk.Button(button_frame, text="✅ Tout Sélectionner", 
+                      command=self.select_all).pack(side=tk.LEFT, padx=(0, 10))
+            ttk.Button(button_frame, text="❌ Tout Désélectionner", 
+                      command=self.deselect_all).pack(side=tk.LEFT, padx=(0, 20))
+            export_text = "📤 Exporter Sélection"
+        else:
+            export_text = "🎭 Exporter cet Acteur"
         
-        ttk.Button(button_frame, text="📤 Exporter Sélection", 
+        ttk.Button(button_frame, text=export_text, 
                   command=self.export_selected).pack(side=tk.RIGHT, padx=(10, 0))
         ttk.Button(button_frame, text="🚫 Annuler", 
                   command=self.window.destroy).pack(side=tk.RIGHT)
@@ -251,13 +266,28 @@ class ActorExportDialog:
     def toggle_selection(self, item_id):
         """Bascule la sélection d'un acteur."""
         if item_id in self.selected_exports:
-            current = self.selected_exports[item_id]['selected']
-            self.selected_exports[item_id]['selected'] = not current
-            
-            # Mettre à jour l'affichage
-            values = list(self.actors_tree.item(item_id, 'values'))
-            values[0] = "☑" if not current else "☐"
-            self.actors_tree.item(item_id, values=values)
+            if self.single_actor_mode:
+                # Mode single : désélectionner tous les autres
+                for other_id in self.selected_exports:
+                    self.selected_exports[other_id]['selected'] = False
+                    values = list(self.actors_tree.item(other_id, 'values'))
+                    values[0] = "☐"
+                    self.actors_tree.item(other_id, values=values)
+                
+                # Sélectionner celui-ci
+                self.selected_exports[item_id]['selected'] = True
+                values = list(self.actors_tree.item(item_id, 'values'))
+                values[0] = "☑"
+                self.actors_tree.item(item_id, values=values)
+            else:
+                # Mode multiple : basculer la sélection
+                current = self.selected_exports[item_id]['selected']
+                self.selected_exports[item_id]['selected'] = not current
+                
+                # Mettre à jour l'affichage
+                values = list(self.actors_tree.item(item_id, 'values'))
+                values[0] = "☑" if not current else "☐"
+                self.actors_tree.item(item_id, values=values)
     
     def select_all(self):
         """Sélectionne tous les acteurs."""
@@ -280,43 +310,74 @@ class ActorExportDialog:
         selected = [data for data in self.selected_exports.values() if data['selected']]
         
         if not selected:
-            messagebox.showwarning("Attention", "Veuillez sélectionner au moins un acteur à exporter.")
+            if self.single_actor_mode:
+                messagebox.showwarning("Attention", "Veuillez sélectionner un acteur à exporter.")
+            else:
+                messagebox.showwarning("Attention", "Veuillez sélectionner au moins un acteur à exporter.")
             return
         
         from tkinter import filedialog
         from lib.actors import export_lua_for_actor
         from lib.database import CardRepo
         
-        # Demander le dossier de destination
-        folder = filedialog.askdirectory(title="Choisir le dossier de destination")
-        if not folder:
-            return
-        
         try:
             repo = CardRepo(self.db_path)
-            exported_files = []
             
-            for data in selected:
+            if self.single_actor_mode:
+                # Mode single : demander le nom du fichier
+                data = selected[0]
                 actor = data['actor']
-                actor_id = data['actor_id']
-                
-                # Nom de fichier sécurisé
                 safe_name = actor['name'].lower().replace(' ', '_').replace('/', '_')
-                filename = f"cards_{safe_name}.lua"
-                filepath = f"{folder}/{filename}"
+                initial_filename = f"cards_{safe_name}.lua"
                 
-                # Export
-                export_lua_for_actor(repo, self.actor_manager, actor_id, filepath)
-                exported_files.append(f"{actor['icon']} {actor['name']} → {filename}")
-            
-            # Message de succès
-            files_text = "\n".join(exported_files)
-            messagebox.showinfo("Export Réussi", 
-                              f"Export terminé avec succès !\n\n"
-                              f"Fichiers créés :\n{files_text}\n\n"
-                              f"Dossier : {folder}")
-            
-            self.window.destroy()
+                filepath = filedialog.asksaveasfilename(
+                    title=f"Exporter les cartes de {actor['name']}",
+                    initialfile=initial_filename,
+                    defaultextension='.lua',
+                    filetypes=[('Fichier Lua', '*.lua')]
+                )
+                
+                if not filepath:
+                    return
+                
+                # Effectuer l'export
+                export_lua_for_actor(repo, self.actor_manager, data['actor_id'], filepath)
+                messagebox.showinfo("Export Réussi", 
+                                  f"Export terminé avec succès !\n\n"
+                                  f"Fichier : {actor['icon']} {actor['name']}\n"
+                                  f"Destination : {filepath}")
+                
+                self.window.destroy()
+                
+            else:
+                # Mode multiple : demander le dossier de destination
+                folder = filedialog.askdirectory(title="Choisir le dossier de destination")
+                if not folder:
+                    return
+                
+                exported_files = []
+                
+                for data in selected:
+                    actor = data['actor']
+                    actor_id = data['actor_id']
+                    
+                    # Nom de fichier sécurisé
+                    safe_name = actor['name'].lower().replace(' ', '_').replace('/', '_')
+                    filename = f"cards_{safe_name}.lua"
+                    filepath = f"{folder}/{filename}"
+                    
+                    # Export
+                    export_lua_for_actor(repo, self.actor_manager, actor_id, filepath)
+                    exported_files.append(f"{actor['icon']} {actor['name']} → {filename}")
+                
+                # Message de succès
+                files_text = "\n".join(exported_files)
+                messagebox.showinfo("Export Réussi", 
+                                  f"Export terminé avec succès !\n\n"
+                                  f"Fichiers créés :\n{files_text}\n\n"
+                                  f"Dossier : {folder}")
+                
+                self.window.destroy()
             
         except Exception as e:
             messagebox.showerror("Erreur", f"Erreur lors de l'export :\n{e}")

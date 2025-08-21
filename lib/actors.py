@@ -306,6 +306,8 @@ def export_lua_for_actor(card_repo, actor_manager: ActorManager, actor_id: int, 
         actor_id: ID de l'acteur
         filename: Nom du fichier (optionnel, généré automatiquement si non fourni)
     """
+    from .lua_export import LUA_HEADER, LUA_FOOTER, build_card_lua
+    
     actor = actor_manager.get_actor_by_id(actor_id)
     if not actor:
         raise ValueError(f"Acteur avec ID {actor_id} introuvable")
@@ -317,13 +319,76 @@ def export_lua_for_actor(card_repo, actor_manager: ActorManager, actor_id: int, 
         safe_name = actor['name'].lower().replace(' ', '_').replace("'", "")
         filename = f"cards_{safe_name}.lua"
     
-    # Créer le contenu Lua directement
-    content = generate_lua_content(cards)
+    # Utiliser le même format que l'export standard Lua
     with open(filename, 'w', encoding='utf-8') as f:
-        f.write(content)
+        f.write(LUA_HEADER)
+        for i, card in enumerate(cards, start=1):
+            f.write(f"    --[[ CARTE {i} - {actor['icon']} {actor['name']} ]]\n")
+            f.write(build_card_lua(card))
+            f.write(",\n\n" if i < len(cards) else "\n")
+        f.write(LUA_FOOTER)
     
     print(f"📤 Export {actor['icon']} {actor['name']} : {len(cards)} cartes → {filename}")
     return filename
+
+
+def export_all_actors_lua(card_repo, actor_manager: ActorManager, filename: str = None):
+    """
+    Exporte toutes les cartes de tous les acteurs vers un fichier Lua unique.
+    
+    Args:
+        card_repo: Instance de CardRepo
+        actor_manager: Instance d'ActorManager
+        filename: Nom du fichier (optionnel, par défaut 'cards_all_actors.lua')
+    """
+    if filename is None:
+        filename = "cards_all_actors.lua"
+    
+    # Récupérer tous les acteurs
+    actors = actor_manager.list_actors()
+    
+    if not actors:
+        raise ValueError("Aucun acteur trouvé")
+    
+    # Collecter toutes les cartes organisées par acteur
+    all_sections = []
+    total_cards = 0
+    
+    for actor in actors:
+        cards = actor_manager.get_actor_cards(actor['id'])
+        if cards:
+            # Créer une section pour cet acteur
+            section_comment = f"    --[[ ACTEUR: {actor['icon']} {actor['name']} - {len(cards)} cartes ]]"
+            card_contents = []
+            
+            for i, card in enumerate(cards, start=1):
+                card_lua = build_card_lua_content(card)
+                card_contents.append(f"    --[[ CARTE {i} ]]\n{card_lua}")
+            
+            if card_contents:
+                all_sections.append(f"{section_comment}\n" + ",\n\n".join(card_contents))
+                total_cards += len(cards)
+    
+    if not all_sections:
+        raise ValueError("Aucune carte trouvée pour aucun acteur")
+    
+    # Assembler le contenu final
+    content = "local Cards = {\n\n"
+    content += ",\n\n".join(all_sections)
+    content += "\n\n}\n\nreturn Cards\n"
+    
+    # Écrire le fichier
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(content)
+    
+    print(f"📤 Export de tous les acteurs : {len(actors)} acteurs, {total_cards} cartes → {filename}")
+    return filename
+
+
+def build_card_lua_content(card):
+    """Construit le contenu Lua pour une carte individuelle."""
+    from .lua_export import build_card_lua
+    return build_card_lua(card)
 
 
 def demo_actors_system():
