@@ -1,5 +1,55 @@
 # 📝 Notes de Version - Éditeur de Cartes Love2D
 
+## 🔧 Version 2.3.1 - Correction Critique Templates (21 août 2025)
+
+### ✨ **CORRECTION MAJEURE : Superposition de Templates**
+
+#### 🐛 **Problème Résolu**
+- **Bug critique** : Changement de rareté multiple créait une superposition de templates
+- **Cause identifiée** : Le système utilisait l'image déjà fusionnée comme source pour la nouvelle fusion
+- **Impact** : Templates s'accumulaient lors de modifications successives de rareté
+
+#### 🔧 **Solution Implémentée**
+- **Séparation image source/affichage** : Nouveau champ `original_img` dans la base
+- **Fusion corrigée** : `generate_card_image()` utilise toujours l'image originale
+- **Migration automatique** : Cartes existantes mises à jour transparente
+- **Tests complets** : Validation du scénario avec changements multiples
+
+### 🔄 **Système de Migration Automatique (Nouveau !)**
+
+#### 📊 **Migration Progressive v1 → v5**
+- **Sauvegarde automatique** : Backup avec timestamp avant migration
+- **Migration par étapes** : v1→v2→v3→v4→v5 sécurisée
+- **Vérification d'intégrité** : Validation automatique de la base
+- **Support chemins absolus** : Gestion complète des chemins personnalisés
+
+#### 🛡️ **Protection Utilisateur GitHub**
+- **Compatibilité totale** : Utilisateurs existants préservés lors des mises à jour
+- **Migration transparente** : Aucune action requise de l'utilisateur
+- **Données préservées** : Toutes les cartes existantes conservées
+- **Base protégée** : Exclusion automatique du versioning Git
+
+### 🔧 **Améliorations Techniques**
+
+#### **Code Refactorisé**
+- **`lib/database.py`** :
+  - Ajout du champ `original_img` avec fallback intelligent
+  - Gestion de la compatibilité ascendante
+- **`lib/ui_components.py`** :
+  - `generate_card_image()` corrigé pour utiliser `original_img`
+  - `load_card()` et `_browse_img()` préservent l'image originale
+- **`lib/database_migration.py`** (Nouveau) :
+  - Système de migration robuste et progressif
+  - Gestion des erreurs avec rollback
+  - Import automatique des templates configurés
+
+#### **Tests de Validation**
+- **`test_github_migration.py`** : Simulation utilisateur GitHub
+- **`test_scenario_github.py`** : Test scénario réel complet
+- **`verify_db_protection.py`** : Validation exclusion Git
+
+---
+
 ## 🆕 Version 2.3.0 - Système d'Acteurs et Tri par Acteur (21 août 2025)
 
 ### 🎭 **NOUVELLES FONCTIONNALITÉS MAJEURES**

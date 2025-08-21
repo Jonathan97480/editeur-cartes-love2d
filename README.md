@@ -2,6 +2,26 @@
 
 Éditeur moderne d'interface française pour créer et gérer des cartes de jeu Love2D avec support des thèmes Windows 11.
 
+## 🚀 Dernières Améliorations (v2.1)
+
+### ✨ **Correction Majeure : Superposition de Templates**
+- **Problème résolu** : Plus de superposition lors des changements de rareté multiples
+- **Système perfectionné** : Séparation complète entre image source et image d'affichage
+- **Migration automatique** : Cartes existantes mises à jour transparente
+
+### 🔄 **Système de Migration Automatique**
+- **Migration progressive** : Mise à jour par étapes de v1 à v5
+- **Sauvegarde automatique** : Protection avant chaque migration
+- **Compatibilité GitHub** : Utilisateurs existants préservés lors des mises à jour
+- **Support chemins absolus** : Gestion complète des chemins personnalisés
+
+### 🛡️ **Robustesse Améliorée**
+- **Base de données protégée** : Exclusion automatique du versioning Git
+- **Intégrité garantie** : Vérification automatique de la base
+- **Tests complets** : Validation du scénario utilisateur GitHub
+
+---
+
 ## ✨ Fonctionnalités
 
 ### � **Système d'Acteurs (Nouveau !)**
@@ -30,9 +50,18 @@
 - Édition complète des effets héros et ennemis
 
 ### 🖼️ **Système d'Images Avancé**
-- Fusion automatique d'images avec templates
-- Génération d'images de cartes personnalisées
-- Configuration flexible des templates
+- **Fusion automatique d'images avec templates** (✨ Amélioré !)
+- **Séparation image source/affichage** : Évite les superpositions de templates
+- **Génération d'images de cartes personnalisées**
+- **Configuration flexible des templates**
+- **Migration automatique** : Mise à jour transparente des cartes existantes
+
+### 🔄 **Système de Migration Automatique (Nouveau !)**
+- **Migration transparente** : Mise à jour automatique de la base de données
+- **Sauvegarde automatique** : Protection des données avant migration
+- **Compatibilité totale** : Préservation des cartes existantes
+- **Gestion des chemins absolus** : Support complet des chemins utilisateur
+- **Migration progressive** : Mise à jour par étapes sécurisées
 
 ### 📤 **Export Love2D**
 - **Export par acteur** : Fichiers .lua séparés par acteur/faction
@@ -101,6 +130,14 @@ python test_compat.py --compat    # Force le mode compatibilité
 1. **Configurer les thèmes** : Menu `Affichage > Thèmes et Apparence`
 2. **Configurer les images** : Menu `Réglages > Configuration des images`
 3. **Créer votre première carte** avec le formulaire à gauche
+4. **Migration automatique** : Si vous avez des cartes existantes, elles seront automatiquement mises à jour
+
+### 🔄 Migration et Mise à Jour
+- **Automatique** : La base de données se met à jour automatiquement
+- **Sauvegarde** : Backup automatique avant chaque migration
+- **Préservation** : Toutes vos cartes existantes sont conservées
+- **Chemins absolus** : Support complet des images avec chemins personnalisés
+- **Transparente** : Aucune action requise de votre part
 
 ### Gestion des Thèmes
 - **Automatique** : L'application suit le thème Windows
@@ -136,6 +173,7 @@ python test_compat.py --compat    # Force le mode compatibilité
 │   ├── 📄 __init__.py     # Package Python
 │   ├── 📄 config.py       # Configuration
 │   ├── 📄 database.py     # Gestion base de données
+│   ├── 📄 database_migration.py # Système de migration (Nouveau !)
 │   ├── 📄 themes.py       # Système de thèmes
 │   ├── 📄 theme_settings.py # Interface thèmes
 │   ├── 📄 main_app.py     # Application principale
@@ -199,6 +237,17 @@ L'application détecte automatiquement le thème Windows et s'adapte. Vous pouve
 - Vérifiez que Pillow est installé
 - Configurez un template dans les paramètres
 - Vérifiez les permissions du dossier images
+
+### Problème de superposition de templates (Résolu !)
+- **Automatiquement corrigé** : Les changements de rareté ne créent plus de superposition
+- **Migration transparente** : Cartes existantes automatiquement mises à jour
+- **Système perfectionné** : Séparation image source/affichage
+
+### Mise à jour depuis GitHub
+- **Migration automatique** : Vos cartes existantes sont préservées
+- **Compatibilité totale** : Support des chemins absolus existants
+- **Sauvegarde automatique** : Protection avant toute modification
+- **Aucune action requise** : Tout fonctionne automatiquement
 
 ## 🧪 Infrastructure de Test Automatisée
 

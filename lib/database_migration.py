@@ -12,7 +12,7 @@ from .config import RARITY_VALUES
 # ======================= Constantes =======================
 
 # Version actuelle de la base de données
-CURRENT_DB_VERSION = 4
+CURRENT_DB_VERSION = 5
 
 # Schéma requis pour la table cards
 REQUIRED_SCHEMA = {
@@ -20,6 +20,7 @@ REQUIRED_SCHEMA = {
     'side': 'TEXT NOT NULL CHECK(side IN (\'joueur\',\'ia\'))',
     'name': 'TEXT NOT NULL',
     'img': 'TEXT NOT NULL',
+    'original_img': 'TEXT NOT NULL DEFAULT \'\'',
     'description': 'TEXT NOT NULL',
     'powerblow': 'INTEGER NOT NULL DEFAULT 0',
     'rarity': 'TEXT NOT NULL DEFAULT \'commun\'',
@@ -309,6 +310,41 @@ def migrate_v3_to_v4(db_path: str) -> None:
         import traceback
         traceback.print_exc()
 
+def migrate_v4_to_v5(db_path: str) -> None:
+    """Migration de la version 4 à la version 5 - Ajout du champ original_img."""
+    print("🔄 Migration v4 → v5 : Ajout du champ original_img...")
+    
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+    
+    try:
+        # Vérifier si la colonne original_img existe déjà
+        cur.execute("PRAGMA table_info(cards)")
+        existing_columns = [row[1] for row in cur.fetchall()]
+        
+        if 'original_img' not in existing_columns:
+            # Ajouter la colonne original_img
+            cur.execute("ALTER TABLE cards ADD COLUMN original_img TEXT NOT NULL DEFAULT ''")
+            
+            # Initialiser original_img avec la valeur actuelle de img pour les cartes existantes
+            cur.execute("UPDATE cards SET original_img = img WHERE original_img = ''")
+            
+            # Compter les cartes mises à jour
+            cur.execute("SELECT COUNT(*) FROM cards WHERE original_img != ''")
+            updated_count = cur.fetchone()[0]
+            
+            con.commit()
+            print(f"   ✅ Colonne original_img ajoutée et {updated_count} cartes initialisées")
+        else:
+            print("   ℹ️  Colonne original_img déjà présente")
+            
+    except Exception as e:
+        con.rollback()
+        print(f"   ❌ Erreur lors de l'ajout de original_img : {e}")
+        raise
+    finally:
+        con.close()
+
 def verify_database_integrity(db_path: str) -> bool:
     """Vérifie l'intégrité de la base de données."""
     try:
@@ -373,6 +409,10 @@ def migrate_database(db_path: str) -> bool:
         if current_version < 4:
             migrate_v3_to_v4(db_path)
             set_db_version(db_path, 4)
+        
+        if current_version < 5:
+            migrate_v4_to_v5(db_path)
+            set_db_version(db_path, 5)
         
         print(f"✅ Migration terminée ! Version {current_version} → {CURRENT_DB_VERSION}")
         

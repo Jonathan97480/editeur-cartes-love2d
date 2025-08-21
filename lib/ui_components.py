@@ -10,7 +10,7 @@ from .config import (APP_TITLE, RARITY_LABELS, RARITY_FROM_LABEL,
                      TYPE_LABELS, TYPE_FROM_LABEL, TYPE_ORDER, APP_SETTINGS)
 from .database import Card, CardRepo
 from .lua_export import export_lua
-from .utils import to_int, create_card_image
+from .utils import to_int, create_card_image, sanitize_filename
 
 def get_available_actors():
     """Récupère la liste des acteurs disponibles pour les interfaces."""
@@ -35,6 +35,7 @@ class CardForm(ttk.Frame):
         self.on_saved = on_saved
         self.current_id: int | None = None
         self.generated_image_path: str | None = None  # Chemin de l'image générée
+        self.previous_rarity: str | None = None  # Pour tracker les changements de rareté
         self._build_ui()
 
     # ---------- Build Tabs ----------
@@ -397,12 +398,16 @@ class CardForm(ttk.Frame):
                 # Convertir en chemin relatif pour la sauvegarde
                 relative_path = convert_to_relative_path(local_image_path)
                 self.img_var.set(relative_path)
+                # Stocker comme image originale pour les futures fusions
+                self._original_image_path = relative_path
                 messagebox.showinfo("Image copiée", 
                     f"Image copiée dans :\n{local_image_path}\n\nChemin sauvegardé : {relative_path}")
             else:
                 # En cas d'échec de copie, essayer de convertir le chemin original en relatif
                 relative_path = convert_to_relative_path(path)
                 self.img_var.set(relative_path)
+                # Stocker comme image originale pour les futures fusions
+                self._original_image_path = relative_path
                 messagebox.showwarning("Copie échouée", 
                     f"La copie de l'image a échoué. Chemin sauvegardé : {relative_path}")
             
@@ -440,6 +445,8 @@ class CardForm(ttk.Frame):
     def clear_form(self):
         self.current_id = None
         self.generated_image_path = None  # Réinitialiser l'image générée
+        self.previous_rarity = None  # Réinitialiser le tracker de rareté
+        self._original_image_path = None  # Réinitialiser l'image originale
         
         # Réinitialiser la sélection des acteurs
         self.actors_listbox.selection_clear(0, 'end')
@@ -460,6 +467,7 @@ class CardForm(ttk.Frame):
         self.desc_txt.delete('1.0', 'end')
         self.power_var.set(0)
         self.rarity_var.set('Commun')
+        self.previous_rarity = 'Commun'  # Initialiser le tracker
         
         # Tous les champs héros
         self.h_heal.set(0); self.h_shield.set(0); self.h_epine.set(0)
@@ -524,9 +532,17 @@ class CardForm(ttk.Frame):
         
         self.name_var.set(card.name)
         self.img_var.set(card.img)
+        
+        # Stocker l'image originale pour la fusion
+        self._original_image_path = getattr(card, 'original_img', card.img)
+        
         self.desc_txt.delete('1.0', 'end'); self.desc_txt.insert('1.0', card.description)
         self.power_var.set(int(card.powerblow))
-        self.rarity_var.set(RARITY_LABELS.get(getattr(card, 'rarity', 'commun'), 'Commun'))
+        
+        # Charger la rareté et tracker l'ancienne valeur
+        current_rarity = RARITY_LABELS.get(getattr(card, 'rarity', 'commun'), 'Commun')
+        self.rarity_var.set(current_rarity)
+        self.previous_rarity = current_rarity  # Tracker pour détecter les changements
         
         # Tous les champs héros
         self.h_heal.set(to_int(card.hero.get('heal', 0)))
@@ -585,6 +601,8 @@ class CardForm(ttk.Frame):
             
         c.name = self.name_var.get().strip()
         c.img = self.img_var.get().strip()
+        # Gérer l'image originale
+        c.original_img = getattr(self, '_original_image_path', c.img)
         c.description = self.desc_txt.get('1.0', 'end').rstrip('\n').strip()
         c.powerblow = int(self.power_var.get())
         c.rarity = RARITY_FROM_LABEL.get(self.rarity_var.get(), 'commun')
@@ -691,7 +709,16 @@ class CardForm(ttk.Frame):
         # Gérer la liaison avec l'acteur sélectionné
         self._update_actor_linkage(c.id if c.id else self.current_id)
         
+        # Détecter si la rareté a changé
+        current_rarity = self.rarity_var.get()
+        rarity_changed = (self.previous_rarity is not None and 
+                         self.previous_rarity != current_rarity)
+        
+        if rarity_changed:
+            print(f"🔄 Changement de rareté détecté : {self.previous_rarity} → {current_rarity}")
+        
         # Génère l'image fusionnée si possible
+        old_image_path = c.img  # Sauvegarder l'ancien chemin pour nettoyage si nécessaire
         generated_image = self.generate_card_image()
         if generated_image:
             self.generated_image_path = generated_image
@@ -700,6 +727,34 @@ class CardForm(ttk.Frame):
             self.repo.update(c)
             # Actualiser l'aperçu pour montrer l'image générée
             self._update_preview()
+            
+            # Valider que l'image a été correctement mise à jour après changement de rareté
+            if rarity_changed:
+                if self.validate_image_after_rarity_change(
+                    self.previous_rarity or 'Commun', 
+                    current_rarity, 
+                    c.name
+                ):
+                    print(f"✅ Image fusionnée mise à jour avec succès pour la nouvelle rareté")
+                else:
+                    print(f"⚠️ Problème détecté lors de la mise à jour de l'image fusionnée")
+            
+        elif old_image_path and old_image_path.startswith('images/cards/'):
+            # Si la génération échoue mais qu'on avait une image fusionnée avant,
+            # on garde l'ancienne référence mais on avertit l'utilisateur
+            print(f"⚠️ Impossible de générer la nouvelle image fusionnée pour la rareté {current_rarity}")
+            print(f"   L'ancienne image fusionnée est conservée : {old_image_path}")
+            
+            if rarity_changed:
+                messagebox.showwarning(
+                    APP_TITLE, 
+                    f"Attention !\n\nLa rareté a été changée de '{self.previous_rarity}' vers '{current_rarity}', "
+                    f"mais l'image fusionnée n'a pas pu être mise à jour.\n\n"
+                    f"Vérifiez la configuration des templates de rareté dans les paramètres."
+                )
+        
+        # Mettre à jour le tracker de rareté
+        self.previous_rarity = current_rarity
         
         if callable(self.on_saved):
             self.on_saved()
@@ -723,11 +778,13 @@ class CardForm(ttk.Frame):
     # ---------- Card Image Generation ----------
     def generate_card_image(self):
         """Génère l'image fusionnée de la carte selon sa rareté."""
-        if not self.img_var.get().strip():
+        # Utiliser l'image originale pour la fusion, pas l'image actuelle qui peut être déjà fusionnée
+        original_image_path = getattr(self, '_original_image_path', None) or self.img_var.get().strip()
+        
+        if not original_image_path:
             return None
         
         card_name = self.name_var.get().strip() or "carte_sans_nom"
-        card_image_path = self.img_var.get().strip()
         
         # Récupérer la rareté de la carte
         rarity_label = self.rarity_var.get()
@@ -744,9 +801,37 @@ class CardForm(ttk.Frame):
         
         # Si toujours pas de template, retourner None
         if not template_path:
+            print(f"⚠️ Aucun template trouvé pour la rareté '{rarity_label}' ({rarity_key})")
             return None
         
-        return create_card_image(card_image_path, template_path, card_name)
+        print(f"🎨 Génération d'image fusionnée pour '{card_name}' (rareté: {rarity_label})")
+        print(f"   📁 Image originale : {original_image_path}")
+        print(f"   🎨 Template : {template_path}")
+        
+        return create_card_image(original_image_path, template_path, card_name)
+
+    def validate_image_after_rarity_change(self, old_rarity: str, new_rarity: str, card_name: str) -> bool:
+        """Valide que l'image a été correctement mise à jour après un changement de rareté."""
+        if old_rarity == new_rarity:
+            return True  # Pas de changement nécessaire
+        
+        expected_path = f"images/cards/{sanitize_filename(card_name)}.png"
+        
+        if not os.path.exists(expected_path):
+            print(f"⚠️ Image attendue manquante après changement de rareté : {expected_path}")
+            return False
+        
+        # Vérifier que l'image a été modifiée récemment (dans les 10 dernières secondes)
+        import time
+        file_mtime = os.path.getmtime(expected_path)
+        time_diff = time.time() - file_mtime
+        
+        if time_diff > 10:  # Plus de 10 secondes
+            print(f"⚠️ L'image n'a pas été mise à jour récemment (modifiée il y a {time_diff:.1f}s)")
+            return False
+        
+        print(f"✅ Image validée pour la nouvelle rareté '{new_rarity}'")
+        return True
 
 
 class CardList(ttk.Frame):

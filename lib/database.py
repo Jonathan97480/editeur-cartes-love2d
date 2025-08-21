@@ -15,7 +15,8 @@ class Card:
         self.id: int | None = None
         self.side = 'joueur'  # 'joueur' | 'ia'
         self.name = ''
-        self.img = ''
+        self.img = ''  # Image fusionnée (pour affichage)
+        self.original_img = ''  # Image originale (pour fusion)
         self.description = ''
         self.powerblow = 0
         self.rarity = 'commun'
@@ -60,6 +61,11 @@ class Card:
             self.side = row['side']
             self.name = row['name']
             self.img = row['img']
+            # Gestion du champ original_img avec fallback
+            if 'original_img' in row.keys() and row['original_img']:
+                self.original_img = row['original_img']
+            else:
+                self.original_img = row['img']  # Fallback vers img si pas de original_img
             self.description = row['description']
             self.powerblow = row['powerblow']
             self.rarity = row['rarity']
@@ -95,6 +101,7 @@ class Card:
             self.side,
             self.name,
             self.img,
+            self.original_img,
             self.description,
             int(self.powerblow),
             self.rarity,
@@ -149,11 +156,11 @@ class CardRepo:
         cur.execute(
             """
             INSERT INTO cards (
-                side, name, img, description, powerblow,
+                side, name, img, original_img, description, powerblow,
                 rarity, types_json,
                 hero_json, enemy_json, action, action_param,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             card.to_db_tuple(),
         )
@@ -168,7 +175,7 @@ class CardRepo:
         cur.execute(
             """
             UPDATE cards SET
-              side=?, name=?, img=?, description=?, powerblow=?,
+              side=?, name=?, img=?, original_img=?, description=?, powerblow=?,
               rarity=?, types_json=?,
               hero_json=?, enemy_json=?, action=?, action_param=?,
               updated_at=?
@@ -178,6 +185,7 @@ class CardRepo:
                 card.side,
                 card.name,
                 card.img,
+                card.original_img,
                 card.description,
                 int(card.powerblow),
                 card.rarity,
@@ -239,5 +247,10 @@ def ensure_db_legacy(db_path: str) -> None:
         cur.execute("ALTER TABLE cards ADD COLUMN rarity TEXT NOT NULL DEFAULT 'commun'")
     if 'types_json' not in cols:
         cur.execute("ALTER TABLE cards ADD COLUMN types_json TEXT NOT NULL DEFAULT '[]'")
+    if 'original_img' not in cols:
+        cur.execute("ALTER TABLE cards ADD COLUMN original_img TEXT NOT NULL DEFAULT ''")
+        # Initialiser original_img avec la valeur actuelle de img pour les cartes existantes
+        cur.execute("UPDATE cards SET original_img = img WHERE original_img = ''")
+        print("✅ Migration: Ajout du champ original_img et initialisation avec les images actuelles")
     con.commit()
     con.close()

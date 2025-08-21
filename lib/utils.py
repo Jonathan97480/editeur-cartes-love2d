@@ -6,6 +6,7 @@ Utilitaires pour l'éditeur de cartes Love2D
 import os
 import re
 import sys
+from datetime import datetime
 from tkinter import messagebox
 from .config import APP_SETTINGS, IMAGES_FOLDER, APP_TITLE
 
@@ -385,6 +386,13 @@ def create_card_image(card_image_path: str, template_image_path: str, card_name:
         subfolders = ensure_images_subfolders()
         filename = f"{sanitize_filename(card_name)}.png"
         output_path = os.path.join(subfolders['cards'], filename)
+        
+        # Vérifier si une image existe déjà et noter son remplacement
+        if os.path.exists(output_path):
+            old_size = os.path.getsize(output_path)
+            old_time = os.path.getmtime(output_path)
+            print(f"🔄 Remplacement de l'image existante :")
+            print(f"   Ancienne : {old_size} bytes (modifiée le {datetime.fromtimestamp(old_time)})")
         
         print(f"💾 Sauvegarde vers {output_path}...")
         
