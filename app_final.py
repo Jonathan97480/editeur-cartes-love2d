@@ -182,8 +182,17 @@ class FinalMainApp(tk.Tk):
             ttk.Button(toolbar, text="Export Joueur", command=self.export_player, width=12).pack(side='left', padx=2, pady=2)
             ttk.Button(toolbar, text="Export IA", command=self.export_ia, width=10).pack(side='left', padx=2, pady=2)
     
-    def load_card(self, card):
+    def load_card(self, card_id):
         """Charge une carte dans le formulaire."""
+        # Si card_id est déjà un objet Card, l'utiliser directement
+        if hasattr(card_id, 'id'):
+            card = card_id
+        else:
+            # Sinon, récupérer la carte depuis la base de données
+            card = self.repo.get(card_id)
+            if not card:
+                return  # Carte non trouvée
+        
         self.form.load_card(card)
     
     def refresh_all_tabs(self):
