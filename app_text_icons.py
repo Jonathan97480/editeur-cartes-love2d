@@ -279,12 +279,29 @@ Légende des icônes :
         messagebox.showinfo("À propos", about_text)
     
     def show_guide(self):
+        """Ouvre le guide d'utilisation."""
         try:
-            guide_path = Path(__file__).parent / "GUIDE.md"
-            if guide_path.exists():
+            # Essayer plusieurs emplacements possibles pour le fichier GUIDE.md
+            possible_paths = [
+                Path(__file__).parent / "GUIDE.md",  # Même dossier que le script
+                Path.cwd() / "GUIDE.md",             # Répertoire de travail actuel
+                Path("GUIDE.md")                     # Répertoire courant relatif
+            ]
+            
+            guide_path = None
+            for path in possible_paths:
+                if path.exists():
+                    guide_path = path
+                    break
+            
+            if guide_path:
+                print(f"[INFO] Ouverture du guide: {guide_path}")
                 os.startfile(str(guide_path))
             else:
-                messagebox.showinfo("Guide", "Le fichier GUIDE.md n'a pas été trouvé.")
+                # Afficher où on a cherché pour aider au debug
+                search_locations = [str(p) for p in possible_paths]
+                message = f"Le fichier GUIDE.md n'a pas été trouvé.\n\nEmplacements vérifiés:\n" + "\n".join(search_locations)
+                messagebox.showinfo("Guide non trouvé", message)
         except Exception as e:
             messagebox.showerror("Erreur", f"Impossible d'ouvrir le guide: {e}")
 
