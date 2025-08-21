@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from pathlib import Path
 import os
+import shutil
 
 # Import des modules de l'application
 from lib.database import CardRepo, ensure_db
@@ -107,6 +108,7 @@ class FinalMainApp(tk.Tk):
         file_menu.add_separator()
         file_menu.add_command(label="📤 Exporter Joueur", command=self.export_player)
         file_menu.add_command(label="📤 Exporter IA", command=self.export_ia)
+        file_menu.add_command(label="🎭 Export par Acteur...", command=self.export_by_actor)
         file_menu.add_separator()
         file_menu.add_command(label="❌ Quitter", command=self.destroy, accelerator="Ctrl+Q")
         menubar.add_cascade(label="📁 Fichier", menu=file_menu)
@@ -121,8 +123,16 @@ class FinalMainApp(tk.Tk):
         view_menu = tk.Menu(menubar, tearoff=0)
         view_menu.add_command(label="🔄 Actualiser", command=self.refresh_all_tabs, accelerator="F5")
         view_menu.add_separator()
-        view_menu.add_command(label="🃏 Voir le deck", command=self.show_deck_viewer, accelerator="Ctrl+V")
+        view_menu.add_command(label="🃏 Voir le deck", command=self.show_deck_viewer, accelerator="Ctrl+Shift+D")
         menubar.add_cascade(label="👁️ Affichage", menu=view_menu)
+        
+        # Menu Acteurs (NOUVEAU)
+        actors_menu = tk.Menu(menubar, tearoff=0)
+        actors_menu.add_command(label="🎭 Gérer les Acteurs...", command=self.manage_actors)
+        actors_menu.add_command(label="📤 Export par Acteur...", command=self.export_by_actor)
+        actors_menu.add_separator()
+        actors_menu.add_command(label="🔄 Migration vers Acteurs...", command=self.demo_actors)
+        menubar.add_cascade(label="🎭 Acteurs", menu=actors_menu)
         
         # Menu Réglages
         settings_menu = tk.Menu(menubar, tearoff=0)
@@ -131,6 +141,8 @@ class FinalMainApp(tk.Tk):
         settings_menu.add_command(label="📂 Ouvrir dossier images", command=self.open_images_folder)
         settings_menu.add_command(label="🗂️ Organiser les images...", command=self.migrate_images)
         settings_menu.add_command(label="📋 Organiser les templates...", command=self.organize_templates)
+        settings_menu.add_separator()
+        settings_menu.add_command(label="🗑️ Clear Data (Vider tout)", command=self.clear_all_data)
         menubar.add_cascade(label="🔧 Réglages", menu=settings_menu)
         
         # Menu Aide
@@ -145,7 +157,7 @@ class FinalMainApp(tk.Tk):
         self.bind_all("<Control-n>", lambda e: self.new_card())
         self.bind_all("<Control-s>", lambda e: self.save_card())
         self.bind_all("<Control-d>", lambda e: self.duplicate_card())
-        self.bind_all("<Control-v>", lambda e: self.show_deck_viewer())
+        self.bind_all("<Control-Shift-d>", lambda e: self.show_deck_viewer())
         self.bind_all("<Control-q>", lambda e: self.destroy())
         self.bind_all("<Delete>", lambda e: self.delete_card())
         self.bind_all("<F5>", lambda e: self.refresh_all_tabs())
@@ -404,6 +416,106 @@ Astuce :
 """
         messagebox.showinfo("À propos", about_text)
     
+    def clear_all_data(self):
+        """Vide complètement la base de données et supprime toutes les images."""
+        # Confirmation en plusieurs étapes pour éviter les accidents
+        warning_text = """⚠️ ATTENTION - SUPPRESSION COMPLÈTE ⚠️
+
+Cette action va DÉFINITIVEMENT supprimer :
+• TOUTES les cartes de la base de données
+• TOUS les acteurs et leurs liaisons
+• TOUTES les images dans le dossier images/
+• TOUTES les images générées et templates
+
+Cette action est IRRÉVERSIBLE !
+
+Êtes-vous ABSOLUMENT sûr de vouloir continuer ?"""
+        
+        if not messagebox.askyesno("⚠️ Confirmation - Clear Data", warning_text, icon='warning'):
+            return
+        
+        # Seconde confirmation plus stricte
+        final_text = """🚨 DERNIÈRE CONFIRMATION 🚨
+
+Vous allez perdre TOUTES vos données !
+
+Pour confirmer, tapez exactement : SUPPRIMER TOUT
+
+Cette action ne peut pas être annulée."""
+        
+        from tkinter import simpledialog
+        confirmation = simpledialog.askstring(
+            "🚨 Confirmation finale", 
+            final_text,
+            show='*'  # Masquer le texte
+        )
+        
+        if confirmation != "SUPPRIMER TOUT":
+            messagebox.showinfo("Annulé", "Suppression annulée.")
+            return
+        
+        try:
+            # Supprimer toutes les images
+            images_folder = Path("images")
+            if images_folder.exists():
+                import shutil
+                deleted_files = []
+                for item in images_folder.rglob("*"):
+                    if item.is_file():
+                        deleted_files.append(item)
+                        item.unlink()
+                    elif item.is_dir() and not any(item.iterdir()):
+                        item.rmdir()
+                
+                # Recréer le dossier vide
+                if not images_folder.exists():
+                    images_folder.mkdir(exist_ok=True)
+                
+                print(f"🗑️ {len(deleted_files)} fichiers supprimés du dossier images/")
+            
+            # Vider complètement la base de données
+            import sqlite3
+            with sqlite3.connect(self.repo.db_path) as conn:
+                # Obtenir toutes les tables
+                cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+                tables = [row[0] for row in cursor.fetchall()]
+                
+                # Supprimer toutes les données de toutes les tables
+                for table in tables:
+                    if table != 'sqlite_sequence':  # Table système SQLite
+                        conn.execute(f"DELETE FROM {table}")
+                
+                # Réinitialiser les séquences d'auto-increment
+                conn.execute("DELETE FROM sqlite_sequence")
+                conn.commit()
+                
+                print(f"🗑️ Toutes les données supprimées de {len(tables)} tables")
+            
+            # Actualiser l'interface
+            self.refresh_all_tabs()
+            
+            success_text = """✅ SUPPRESSION TERMINÉE
+
+Toutes les données ont été supprimées :
+• Base de données vidée
+• Dossier images/ nettoyé
+• Interface actualisée
+
+L'application est maintenant dans un état vierge."""
+            
+            messagebox.showinfo("✅ Terminé", success_text)
+            
+        except Exception as e:
+            error_text = f"""❌ ERREUR lors de la suppression
+
+Une erreur s'est produite :
+{str(e)}
+
+Certaines données peuvent ne pas avoir été supprimées.
+Vérifiez manuellement les fichiers si nécessaire."""
+            
+            messagebox.showerror("❌ Erreur", error_text)
+    
     def show_guide(self):
         """Ouvre le guide d'utilisation."""
         try:
@@ -430,6 +542,56 @@ Astuce :
                 messagebox.showinfo("Guide non trouvé", message)
         except Exception as e:
             messagebox.showerror("Erreur", f"Impossible d'ouvrir le guide: {e}")
+    
+    # === NOUVELLES MÉTHODES POUR LES ACTEURS ===
+    
+    def manage_actors(self):
+        """Ouvre la fenêtre de gestion des acteurs."""
+        try:
+            from lib.actor_ui import open_actor_manager
+            open_actor_manager(self, default_db_path())
+            # Rafraîchir l'interface après fermeture
+            self.after(500, self.refresh_all_tabs)
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors de l'ouverture de la gestion d'acteurs :\n{e}")
+    
+    def export_by_actor(self):
+        """Ouvre le dialogue d'export par acteur."""
+        try:
+            from lib.actor_selector import open_actor_export_dialog
+            open_actor_export_dialog(self, default_db_path())
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors de l'ouverture de l'export par acteur :\n{e}")
+    
+    def demo_actors(self):
+        """Lance la démonstration du système d'acteurs."""
+        try:
+            import subprocess
+            import sys
+            from pathlib import Path
+            
+            # Demander confirmation
+            response = messagebox.askyesno(
+                "Démonstration Acteurs",
+                "Voulez-vous ouvrir la démonstration complète du système d'acteurs ?\n\n"
+                "Cela ouvrira une nouvelle fenêtre avec :\n"
+                "• Interface de gestion des acteurs\n"
+                "• Visualisation des cartes par acteur\n"
+                "• Outils d'export personnalisés\n\n"
+                "L'application actuelle restera ouverte."
+            )
+            
+            if response:
+                demo_path = Path(__file__).parent / "demo_actors.py"
+                if demo_path.exists():
+                    # Lancer la démo dans un processus séparé
+                    subprocess.Popen([sys.executable, str(demo_path)], 
+                                   cwd=str(Path(__file__).parent))
+                    messagebox.showinfo("Info", "Démonstration lancée dans une nouvelle fenêtre !")
+                else:
+                    messagebox.showerror("Erreur", f"Fichier de démonstration introuvable :\n{demo_path}")
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors du lancement de la démonstration :\n{e}")
 
 def main(argv=None):
     """Point d'entrée principal de l'application."""

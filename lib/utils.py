@@ -278,18 +278,45 @@ def create_card_image(card_image_path: str, template_image_path: str, card_name:
         return None
     
     if not os.path.exists(card_image_path) or not os.path.exists(template_image_path):
+        print(f"❌ Fichier manquant : carte={os.path.exists(card_image_path)}, template={os.path.exists(template_image_path)}")
         return None
     
     try:
-        # Charge les images
-        card_img = Image.open(card_image_path)
-        template_img = Image.open(template_image_path)
+        print(f"🖼️ Chargement des images...")
+        print(f"   Carte : {card_image_path}")
+        print(f"   Template : {template_image_path}")
+        
+        # Charge les images avec gestion des erreurs améliorée
+        try:
+            from PIL import ImageFile
+            ImageFile.LOAD_TRUNCATED_IMAGES = True  # Permet de charger les images tronquées
+            
+            card_img = Image.open(card_image_path)
+            card_img.load()  # Force le chargement complet de l'image
+            print(f"   ✅ Image carte chargée : {card_img.size} ({card_img.mode})")
+            
+        except Exception as e:
+            print(f"   ❌ Erreur image carte : {e}")
+            messagebox.showerror(APP_TITLE, f"Erreur lors du chargement de l'image de la carte :\n{e}\n\nVeuillez choisir une autre image.")
+            return None
+        
+        try:
+            template_img = Image.open(template_image_path)
+            template_img.load()  # Force le chargement complet du template
+            print(f"   ✅ Template chargé : {template_img.size} ({template_img.mode})")
+            
+        except Exception as e:
+            print(f"   ❌ Erreur template : {e}")
+            messagebox.showerror(APP_TITLE, f"Erreur lors du chargement du template :\n{e}\n\nVérifiez le template configuré.")
+            return None
         
         # Redimensionne l'image de la carte pour qu'elle s'adapte au template
         template_size = template_img.size
+        print(f"🔄 Redimensionnement vers {template_size}...")
         card_img = card_img.resize(template_size, Image.Resampling.LANCZOS)
         
         # Crée l'image finale
+        print(f"🎨 Fusion des images...")
         if template_img.mode == 'RGBA':
             # Le template a de la transparence, on le superpose à la carte
             final_img = Image.new('RGBA', template_size)
@@ -307,6 +334,8 @@ def create_card_image(card_image_path: str, template_image_path: str, card_name:
         filename = f"{sanitize_filename(card_name)}.png"
         output_path = os.path.join(subfolders['cards'], filename)
         
+        print(f"💾 Sauvegarde vers {output_path}...")
+        
         # Convertit en RGB si nécessaire pour PNG
         if final_img.mode == 'RGBA':
             # Crée un fond blanc pour remplacer la transparence
@@ -315,10 +344,12 @@ def create_card_image(card_image_path: str, template_image_path: str, card_name:
             final_img = rgb_img
         
         final_img.save(output_path, 'PNG')
+        print(f"✅ Image fusionnée créée avec succès : {output_path}")
         return output_path
         
     except Exception as e:
-        messagebox.showerror(APP_TITLE, f"Erreur lors de la création de l'image :\n{e}")
+        print(f"❌ Erreur lors de la fusion : {e}")
+        messagebox.showerror(APP_TITLE, f"Erreur lors de la création de l'image :\n{e}\n\nVeuillez vérifier :\n- La qualité de l'image source\n- Les permissions d'écriture\n- L'espace disque disponible")
         return None
 
 # ======================= Scripts Windows =======================

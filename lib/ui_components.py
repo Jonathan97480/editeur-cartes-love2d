@@ -12,6 +12,22 @@ from .database import Card, CardRepo
 from .lua_export import export_lua
 from .utils import to_int, create_card_image
 
+def get_available_actors():
+    """Récupère la liste des acteurs disponibles pour les interfaces."""
+    try:
+        from .actors import ActorManager
+        from .config import DB_FILE
+        
+        manager = ActorManager(DB_FILE)
+        actors = manager.list_actors()
+        
+        # Retourner les noms des acteurs
+        return [actor['name'] for actor in actors]
+    except Exception as e:
+        print(f"Erreur lors de la récupération des acteurs : {e}")
+        # Fallback vers l'ancien système
+        return ['Joueur', 'IA']
+
 class CardForm(ttk.Frame):
     def __init__(self, master, repo: CardRepo, on_saved, **kw):
         super().__init__(master, **kw)
@@ -24,22 +40,53 @@ class CardForm(ttk.Frame):
     # ---------- Build Tabs ----------
     def _build_ui(self):
         pad = dict(padx=8, pady=4)
-        # Ligne 1 : côté, nom, power, rareté
+        # Ligne 1 : acteurs, nom, power, rareté
         row = ttk.Frame(self); row.pack(fill='x', **pad)
-        ttk.Label(row, text="Côté :").pack(side='left')
-        self.side_var = tk.StringVar(value='Joueur')
-        ttk.Combobox(row, textvariable=self.side_var, values=['Joueur', 'IA'], width=8, state='readonly').pack(side='left', padx=6)
+        
+        # Sélection multiple d'acteurs
+        actors_frame = ttk.LabelFrame(row, text="Acteurs (Ctrl+clic pour sélection multiple)", padding=5)
+        actors_frame.pack(side='left', padx=(0,12), fill='y')
+        
+        available_actors = get_available_actors()
+        self.actors_listbox = tk.Listbox(actors_frame, height=3, width=15, selectmode='extended')
+        self.actors_listbox.pack(side='left')
+        
+        # Ajouter une scrollbar pour la liste des acteurs
+        actors_scrollbar = ttk.Scrollbar(actors_frame, orient='vertical', command=self.actors_listbox.yview)
+        actors_scrollbar.pack(side='right', fill='y')
+        self.actors_listbox.config(yscrollcommand=actors_scrollbar.set)
+        
+        # Remplir la liste des acteurs
+        for actor in available_actors:
+            self.actors_listbox.insert('end', actor)
+        
+        # Sélectionner 'Joueur' par défaut s'il existe
+        try:
+            joueur_index = available_actors.index('Joueur')
+            self.actors_listbox.selection_set(joueur_index)
+        except ValueError:
+            # Si 'Joueur' n'existe pas, sélectionner le premier
+            if available_actors:
+                self.actors_listbox.selection_set(0)
+        
+        # Conteneur pour nom, power, rareté
+        info_frame = ttk.Frame(row)
+        info_frame.pack(side='left', fill='x', expand=True)
 
-        ttk.Label(row, text="Nom de la carte :").pack(side='left', padx=(12,4))
-        self.name_var = tk.StringVar(); ttk.Entry(row, textvariable=self.name_var, width=32).pack(side='left')
+        # Conteneur pour nom, power, rareté
+        info_frame = ttk.Frame(row)
+        info_frame.pack(side='left', fill='x', expand=True)
 
-        ttk.Label(row, text="Coût (PowerBlow) :").pack(side='left', padx=(12,4))
+        ttk.Label(info_frame, text="Nom de la carte :").pack(side='left', padx=(0,4))
+        self.name_var = tk.StringVar(); ttk.Entry(info_frame, textvariable=self.name_var, width=25).pack(side='left', padx=(0,8))
+
+        ttk.Label(info_frame, text="Coût (PowerBlow) :").pack(side='left', padx=(8,4))
         self.power_var = tk.IntVar(value=0)
-        ttk.Spinbox(row, from_=0, to=999, textvariable=self.power_var, width=6).pack(side='left')
+        ttk.Spinbox(info_frame, from_=0, to=999, textvariable=self.power_var, width=6).pack(side='left', padx=(0,8))
 
-        ttk.Label(row, text="Rareté :").pack(side='left', padx=(12,4))
+        ttk.Label(info_frame, text="Rareté :").pack(side='left', padx=(8,4))
         self.rarity_var = tk.StringVar(value='Commun')
-        ttk.Combobox(row, textvariable=self.rarity_var, values=['Commun','Rare','Légendaire','Mythique'], width=12, state='readonly').pack(side='left')
+        ttk.Combobox(info_frame, textvariable=self.rarity_var, values=['Commun','Rare','Légendaire','Mythique'], width=12, state='readonly').pack(side='left')
 
         # Ligne 2 : illustration (chemin) + bouton
         r2 = ttk.Frame(self); r2.pack(fill='x', **pad)
@@ -384,7 +431,21 @@ class CardForm(ttk.Frame):
     def clear_form(self):
         self.current_id = None
         self.generated_image_path = None  # Réinitialiser l'image générée
-        self.side_var.set('Joueur')
+        
+        # Réinitialiser la sélection des acteurs
+        self.actors_listbox.selection_clear(0, 'end')
+        available_actors = get_available_actors()
+        try:
+            joueur_index = available_actors.index('Joueur')
+            self.actors_listbox.selection_set(joueur_index)
+            print("✅ Acteur 'Joueur' sélectionné par défaut")
+        except ValueError:
+            if available_actors:
+                self.actors_listbox.selection_set(0)
+                print(f"✅ Premier acteur sélectionné par défaut : {available_actors[0]}")
+            else:
+                print("⚠️ Aucun acteur disponible")
+        
         self.name_var.set('')
         self.img_var.set('')
         self.desc_txt.delete('1.0', 'end')
@@ -414,10 +475,44 @@ class CardForm(ttk.Frame):
         if callable(self.on_saved):
             self.on_saved()
 
+    def _get_card_actors(self, card_id):
+        """Récupère la liste des acteurs liés à cette carte."""
+        try:
+            from .actors import ActorManager
+            from .config import DB_FILE
+            
+            manager = ActorManager(DB_FILE)
+            actors = manager.get_card_actors(card_id)
+            
+            if actors:
+                # Retourner les noms des acteurs liés
+                return [actor['name'] for actor in actors]
+            else:
+                # Fallback : utiliser le système legacy side
+                return ['Joueur']  # Valeur par défaut
+                
+        except Exception as e:
+            print(f"Erreur lors de la récupération des acteurs : {e}")
+            return ['Joueur']
+
     def load_card(self, card: Card):
         self.current_id = card.id
         self.generated_image_path = None  # Réinitialiser l'image générée lors du chargement
-        self.side_var.set('Joueur' if card.side == 'joueur' else 'IA')
+        
+        # Récupérer les acteurs liés à cette carte
+        actor_names = self._get_card_actors(card.id)
+        
+        # Sélectionner les acteurs dans la listbox
+        self.actors_listbox.selection_clear(0, 'end')
+        available_actors = get_available_actors()
+        
+        for actor_name in actor_names:
+            try:
+                actor_index = available_actors.index(actor_name)
+                self.actors_listbox.selection_set(actor_index)
+            except ValueError:
+                print(f"Acteur '{actor_name}' non trouvé dans la liste disponible")
+        
         self.name_var.set(card.name)
         self.img_var.set(card.img)
         self.desc_txt.delete('1.0', 'end'); self.desc_txt.insert('1.0', card.description)
@@ -469,7 +564,16 @@ class CardForm(ttk.Frame):
     def _form_to_card(self) -> Card:
         c = Card()
         c.id = self.current_id
-        c.side = 'joueur' if self.side_var.get() == 'Joueur' else 'ia'
+        
+        # Récupérer les acteurs sélectionnés pour déterminer le side (compatibilité legacy)
+        selected_actors = self._get_selected_actors()
+        if 'Joueur' in selected_actors:
+            c.side = 'joueur'
+        elif 'IA' in selected_actors:
+            c.side = 'ia'
+        else:
+            c.side = 'joueur'  # Par défaut
+            
         c.name = self.name_var.get().strip()
         c.img = self.img_var.get().strip()
         c.description = self.desc_txt.get('1.0', 'end').rstrip('\n').strip()
@@ -513,7 +617,46 @@ class CardForm(ttk.Frame):
             c.types = [k for k, var in self.type_vars.items() if bool(var.get())]
         return c
 
+    def _get_selected_actors(self):
+        """Récupère la liste des acteurs sélectionnés dans la listbox."""
+        selected_indices = self.actors_listbox.curselection()
+        available_actors = get_available_actors()
+        return [available_actors[i] for i in selected_indices if i < len(available_actors)]
+
     # ---------- Commands ----------
+    def _update_actor_linkage(self, card_id):
+        """Met à jour la liaison entre la carte et les acteurs sélectionnés."""
+        try:
+            from .actors import ActorManager
+            from .config import DB_FILE
+            
+            manager = ActorManager(DB_FILE)
+            selected_actor_names = self._get_selected_actors()
+            
+            # Supprimer toutes les anciennes liaisons de cette carte
+            all_actors = manager.list_actors()
+            for actor in all_actors:
+                manager.unlink_card_from_actor(card_id, actor['id'])
+            
+            # Créer les nouvelles liaisons pour chaque acteur sélectionné
+            for actor_name in selected_actor_names:
+                # Trouver l'ID de l'acteur sélectionné
+                selected_actor_id = None
+                for actor in all_actors:
+                    if actor['name'] == actor_name:
+                        selected_actor_id = actor['id']
+                        break
+                
+                if selected_actor_id:
+                    manager.link_card_to_actor(card_id, selected_actor_id)
+                    print(f"✅ Carte {card_id} liée à l'acteur '{actor_name}'")
+            
+            if selected_actor_names:
+                print(f"🎯 Carte {card_id} maintenant liée à {len(selected_actor_names)} acteur(s)")
+            
+        except Exception as e:
+            print(f"Erreur lors de la liaison avec les acteurs : {e}")
+
     def save(self):
         # Mettre à jour le nom de l'image si nécessaire avant la sauvegarde
         self._update_image_name_if_needed()
@@ -535,6 +678,9 @@ class CardForm(ttk.Frame):
             new_id = self.repo.insert(c); self.current_id = new_id
         else:
             self.repo.update(c)
+        
+        # Gérer la liaison avec l'acteur sélectionné
+        self._update_actor_linkage(c.id if c.id else self.current_id)
         
         # Génère l'image fusionnée si possible
         generated_image = self.generate_card_image()
@@ -606,9 +752,10 @@ class CardList(ttk.Frame):
     def _build_ui(self):
         pad = dict(padx=8, pady=6)
         top = ttk.Frame(self); top.pack(fill='x', **pad)
-        ttk.Label(top, text='Côté :').pack(side='left')
+        ttk.Label(top, text='Acteur :').pack(side='left')
         self.side_filter = tk.StringVar(value='Tous')
-        ttk.Combobox(top, textvariable=self.side_filter, values=['Tous', 'Joueur', 'IA'], width=8, state='readonly').pack(side='left', padx=6)
+        available_actors = ['Tous'] + get_available_actors()
+        ttk.Combobox(top, textvariable=self.side_filter, values=available_actors, width=12, state='readonly').pack(side='left', padx=6)
         self.side_filter.trace_add('write', lambda *_: self.refresh())
 
         # Rareté (fixée par l'onglet ou modifiable)
@@ -626,29 +773,52 @@ class CardList(ttk.Frame):
         self.search_var.trace_add('write', lambda *_: self.refresh())
 
         # Treeview
-        cols = ('id','cote','rarete','nom','power','desc','maj')
+        cols = ('id','acteurs','rarete','nom','power','desc','maj')
         self.tree = ttk.Treeview(self, columns=cols, show='headings', height=20)
         self.tree.heading('id', text='ID'); self.tree.column('id', width=50, anchor='center')
-        self.tree.heading('cote', text='Côté'); self.tree.column('cote', width=70, anchor='center')
+        self.tree.heading('acteurs', text='Acteurs'); self.tree.column('acteurs', width=120, anchor='center')
         self.tree.heading('rarete', text='Rareté'); self.tree.column('rarete', width=110, anchor='center')
         self.tree.heading('nom', text='Nom'); self.tree.column('nom', width=200)
         self.tree.heading('power', text='Power'); self.tree.column('power', width=60, anchor='center')
-        self.tree.heading('desc', text='Description'); self.tree.column('desc', width=300)
+        self.tree.heading('desc', text='Description'); self.tree.column('desc', width=280)
         self.tree.heading('maj', text='MAJ'); self.tree.column('maj', width=140, anchor='center')
         self.tree.pack(fill='both', expand=True, padx=8, pady=4)
         self.tree.bind('<Double-1>', self._on_double)
 
         # Exports
         exp = ttk.Frame(self); exp.pack(fill='x', **pad)
-        ttk.Button(exp, text='Exporter LUA (Joueur)', command=lambda: self.export_side('joueur')).pack(side='left')
-        ttk.Button(exp, text='Exporter LUA (IA)', command=lambda: self.export_side('ia')).pack(side='left', padx=6)
-        ttk.Button(exp, text='Terminer (Exporter les deux)', command=self.export_both).pack(side='right')
+        ttk.Button(exp, text='🎭 Exporter Acteur', command=self.export_actor_selection).pack(side='left')
+        ttk.Button(exp, text='📤 Exporter Tout', command=self.export_all_actors).pack(side='left', padx=6)
 
     def _side_value(self):
         v = self.side_filter.get()
         if v == 'Joueur': return 'joueur'
         if v == 'IA': return 'ia'
         return None
+
+    def _get_card_actors_display(self, card_id):
+        """Récupère l'affichage des acteurs liés à une carte."""
+        try:
+            from .actors import ActorManager
+            from .config import DB_FILE
+            
+            manager = ActorManager(DB_FILE)
+            actors = manager.get_card_actors(card_id)
+            
+            if actors:
+                # Si plusieurs acteurs, afficher le nombre
+                if len(actors) == 1:
+                    return actors[0]['name']
+                else:
+                    actor_names = [actor['name'] for actor in actors]
+                    return f"{len(actors)} acteurs: {', '.join(actor_names[:2])}" + ("..." if len(actors) > 2 else "")
+            else:
+                # Fallback vers l'ancien système side
+                return 'Aucun acteur'
+                
+        except Exception as e:
+            print(f"Erreur lors de la récupération des acteurs pour la carte {card_id} : {e}")
+            return 'Erreur acteurs'
 
     def refresh(self):
         side = self._side_value()
@@ -658,13 +828,52 @@ class CardList(ttk.Frame):
         else:
             rarity_label = self.rarity_filter.get() if self.rarity_filter else 'Toutes'
             rarity = RARITY_FROM_LABEL.get(rarity_label) if rarity_label != 'Toutes' else None
-        cards = self.repo.list_cards(side=side, search_text=text, rarity=rarity)
-        for i in self.tree.get_children(): self.tree.delete(i)
+        
+        # Obtenir toutes les cartes (sans filtre side pour l'instant)
+        cards = self.repo.list_cards(side=None, search_text=text, rarity=rarity)
+        
+        # Filtrer par acteur si nécessaire
+        if side:
+            filtered_cards = []
+            try:
+                from .actors import ActorManager
+                from .config import DB_FILE
+                
+                manager = ActorManager(DB_FILE)
+                
+                for card in cards:
+                    card_actors = manager.get_card_actors(card.id)
+                    
+                    # Vérifier si la carte a l'acteur recherché
+                    if side == 'joueur':
+                        has_joueur = any(actor['name'] == 'Joueur' for actor in card_actors)
+                        if has_joueur:
+                            filtered_cards.append(card)
+                    elif side == 'ia':
+                        has_ia = any(actor['name'] == 'IA' for actor in card_actors)
+                        if has_ia:
+                            filtered_cards.append(card)
+                
+                cards = filtered_cards
+                
+            except Exception as e:
+                print(f"Erreur filtrage par acteur : {e}")
+                # Fallback vers l'ancien système
+                cards = self.repo.list_cards(side=side, search_text=text, rarity=rarity)
+        
+        # Afficher les cartes avec leurs acteurs
+        for i in self.tree.get_children(): 
+            self.tree.delete(i)
+            
         for c in cards:
             maj = c.updated_at.split('T')[0] if c.updated_at else ''
+            
+            # Obtenir l'affichage des acteurs pour cette carte
+            actors_display = self._get_card_actors_display(c.id)
+            
             self.tree.insert('', 'end', values=(
                 c.id,
-                'Joueur' if c.side=='joueur' else 'IA',
+                actors_display,  # Remplacer l'ancien système Joueur/IA
                 RARITY_LABELS.get(getattr(c,'rarity','commun'),'Commun'),
                 c.name,
                 c.powerblow,
@@ -706,3 +915,53 @@ class CardList(ttk.Frame):
             messagebox.showerror(APP_TITLE, f"Échec export : {e}")
             return
         messagebox.showinfo(APP_TITLE, f"Exports réussis :\n- {p1}\n- {p2}")
+
+    def export_actor_selection(self):
+        """Ouvre un dialogue pour sélectionner un acteur spécifique à exporter."""
+        try:
+            from .actor_selector import ActorExportDialog
+            from .config import DB_FILE
+            from .actors import ActorManager
+            
+            # Créer le gestionnaire d'acteurs
+            db_path = DB_FILE
+            actor_manager = ActorManager(db_path)
+            
+            # Ouvrir le dialogue de sélection d'acteur unique
+            dialog = ActorExportDialog(
+                parent=self,
+                db_path=db_path,
+                actor_manager=actor_manager,
+                single_actor_mode=True
+            )
+            
+        except Exception as e:
+            messagebox.showerror(APP_TITLE, f"Erreur lors de l'ouverture de la sélection d'acteur :\n{e}")
+    
+    def export_all_actors(self):
+        """Exporte tous les acteurs en un seul fichier."""
+        try:
+            from .actors import ActorManager, export_all_actors_lua
+            from .config import DB_FILE
+            
+            # Créer le gestionnaire d'acteurs  
+            db_path = DB_FILE
+            actor_manager = ActorManager(db_path)
+            
+            # Demander le fichier de destination
+            filepath = filedialog.asksaveasfilename(
+                title='Export de tous les acteurs',
+                initialfile='cards_all_actors.lua',
+                defaultextension='.lua',
+                filetypes=[('Fichier Lua', '*.lua')]
+            )
+            
+            if not filepath:
+                return
+            
+            # Effectuer l'export
+            export_all_actors_lua(self.repo, actor_manager, filepath)
+            messagebox.showinfo(APP_TITLE, f"Export réussi :\n{filepath}")
+            
+        except Exception as e:
+            messagebox.showerror(APP_TITLE, f"Erreur lors de l'export de tous les acteurs :\n{e}")
