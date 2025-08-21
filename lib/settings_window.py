@@ -22,7 +22,7 @@ class SettingsWindow:
             
         self.window = tk.Toplevel(self.parent)
         self.window.title("Réglages")
-        self.window.geometry("800x650")
+        self.window.geometry("1195x646")
         self.window.resizable(True, True)
         self.window.transient(self.parent)
         self.window.grab_set()
@@ -51,7 +51,7 @@ class SettingsWindow:
         title_label.pack(anchor='w', pady=(0, 15))
         
         # Frame scrollable pour les templates
-        canvas = tk.Canvas(main_frame, height=350)
+        canvas = tk.Canvas(main_frame, height=400)
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
         
