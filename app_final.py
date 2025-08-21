@@ -107,6 +107,7 @@ class FinalMainApp(tk.Tk):
         file_menu.add_separator()
         file_menu.add_command(label="📤 Exporter Joueur", command=self.export_player)
         file_menu.add_command(label="📤 Exporter IA", command=self.export_ia)
+        file_menu.add_command(label="🎭 Export par Acteur...", command=self.export_by_actor)
         file_menu.add_separator()
         file_menu.add_command(label="❌ Quitter", command=self.destroy, accelerator="Ctrl+Q")
         menubar.add_cascade(label="📁 Fichier", menu=file_menu)
@@ -123,6 +124,14 @@ class FinalMainApp(tk.Tk):
         view_menu.add_separator()
         view_menu.add_command(label="🃏 Voir le deck", command=self.show_deck_viewer, accelerator="Ctrl+V")
         menubar.add_cascade(label="👁️ Affichage", menu=view_menu)
+        
+        # Menu Acteurs (NOUVEAU)
+        actors_menu = tk.Menu(menubar, tearoff=0)
+        actors_menu.add_command(label="🎭 Gérer les Acteurs...", command=self.manage_actors)
+        actors_menu.add_command(label="📤 Export par Acteur...", command=self.export_by_actor)
+        actors_menu.add_separator()
+        actors_menu.add_command(label="🔄 Migration vers Acteurs...", command=self.demo_actors)
+        menubar.add_cascade(label="🎭 Acteurs", menu=actors_menu)
         
         # Menu Réglages
         settings_menu = tk.Menu(menubar, tearoff=0)
@@ -430,6 +439,56 @@ Astuce :
                 messagebox.showinfo("Guide non trouvé", message)
         except Exception as e:
             messagebox.showerror("Erreur", f"Impossible d'ouvrir le guide: {e}")
+    
+    # === NOUVELLES MÉTHODES POUR LES ACTEURS ===
+    
+    def manage_actors(self):
+        """Ouvre la fenêtre de gestion des acteurs."""
+        try:
+            from lib.actor_ui import open_actor_manager
+            open_actor_manager(self, default_db_path())
+            # Rafraîchir l'interface après fermeture
+            self.after(500, self.refresh_all_tabs)
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors de l'ouverture de la gestion d'acteurs :\n{e}")
+    
+    def export_by_actor(self):
+        """Ouvre le dialogue d'export par acteur."""
+        try:
+            from lib.actor_selector import open_actor_export_dialog
+            open_actor_export_dialog(self, default_db_path())
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors de l'ouverture de l'export par acteur :\n{e}")
+    
+    def demo_actors(self):
+        """Lance la démonstration du système d'acteurs."""
+        try:
+            import subprocess
+            import sys
+            from pathlib import Path
+            
+            # Demander confirmation
+            response = messagebox.askyesno(
+                "Démonstration Acteurs",
+                "Voulez-vous ouvrir la démonstration complète du système d'acteurs ?\n\n"
+                "Cela ouvrira une nouvelle fenêtre avec :\n"
+                "• Interface de gestion des acteurs\n"
+                "• Visualisation des cartes par acteur\n"
+                "• Outils d'export personnalisés\n\n"
+                "L'application actuelle restera ouverte."
+            )
+            
+            if response:
+                demo_path = Path(__file__).parent / "demo_actors.py"
+                if demo_path.exists():
+                    # Lancer la démo dans un processus séparé
+                    subprocess.Popen([sys.executable, str(demo_path)], 
+                                   cwd=str(Path(__file__).parent))
+                    messagebox.showinfo("Info", "Démonstration lancée dans une nouvelle fenêtre !")
+                else:
+                    messagebox.showerror("Erreur", f"Fichier de démonstration introuvable :\n{demo_path}")
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors du lancement de la démonstration :\n{e}")
 
 def main(argv=None):
     """Point d'entrée principal de l'application."""
