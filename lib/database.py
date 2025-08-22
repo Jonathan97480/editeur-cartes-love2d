@@ -76,6 +76,23 @@ class Card:
             self.action_param = row['action_param']
             self.created_at = row['created_at']
             self.updated_at = row['updated_at']
+            
+            # Champs de formatage de texte (avec valeurs par défaut)
+            self.title_x = row.get('title_x', 50)
+            self.title_y = row.get('title_y', 30)
+            self.title_font = row.get('title_font', 'Arial')
+            self.title_size = row.get('title_size', 16)
+            self.title_color = row.get('title_color', '#000000')
+            self.text_x = row.get('text_x', 50)
+            self.text_y = row.get('text_y', 100)
+            self.text_width = row.get('text_width', 200)
+            self.text_height = row.get('text_height', 150)
+            self.text_font = row.get('text_font', 'Arial')
+            self.text_size = row.get('text_size', 12)
+            self.text_color = row.get('text_color', '#000000')
+            self.text_align = row.get('text_align', 'left')
+            self.line_spacing = row.get('line_spacing', 1.2)
+            self.text_wrap = row.get('text_wrap', 1)
         else:
             (
                 self.id,
