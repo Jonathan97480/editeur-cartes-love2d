@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "timestamp": "20250822_082355",
+    "date": "2025-08-22T08:23:57.834498",
+    "project": "editeur-cartes-love2d",
+    "python_executable": "C:/Users/berou/AppData/Local/NVIDIA/ChatWithRTX/env_nvd_rag/python.exe"
+  },
+  "tests": {
+    "timestamp": "20250822_082355",
+    "status": "FAIL",
+    "tests": {
+      "syntax": {
+        "status": "PASS",
+        "files_tested": 22,
+        "errors": []
+      },
+      "main_app": {
+        "status": "PASS",
+        "output": "[INFO] Execution des tests...\n[INFO] Creation de la nouvelle base de donnees...\n[SUCCESS] Base de donnees creee avec le schema actuel\n",
+        "errors": "test_build_enemy_lua_full_structure (lib.tests.TestLuaHelpers) ... ok\ntest_build_hero_lua_full_structure (lib.tests.TestLuaHelpers) ... ok\ntest_build_types_lua (lib.tests.TestLuaHelpers) ... ok\ntest_lua_escape_quotes_and_newlines (lib.tests.TestLuaHelpers) ... ok\ntest_build_card_lua_includes_rarete_and_type (lib.tests.TestRarityAndTypes) ... ok\ntest_defaults (lib.tests.TestRarityAndTypes) ... ok\ntest_export_lua_creates_file_with_header_footer (lib.tests.TestExport) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.050s\n\nOK\n"
+      },
+      "database": {
+        "status": "FAIL",
+        "output": "",
+        "errors": "Traceback (most recent call last):\n  File \"C:\\Users\\berou\\Downloads\\Nouveau dossier\\db_tools.py\", line 212, in <module>\n    success = main()\n  File \"C:\\Users\\berou\\Downloads\\Nouveau dossier\\db_tools.py\", line 168, in main\n    print(\"\\U0001f50d Validation rapide de la base de donn�es...\")\n  File \"C:\\Users\\berou\\AppData\\Local\\NVIDIA\\ChatWithRTX\\env_nvd_rag\\lib\\encodings\\cp1252.py\", line 19, in encode\n    return codecs.charmap_encode(input,self.errors,encoding_table)[0]\nUnicodeEncodeError: 'charmap' codec can't encode character '\\U0001f50d' in position 0: character maps to <undefined>\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"C:\\Users\\berou\\Downloads\\Nouveau dossier\\db_tools.py\", line 219, in <module>\n    print(f\"\\n\\u274c Erreur inattendue : {e}\")\n  File \"C:\\Users\\berou\\AppData\\Local\\NVIDIA\\ChatWithRTX\\env_nvd_rag\\lib\\encodings\\cp1252.py\", line 19, in encode\n    return codecs.charmap_encode(input,self.errors,encoding_table)[0]\nUnicodeEncodeError: 'charmap' codec can't encode character '\\u274c' in position 2: character maps to <undefined>\n"
+      },
+      "configuration": {
+        "status": "PASS",
+        "output": "Configuration de l'environnement Python\n==================================================\n🔍 Test de l'environnement Python...\n📍 Exécutable Python: C:/Users/berou/AppData/Local/NVIDIA/ChatWithRTX/env_nvd_rag/python.exe\n✅ Version: Python 3.10.13\n✅ Import basique: OK\n✅ Tests du projet: OK\n\n🛠️  Création des scripts de lancement...\n✅ Scripts de lancement créés:\n   - run_app.bat (Windows)\n   - run_app.ps1 (PowerShell)\n✅ Script de tests créé: run_tests.bat\n✅ Script d'organisation créé: run_organize.bat\n\n🎉 Configuration terminée avec succès !\n\n💡 Utilisation:\n   • Double-cliquez sur run_app.bat pour lancer l'application\n   • Double-cliquez sur run_tests.bat pour lancer les tests\n   • Double-cliquez sur run_organize.bat pour organiser le projet\n\n📝 Note: Ces scripts utilisent le bon environnement Python\n   et évitent l'erreur 'Python est introuvable'\n",
+        "errors": ""
+      },
+      "validation": {
+        "status": "FAIL",
+        "output": "",
+        "errors": "Traceback (most recent call last):\n  File \"C:\\Users\\berou\\Downloads\\Nouveau dossier\\validate_tests_auto.py\", line 198, in <module>\n    success = main()\n  File \"C:\\Users\\berou\\Downloads\\Nouveau dossier\\validate_tests_auto.py\", line 123, in main\n    print(\"\\U0001f50d VALIDATION AUTOMATIS�E DES TESTS\")\n  File \"C:\\Users\\berou\\AppData\\Local\\NVIDIA\\ChatWithRTX\\env_nvd_rag\\lib\\encodings\\cp1252.py\", line 19, in encode\n    return codecs.charmap_encode(input,self.errors,encoding_table)[0]\nUnicodeEncodeError: 'charmap' codec can't encode character '\\U0001f50d' in position 0: character maps to <undefined>\n"
+      }
+    },
+    "summary": {
+      "total_tests": 5,
+      "passed_tests": 3,
+      "failed_tests": 2,
+      "success_rate": 60.0
+    }
+  },
+  "audit": {
+    "timestamp": "20250822_082355",
+    "status": "PASS",
+    "checks": {
+      "sensitive_files": {
+        "status": "PASS",
+        "files_found": [],
+        "count": 0
+      },
+      "permissions": {
+        "status": "PASS",
+        "issues": [],
+        "files_checked": 4
+      },
+      "structure": {
+        "status": "PASS",
+        "missing_directories": [],
+        "missing_files": [],
+        "structure_score": 100.0
+      },
+      "git_status": {
+        "status": "PASS",
+        "staged_files": 0,
+        "modified_files": 0,
+        "recent_commits": [
+          "ade1f3e docs: Documentation complète de la grande réorganisation",
+          "72641ea refactor: Grande réorganisation - Archivage fichiers legacy dans dossiers dédiés",
+          "f8900bb docs: Documentation modification START.bat - suppression option Love2D",
+          "849c50c refactor: Suppression choix Love2D inutile du menu START.bat - Réorganisation [1] Python [2] Dev",
+          "68fae9a docs: Résumé final réorganisation + scripts prêts pour GitHub"
+        ]
+      },
+      "environment": {
+        "status": "PASS",
+        "python_version": "Python 3.10.13",
+        "python_path": "C:/Users/berou/AppData/Local/NVIDIA/ChatWithRTX/env_nvd_rag/python.exe",
+        "working_directory": "C:\\Users\\berou\\Downloads\\Nouveau dossier"
+      }
+    },
+    "summary": {
+      "total_checks": 5,
+      "passed_checks": 5,
+      "warning_checks": 0,
+      "failed_checks": 0,
+      "security_score": 100.0
+    }
+  },
+  "overall_status": "FAIL"
+}

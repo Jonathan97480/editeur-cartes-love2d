@@ -8,6 +8,11 @@ import os
 import sys
 from pathlib import Path
 
+# Configuration pour éviter les problèmes d'encodage Unicode
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 # Ajouter le dossier parent au path pour les imports
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -152,15 +157,43 @@ def main():
     parser.add_argument('--diagnose', action='store_true', help='Diagnostic complet')
     parser.add_argument('--migrate', action='store_true', help='Migration forcée')
     parser.add_argument('--backup', action='store_true', help='Sauvegarde manuelle')
+    parser.add_argument('--validate', action='store_true', help='Validation rapide intégrité')
     parser.add_argument('--all', action='store_true', help='Exécuter toutes les opérations')
     
     args = parser.parse_args()
     
-    if not any([args.diagnose, args.migrate, args.backup, args.all]):
+    if not any([args.diagnose, args.migrate, args.backup, args.validate, args.all]):
         # Par défaut, faire un diagnostic
         args.diagnose = True
     
     success = True
+    
+    # Validation rapide pour les tests de sécurité
+    if args.validate:
+        print("Validation rapide de la base de donnees...")
+        try:
+            if not os.path.exists(default_db_path()):
+                print("Erreur: Base de donnees non trouvee")
+                return False
+            
+            # Test de connexion basique
+            import sqlite3
+            conn = sqlite3.connect(default_db_path())
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table'")
+            table_count = cursor.fetchone()[0]
+            conn.close()
+            
+            if table_count > 0:
+                print(f"Succes: Base de donnees valide ({table_count} tables)")
+                return True
+            else:
+                print("Erreur: Base de donnees vide ou corrompue")
+                return False
+                
+        except Exception as e:
+            print(f"Erreur validation: {e}")
+            return False
     
     if args.all or args.backup:
         print()

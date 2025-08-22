@@ -70,14 +70,15 @@ def git_add_all():
         return False
 
 def git_commit_with_validation(message):
-    """Fait un commit avec validation préalable"""
-    print("🔍 VALIDATION PRE-COMMIT")
-    print("=" * 40)
+    """Fait un commit avec validation préalable et sécurité"""
+    print("� VALIDATION PRE-COMMIT AVEC SÉCURITÉ")
+    print("=" * 50)
     
-    # Tests préalables
+    # Étape 1: Tests rapides
+    print("🧪 Tests rapides...")
     success, stdout, stderr = run_tests()
     if not success:
-        print("❌ Tests échoués - Commit annulé")
+        print("❌ Tests rapides échoués - Commit annulé")
         print("Sortie des tests:")
         print(stdout)
         if stderr:
@@ -85,13 +86,46 @@ def git_commit_with_validation(message):
             print(stderr)
         return False
     
-    print("✅ Tests OK - Proceeding avec le commit")
+    print("✅ Tests rapides OK")
     
-    # Faire le commit
+    # Étape 2: Test de sécurité rapide (éviter les timeouts)
+    print("\n🔒 Test de sécurité rapide...")
+    python_exe = get_python_executable()
+    
+    # Test simple et rapide
+    quick_security = subprocess.run([
+        "dev\\test_quick_security.bat"
+    ], capture_output=True, text=True, shell=True, encoding='utf-8', errors='replace')
+    
+    if quick_security.returncode != 0:
+        print("❌ TEST DE SÉCURITÉ ÉCHOUÉ - Commit bloqué")
+        print("\n📋 Rapport de sécurité:")
+        print(quick_security.stdout)
+        if quick_security.stderr:
+            print("\nErreurs:")
+            print(quick_security.stderr)
+        
+        print(f"\n📄 Consultez les rapports détaillés dans: commit_reports/")
+        return False
+    
+    print("✅ Audit de sécurité réussi - Commit autorisé")
+    
+    # Étape 3: Faire le commit
+    print(f"\n💾 Création du commit: '{message}'")
     result = run_git_command(["commit", "-m", message])
     if result and result.returncode == 0:
         print("✅ Commit créé avec succès !")
         print(result.stdout)
+        
+        # Afficher les rapports générés
+        import glob
+        from datetime import datetime
+        today = datetime.now().strftime("%Y%m%d")
+        recent_reports = glob.glob(f"commit_reports/commit_report_{today}*.md")
+        if recent_reports:
+            latest_report = max(recent_reports)
+            print(f"\n📄 Rapport de sécurité: {latest_report}")
+        
         return True
     else:
         print("❌ Erreur lors du commit")

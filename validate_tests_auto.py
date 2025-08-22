@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🔍 VALIDATION RAPIDE DE TOUS LES TESTS (NON-INTERACTIF)
+VALIDATION RAPIDE DE TOUS LES TESTS (NON-INTERACTIF)
 ======================================================
 
 Version non-interactive pour validation automatisée.
 """
 import os
 import sys
+
+# Configuration pour éviter les problèmes d'encodage Unicode
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 import subprocess
 from datetime import datetime
 
@@ -120,7 +125,7 @@ def test_direct_execution():
 
 def main():
     """Validation complète non-interactive"""
-    print("🔍 VALIDATION AUTOMATISÉE DES TESTS")
+    print("VALIDATION AUTOMATISEE DES TESTS")
     print("=" * 60)
     print(f"📅 Date : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
@@ -133,7 +138,7 @@ def main():
     
     # Rapport final
     print("\n" + "=" * 60)
-    print("📊 RAPPORT DE VALIDATION AUTOMATISÉE")
+    print("RAPPORT DE VALIDATION AUTOMATISEE")
     print("=" * 60)
     
     # Statistiques syntaxe
@@ -190,7 +195,7 @@ def main():
         print("   ⚠️  Révision nécessaire de l'organisation des tests.")
         print("   ➡️  Vérifier la configuration d'import.")
     
-    print(f"\n🏁 Validation automatisée terminée !")
+    print(f"\nValidation automatisee terminee !")
     
     return total_syntax_ok == total_tests
 

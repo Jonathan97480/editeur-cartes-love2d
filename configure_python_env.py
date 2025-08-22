@@ -8,6 +8,11 @@ Configuration de l'environnement Python pour le projet
 import os
 import sys
 import subprocess
+
+# Configuration pour éviter les problèmes d'encodage Unicode
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 from pathlib import Path
 
 def get_python_executable():
@@ -139,7 +144,17 @@ pause
 
 def main():
     """Fonction principale"""
-    print("🐍 CONFIGURATION DE L'ENVIRONNEMENT PYTHON")
+    # Gérer l'argument --validate pour les tests de sécurité
+    if len(sys.argv) > 1 and sys.argv[1] == "--validate":
+        print("Validation environnement Python...")
+        if test_environment():
+            print("✅ Environnement Python valide")
+            return True
+        else:
+            print("❌ Problème environnement Python")
+            return False
+    
+    print("Configuration de l'environnement Python")
     print("=" * 50)
     
     if test_environment():
@@ -155,9 +170,13 @@ def main():
         print("   • Double-cliquez sur run_organize.bat pour organiser le projet")
         print("\n📝 Note: Ces scripts utilisent le bon environnement Python")
         print("   et évitent l'erreur 'Python est introuvable'")
+        return True
     else:
         print("\n❌ Problème avec l'environnement Python")
         print("Veuillez vérifier votre installation Python/Conda")
+        return False
 
 if __name__ == "__main__":
-    main()
+    success = main()
+    if not success:
+        sys.exit(1)
