@@ -17,12 +17,13 @@ dist/
 *.rar
 
 # Base de données locale (contient des données utilisateur)
-cartes.db
+data/cartes.db
+data/*.db
 *.db
 
 # Sauvegardes automatiques
 *.backup*
-cartes.db.backup.*
+data/cartes.db.backup.*
 
 # Fichiers temporaires des tests
 test_integration_basic.lua
@@ -43,8 +44,149 @@ settings.json
 
 # Logs
 *.log
+logs/
 
 # OS
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Dossier de backups
+dbBackup/
+dbBackup/*
+
+# Dossiers de backups spécialisés
+luaBackup/
+imagesBackup/
+
+# Dossiers de documentation générée
+rapports/
+# Note: docs/ et guides/ sont conservés dans Git pour la documentation
+
+# Dossier de données sensibles
+data/
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Sauvegardes automatiques
+*_backup_*
+backup_*
+
+# Fichiers temporaires
+temp/
+tmp/
+
+# Dossier de données sensibles
+data/
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Sauvegardes automatiques
+*_backup_*
+backup_*
+
+# Fichiers temporaires
+temp/
+tmp/
+
+# Dossier de données sensibles
+data/
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Sauvegardes automatiques
+*_backup_*
+backup_*
+
+# Fichiers temporaires
+temp/
+tmp/
+
+# Dossier de données sensibles
+data/
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Sauvegardes automatiques
+*_backup_*
+backup_*
+
+# Fichiers temporaires
+temp/
+tmp/
+
+# Dossier de données sensibles
+data/
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Sauvegardes automatiques
+*_backup_*
+backup_*
+
+# Fichiers temporaires
+temp/
+tmp/
+
+# Dossier de données sensibles
+data/
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Sauvegardes automatiques
+*_backup_*
+backup_*
+
+# Fichiers temporaires
+temp/
+tmp/
+
+# Dossier de données sensibles
+data/
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Sauvegardes automatiques
+*_backup_*
+backup_*
+
+# Fichiers temporaires
+temp/
+tmp/
+
+# Dossier de données sensibles
+data/
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Sauvegardes automatiques
+*_backup_*
+backup_*
+
+# Fichiers temporaires
+temp/
+tmp/

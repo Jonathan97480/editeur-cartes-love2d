@@ -1,3 +1,5 @@
 @echo off
-git commit -m "feat: Refonte systeme export Lua - boutons acteurs + corrections completes"
+git commit -m "fix: template overlay resolution - separate original and display images"
+echo.
+echo Commit complete!
 pause

@@ -8,7 +8,7 @@ import os
 
 # ======================= Constantes =======================
 
-DB_FILE = "cartes.db"
+DB_FILE = "data/cartes.db"
 APP_TITLE = "Éditeur de Cartes Love2D"
 SETTINGS_FILE = "settings.json"
 IMAGES_FOLDER = "images"

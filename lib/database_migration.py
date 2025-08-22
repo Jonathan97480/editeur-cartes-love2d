@@ -4,6 +4,7 @@
 Système de migration et de vérification de la base de données
 """
 import json
+import os
 import sqlite3
 from datetime import datetime
 from typing import Dict, List, Any
@@ -371,7 +372,10 @@ def verify_database_integrity(db_path: str) -> bool:
                 return False
         
         con.close()
-        print("✅ Intégrité de la base de données vérifiée")
+        try:
+            print("✅ Intégrité de la base de données vérifiée")
+        except UnicodeEncodeError:
+            print("[SUCCESS] Integrite de la base de donnees verifiee")
         return True
         
     except Exception as e:
@@ -388,11 +392,19 @@ def migrate_database(db_path: str) -> bool:
         print(f"📊 Version cible : {CURRENT_DB_VERSION}")
         
         if current_version == CURRENT_DB_VERSION:
-            print("✅ Base de données à jour")
+            try:
+                print("✅ Base de données à jour")
+            except UnicodeEncodeError:
+                print("[SUCCESS] Base de donnees a jour")
             return verify_database_integrity(db_path)
         
         # Sauvegarder la base avant migration
-        backup_path = f"{db_path}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        # Créer le dossier dbBackup s'il n'existe pas
+        backup_dir = "dbBackup"
+        os.makedirs(backup_dir, exist_ok=True)
+        
+        backup_filename = f"{os.path.basename(db_path)}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        backup_path = os.path.join(backup_dir, backup_filename)
         import shutil
         shutil.copy2(db_path, backup_path)
         print(f"💾 Sauvegarde créée : {backup_path}")
@@ -431,7 +443,10 @@ def ensure_db_with_migration(db_path: str) -> bool:
     
     # Créer la base si elle n'existe pas
     if not os.path.exists(db_path):
-        print("📂 Création de la nouvelle base de données...")
+        try:
+            print("📂 Création de la nouvelle base de données...")
+        except UnicodeEncodeError:
+            print("[INFO] Creation de la nouvelle base de donnees...")
         con = sqlite3.connect(db_path)
         cur = con.cursor()
         
@@ -444,7 +459,10 @@ def ensure_db_with_migration(db_path: str) -> bool:
         
         # Marquer comme version actuelle
         set_db_version(db_path, CURRENT_DB_VERSION)
-        print("✅ Base de données créée avec le schéma actuel")
+        try:
+            print("✅ Base de données créée avec le schéma actuel")
+        except UnicodeEncodeError:
+            print("[SUCCESS] Base de donnees creee avec le schema actuel")
         return True
     
     # Migrer la base existante

@@ -8,6 +8,7 @@ import argparse
 import sys
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
+from lib.logging_utils import log_info, log_warning, log_error, log_success, setup_logging
 from pathlib import Path
 import os
 import shutil
@@ -170,34 +171,52 @@ class FinalMainApp(tk.Tk):
         # Test d'affichage des émojis
         try:
             # Boutons principaux avec icônes
-            ttk.Button(toolbar, text="🆕Nouveau", command=self.new_card, width=12).pack(side='left', padx=2, pady=2)
-            ttk.Button(toolbar, text="💾Sauvegarder", command=self.save_card, width=14).pack(side='left', padx=2, pady=2)
-            ttk.Button(toolbar, text="🗑️Supprimer", command=self.delete_card, width=14).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="🆕Nouveau", command=self.new_card, 
+                      width=12).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="💾Sauvegarder", command=self.save_card, 
+                      width=14).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="🗑️Supprimer", command=self.delete_card, 
+                      width=14).pack(side='left', padx=2, pady=2)
             
             # Séparateur
-            ttk.Separator(toolbar, orient='vertical').pack(side='left', fill='y', padx=5, pady=2)
+            ttk.Separator(toolbar, orient='vertical').pack(side='left', fill='y', 
+                                                          padx=5, pady=2)
             
             # Actions supplémentaires
-            ttk.Button(toolbar, text="📋Dupliquer", command=self.duplicate_card, width=12).pack(side='left', padx=2, pady=2)
-            ttk.Button(toolbar, text="🔄Actualiser", command=self.refresh_all_tabs, width=12).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="📋Dupliquer", command=self.duplicate_card, 
+                      width=12).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="🔄Actualiser", command=self.refresh_all_tabs, 
+                      width=12).pack(side='left', padx=2, pady=2)
             
             # Séparateur
-            ttk.Separator(toolbar, orient='vertical').pack(side='left', fill='y', padx=5, pady=2)
+            ttk.Separator(toolbar, orient='vertical').pack(side='left', fill='y', 
+                                                          padx=5, pady=2)
             
             # Exports
-            ttk.Button(toolbar, text="📤Export Joueur", command=self.export_player, width=15).pack(side='left', padx=2, pady=2)
-            ttk.Button(toolbar, text="📤Export IA", command=self.export_ia, width=12).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="📤Export Joueur", command=self.export_player, 
+                      width=15).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="📤Export IA", command=self.export_ia, 
+                      width=12).pack(side='left', padx=2, pady=2)
         except:
             # Fallback sans émojis
-            ttk.Button(toolbar, text="Nouveau", command=self.new_card, width=10).pack(side='left', padx=2, pady=2)
-            ttk.Button(toolbar, text="Sauvegarder", command=self.save_card, width=12).pack(side='left', padx=2, pady=2)
-            ttk.Button(toolbar, text="Supprimer", command=self.delete_card, width=12).pack(side='left', padx=2, pady=2)
-            ttk.Separator(toolbar, orient='vertical').pack(side='left', fill='y', padx=5, pady=2)
-            ttk.Button(toolbar, text="Dupliquer", command=self.duplicate_card, width=10).pack(side='left', padx=2, pady=2)
-            ttk.Button(toolbar, text="Actualiser", command=self.refresh_all_tabs, width=10).pack(side='left', padx=2, pady=2)
-            ttk.Separator(toolbar, orient='vertical').pack(side='left', fill='y', padx=5, pady=2)
-            ttk.Button(toolbar, text="Export Joueur", command=self.export_player, width=12).pack(side='left', padx=2, pady=2)
-            ttk.Button(toolbar, text="Export IA", command=self.export_ia, width=10).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="Nouveau", command=self.new_card, 
+                      width=10).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="Sauvegarder", command=self.save_card, 
+                      width=12).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="Supprimer", command=self.delete_card, 
+                      width=12).pack(side='left', padx=2, pady=2)
+            ttk.Separator(toolbar, orient='vertical').pack(side='left', fill='y', 
+                                                          padx=5, pady=2)
+            ttk.Button(toolbar, text="Dupliquer", command=self.duplicate_card, 
+                      width=10).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="Actualiser", command=self.refresh_all_tabs, 
+                      width=10).pack(side='left', padx=2, pady=2)
+            ttk.Separator(toolbar, orient='vertical').pack(side='left', fill='y', 
+                                                          padx=5, pady=2)
+            ttk.Button(toolbar, text="Export Joueur", command=self.export_player, 
+                      width=12).pack(side='left', padx=2, pady=2)
+            ttk.Button(toolbar, text="Export IA", command=self.export_ia, 
+                      width=10).pack(side='left', padx=2, pady=2)
     
     def load_card(self, card_id):
         """Charge une carte dans le formulaire."""
@@ -259,7 +278,7 @@ class FinalMainApp(tk.Tk):
             settings_window = SettingsWindow(self)
             settings_window.show()
         except Exception as e:
-            print(f"Erreur avec settings_window: {e}")
+            log_error(f"Erreur avec settings_window: {e}")
             try:
                 # Fallback vers la version simple
                 from lib.simple_settings_window import SimpleSettingsWindow
@@ -471,7 +490,7 @@ Cette action ne peut pas être annulée."""
                 if not images_folder.exists():
                     images_folder.mkdir(exist_ok=True)
                 
-                print(f"🗑️ {len(deleted_files)} fichiers supprimés du dossier images/")
+                log_success(f"🗑️ {len(deleted_files)} fichiers supprimés du dossier images/")
             
             # Vider complètement la base de données
             import sqlite3
@@ -489,7 +508,7 @@ Cette action ne peut pas être annulée."""
                 conn.execute("DELETE FROM sqlite_sequence")
                 conn.commit()
                 
-                print(f"🗑️ Toutes les données supprimées de {len(tables)} tables")
+                log_success(f"🗑️ Toutes les données supprimées de {len(tables)} tables")
             
             # Actualiser l'interface
             self.refresh_all_tabs()
@@ -533,12 +552,13 @@ Vérifiez manuellement les fichiers si nécessaire."""
                     break
             
             if guide_path:
-                print(f"[INFO] Ouverture du guide: {guide_path}")
+                log_info(f"[INFO] Ouverture du guide: {guide_path}")
                 os.startfile(str(guide_path))
             else:
                 # Afficher où on a cherché pour aider au debug
                 search_locations = [str(p) for p in possible_paths]
-                message = f"Le fichier GUIDE.md n'a pas été trouvé.\n\nEmplacements vérifiés:\n" + "\n".join(search_locations)
+                message = ("Le fichier GUIDE.md n'a pas été trouvé.\n\n"
+                          "Emplacements vérifiés:\n" + "\n".join(search_locations))
                 messagebox.showinfo("Guide non trouvé", message)
         except Exception as e:
             messagebox.showerror("Erreur", f"Impossible d'ouvrir le guide: {e}")
@@ -597,32 +617,34 @@ def main(argv=None):
     """Point d'entrée principal de l'application."""
     parser = argparse.ArgumentParser(description=APP_TITLE)
     parser.add_argument('--test', action='store_true', help='Exécuter la suite de tests et quitter')
-    parser.add_argument('--write-bats', action='store_true', help='Générer run.bat et build.bat dans le dossier du script')
+    parser.add_argument('--write-bats', action='store_true', 
+                       help='Générer run.bat et build.bat dans le dossier du script')
     args = parser.parse_args(argv)
 
     if args.test:
-        print("Exécution des tests...")
+        log_info("Execution des tests...")
         success = run_tests()
         sys.exit(0 if success else 1)
 
     if getattr(args, 'write_bats', False):
         paths = write_bat_scripts()
-        print("Scripts générés :", paths)
+        log_info(f"Scripts générés : {paths}")
         sys.exit(0)
 
     # Initialisation et vérification de la base de données
-    print("🚀 Démarrage de l'éditeur de cartes Love2D...")
-    print("=" * 50)
+    setup_logging()
+    log_info("🚀 Démarrage de l'éditeur de cartes Love2D...")
+    log_info("=" * 50)
     
     db_path = default_db_path()
     
     try:
         # Vérification et migration de la base de données
         ensure_db(db_path)
-        print("✅ Base de données initialisée et vérifiée")
+        log_success("✅ Base de données initialisée et vérifiée")
     except Exception as e:
-        print(f"❌ Erreur lors de l'initialisation de la base de données :")
-        print(f"   {e}")
+        log_error(f"❌ Erreur lors de l'initialisation de la base de données :")
+        log_error(f"   {e}")
         
         # Demander à l'utilisateur s'il veut continuer avec la version legacy
         import tkinter as tk
@@ -643,16 +665,16 @@ def main(argv=None):
         root.destroy()
         
         if not response:
-            print("❌ Arrêt de l'application.")
+            log_error("❌ Arrêt de l'application.")
             sys.exit(1)
         
         # Essayer avec le système legacy
         try:
             from lib.database import ensure_db_legacy
             ensure_db_legacy(db_path)
-            print("⚠️  Mode de compatibilité activé (legacy)")
+            log_warning("⚠️  Mode de compatibilité activé (legacy)")
         except Exception as e2:
-            print(f"❌ Impossible de continuer même en mode legacy : {e2}")
+            log_error(f"❌ Impossible de continuer même en mode legacy : {e2}")
             sys.exit(1)
     
     repo = CardRepo(db_path)
@@ -660,7 +682,7 @@ def main(argv=None):
     # Charge les paramètres de l'application
     load_settings()
     
-    print("=" * 50)
+    log_info("=" * 50)
 
     try:
         app = FinalMainApp(repo)

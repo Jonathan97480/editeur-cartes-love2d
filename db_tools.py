@@ -131,7 +131,12 @@ def backup_database():
         import shutil
         
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        backup_path = f"{db_path}.backup.manual.{timestamp}"
+        # Créer le dossier dbBackup s'il n'existe pas
+        backup_dir = "dbBackup"
+        os.makedirs(backup_dir, exist_ok=True)
+        
+        backup_filename = f"{os.path.basename(db_path)}.backup.manual.{timestamp}"
+        backup_path = os.path.join(backup_dir, backup_filename)
         
         shutil.copy2(db_path, backup_path)
         print(f"✅ Sauvegarde créée : {backup_path}")

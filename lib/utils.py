@@ -21,7 +21,7 @@ except ImportError:
 def default_db_path() -> str:
     """Chemin par défaut de la BDD.
     - Exécutable (PyInstaller, sys.frozen) : %APPDATA%/EditeurCartesLove2D/cartes.db
-    - Script : ./cartes.db
+    - Script : ./data/cartes.db
     """
     if getattr(sys, 'frozen', False):
         base = os.environ.get('APPDATA') or os.path.expanduser('~')
@@ -31,7 +31,9 @@ def default_db_path() -> str:
         except Exception:
             folder = os.path.expanduser('~')
         return os.path.join(folder, 'cartes.db')
-    return "cartes.db"
+    # En mode développement, utiliser le dossier data/
+    os.makedirs("data", exist_ok=True)
+    return "data/cartes.db"
 
 def to_int(x) -> int:
     """Convertit une valeur en entier, retourne 0 si impossible."""
