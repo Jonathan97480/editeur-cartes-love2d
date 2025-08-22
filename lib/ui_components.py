@@ -965,7 +965,8 @@ class CardForm(ttk.Frame):
                         UPDATE cards SET 
                             title_x=?, title_y=?, title_font=?, title_size=?, title_color=?,
                             text_x=?, text_y=?, text_width=?, text_height=?, text_font=?,
-                            text_size=?, text_color=?, text_align=?, line_spacing=?, text_wrap=?
+                            text_size=?, text_color=?, text_align=?, line_spacing=?, text_wrap=?,
+                            energy_x=?, energy_y=?, energy_font=?, energy_size=?, energy_color=?
                         WHERE id=?
                     """, (
                         card_data.title_x, card_data.title_y, card_data.title_font,
@@ -973,7 +974,10 @@ class CardForm(ttk.Frame):
                         card_data.text_x, card_data.text_y, card_data.text_width,
                         card_data.text_height, card_data.text_font, card_data.text_size,
                         card_data.text_color, card_data.text_align, card_data.line_spacing,
-                        int(card_data.text_wrap), card_data.id
+                        int(card_data.text_wrap),
+                        card_data.energy_x, card_data.energy_y, card_data.energy_font,
+                        card_data.energy_size, card_data.energy_color,
+                        card_data.id
                     ))
                     
                     conn.commit()

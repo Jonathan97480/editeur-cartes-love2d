@@ -35,6 +35,13 @@ class Card:
         self.line_spacing = 1.2
         self.text_wrap = True
         
+        # Champs de formatage de l'énergie
+        self.energy_x = 25
+        self.energy_y = 25
+        self.energy_font = 'Arial'
+        self.energy_size = 14
+        self.energy_color = '#FFFFFF'
+        
         if row:
             self.from_row(row)
 
@@ -70,6 +77,13 @@ class Card:
         self.text_align = row['text_align'] if 'text_align' in row.keys() else 'left'
         self.line_spacing = row['line_spacing'] if 'line_spacing' in row.keys() else 1.2
         self.text_wrap = bool(row['text_wrap']) if 'text_wrap' in row.keys() else True
+        
+        # Champs de formatage de l'énergie
+        self.energy_x = row['energy_x'] if 'energy_x' in row.keys() else 25
+        self.energy_y = row['energy_y'] if 'energy_y' in row.keys() else 25
+        self.energy_font = row['energy_font'] if 'energy_font' in row.keys() else 'Arial'
+        self.energy_size = row['energy_size'] if 'energy_size' in row.keys() else 14
+        self.energy_color = row['energy_color'] if 'energy_color' in row.keys() else '#FFFFFF'
 
     def to_db_tuple(self):
         """Convert card to database tuple for insertion/update."""
@@ -94,7 +108,12 @@ class Card:
             self.text_color,
             self.text_align,
             self.line_spacing,
-            int(self.text_wrap)
+            int(self.text_wrap),
+            self.energy_x,
+            self.energy_y,
+            self.energy_font,
+            self.energy_size,
+            self.energy_color
         )
 
     def to_dict(self):
@@ -236,7 +255,8 @@ class CardRepo:
                     nom = ?, type = ?, rarete = ?, cout = ?, description = ?, image_path = ?,
                     title_x = ?, title_y = ?, title_font = ?, title_size = ?, title_color = ?,
                     text_x = ?, text_y = ?, text_width = ?, text_height = ?, text_font = ?,
-                    text_size = ?, text_color = ?, text_align = ?, line_spacing = ?, text_wrap = ?
+                    text_size = ?, text_color = ?, text_align = ?, line_spacing = ?, text_wrap = ?,
+                    energy_x = ?, energy_y = ?, energy_font = ?, energy_size = ?, energy_color = ?
                 WHERE id = ?
             ''', card.to_db_tuple() + (card.id,))
         else:
@@ -246,8 +266,9 @@ class CardRepo:
                     nom, type, rarete, cout, description, image_path,
                     title_x, title_y, title_font, title_size, title_color,
                     text_x, text_y, text_width, text_height, text_font,
-                    text_size, text_color, text_align, line_spacing, text_wrap
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    text_size, text_color, text_align, line_spacing, text_wrap,
+                    energy_x, energy_y, energy_font, energy_size, energy_color
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', card.to_db_tuple())
             card.id = cursor.lastrowid
         
