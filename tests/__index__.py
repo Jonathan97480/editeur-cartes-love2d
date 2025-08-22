@@ -22,7 +22,7 @@ def print_tests_index():
     
     print("\n   📱 Interface et Compatibilité :")
     print("      • test_compat.py - Tests de compatibilité interface")
-    print("      • test_simple.py - Test basique de Tkinter")
+    print("      • interface/test_simple.py - Test basique de Tkinter")
     print("      • test_deck_viewer.py - Visualiseur de deck complet")
     
     print("\n   🖼️ Gestion des Images :")
@@ -60,7 +60,7 @@ def print_tests_index():
     print("\n📊 CATÉGORIES DE TESTS :")
     
     print("\n   🟢 Tests de base (toujours passer) :")
-    print("      • test_simple.py")
+    print("      • interface/test_simple.py")
     print("      • test_compat.py")
     print("      • test_migration.py")
     

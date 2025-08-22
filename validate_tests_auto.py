@@ -81,11 +81,11 @@ def test_direct_execution():
     
     # Tests simples sans interaction
     simple_tests = [
-        '../interface/test_simple.py',
-        '../test_compat.py', 
-        '../test_migration.py',
-        '../exports/test_lua_export.py',
-        '../organisation/test_template_organization.py'
+        'tests/interface/test_simple.py',
+        'tests/test_compat.py', 
+        'tests/test_migration.py',
+        'tests/exports/test_lua_export.py',
+        'tests/organisation/test_template_organization.py'
     ]
     
     results = []

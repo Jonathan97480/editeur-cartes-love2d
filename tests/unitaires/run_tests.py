@@ -13,29 +13,48 @@ from pathlib import Path
 
 def list_available_tests():
     """Liste tous les tests disponibles."""
-    tests_dir = Path("tests")
-    if not tests_dir.exists():
-        print("❌ Dossier tests/ introuvable")
-        return []
+    tests_dir = Path("../")  # Dossier tests/
+    test_files = []
     
-    test_files = list(tests_dir.glob("test_*.py"))
-    return sorted([f.stem for f in test_files])
+    # Chercher dans tous les sous-dossiers
+    for subdir in tests_dir.iterdir():
+        if subdir.is_dir() and subdir.name not in ["__pycache__", "unitaires"]:
+            for test_file in subdir.glob("test_*.py"):
+                test_files.append(test_file.stem)
+    
+    return sorted(test_files)
 
 def run_test(test_name):
     """Exécute un test spécifique."""
-    test_path = Path("tests") / f"{test_name}.py"
+    # Chercher le test dans tous les sous-dossiers
+    tests_base = Path("../")
+    test_path = None
     
-    if not test_path.exists():
-        print(f"❌ Test {test_name} introuvable dans tests/")
+    for subdir in tests_base.iterdir():
+        if subdir.is_dir() and subdir.name not in ["__pycache__", "unitaires"]:
+            potential_path = subdir / f"{test_name}.py"
+            if potential_path.exists():
+                test_path = potential_path
+                break
+    
+    if not test_path:
+        print(f"❌ Test {test_name} introuvable")
+        print("📋 Tests disponibles:")
+        for test in list_available_tests():
+            print(f"   • {test}")
         return False
     
     print(f"🚀 Exécution de {test_name}...")
+    print(f"📁 Chemin: {test_path}")
     print("=" * 50)
     
     try:
+        # Changer de répertoire vers la racine du projet pour les imports
+        root_dir = Path("../../")  # Racine du projet
         result = subprocess.run([
-            sys.executable, str(test_path)
-        ], capture_output=False, text=True)
+            sys.executable, "-c",
+            f"import sys; sys.path.insert(0, '{root_dir.resolve()}'); exec(open('{test_path.resolve()}').read())"
+        ], capture_output=False, text=True, cwd=root_dir)
         
         if result.returncode == 0:
             print(f"✅ {test_name} terminé avec succès")
