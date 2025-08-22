@@ -6,10 +6,16 @@ Composants de l'interface utilisateur pour l'éditeur de cartes
 import os
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from .config import (APP_TITLE, RARITY_LABELS, RARITY_FROM_LABEL, 
-                     TYPE_LABELS, TYPE_FROM_LABEL, TYPE_ORDER, APP_SETTINGS)
-from .database import Card, CardRepo
-# from .lua_export import export_lua  # Ancien système SANS TextFormatting
+
+# Pattern try/except pour imports relatifs/absolus
+try:
+    from .config import (APP_TITLE, RARITY_LABELS, RARITY_FROM_LABEL, 
+                         TYPE_LABELS, TYPE_FROM_LABEL, TYPE_ORDER, APP_SETTINGS)
+    from .database import Card, CardRepo
+except ImportError:
+    from config import (APP_TITLE, RARITY_LABELS, RARITY_FROM_LABEL, 
+                       TYPE_LABELS, TYPE_FROM_LABEL, TYPE_ORDER, APP_SETTINGS)
+    from database import Card, CardRepo
 # CORRECTION: Utiliser directement Love2DLuaExporter
 def export_lua(repo, side, filepath):
     """Export avec Love2DLuaExporter - garantit TextFormatting"""
@@ -20,13 +26,21 @@ def export_lua(repo, side, filepath):
     exporter.export_to_file(filepath)
     print(f"✅ Export Love2D avec TextFormatting: {filepath}")
 
-from .utils import to_int, create_card_image, sanitize_filename
+# Pattern try/except pour imports utils
+try:
+    from .utils import to_int, create_card_image, sanitize_filename
+except ImportError:
+    from utils import to_int, create_card_image, sanitize_filename
 
 def get_available_actors():
     """Récupère la liste des acteurs disponibles pour les interfaces."""
     try:
-        from .actors import ActorManager
-        from .config import DB_FILE
+        try:
+            from .actors import ActorManager
+            from .config import DB_FILE
+        except ImportError:
+            from actors import ActorManager
+            from config import DB_FILE
         
         manager = ActorManager(DB_FILE)
         actors = manager.list_actors()
@@ -261,7 +275,10 @@ class CardForm(ttk.Frame):
             current_img_path = ''
         
         # Résoudre le chemin relatif en absolu pour les vérifications d'existence
-        from .utils import resolve_relative_path
+        try:
+            from .utils import resolve_relative_path
+        except ImportError:
+            from utils import resolve_relative_path
         resolved_img_path = resolve_relative_path(current_img_path) if current_img_path else ''
         
         # Déterminer si l'image actuelle est fusionnée ou originale
@@ -282,7 +299,10 @@ class CardForm(ttk.Frame):
         if current_img_path and os.path.exists(resolved_img_path):
             if is_fused_image:
                 # Chercher l'image originale correspondante
-                from .utils import ensure_images_subfolders
+                try:
+                    from .utils import ensure_images_subfolders
+                except ImportError:
+                    from utils import ensure_images_subfolders
                 subfolders = ensure_images_subfolders()
                 filename = os.path.basename(resolved_img_path)
                 potential_original = os.path.join(subfolders['originals'], filename)
@@ -400,7 +420,10 @@ class CardForm(ttk.Frame):
         if path:
             # Copier l'image dans le dossier originals avec le nom de la carte
             card_name = self.name_var.get().strip() or "carte_sans_nom"
-            from .utils import copy_image_to_originals, convert_to_relative_path
+            try:
+                from .utils import copy_image_to_originals, convert_to_relative_path
+            except ImportError:
+                from utils import copy_image_to_originals, convert_to_relative_path
             
             # Copier l'image vers le dossier originals
             local_image_path = copy_image_to_originals(path, card_name)
@@ -433,7 +456,10 @@ class CardForm(ttk.Frame):
             return
             
         # Vérifier si l'image est dans le dossier originals
-        from .utils import ensure_images_subfolders, sanitize_filename
+        try:
+            from .utils import ensure_images_subfolders, sanitize_filename
+        except ImportError:
+            from utils import ensure_images_subfolders, sanitize_filename
         subfolders = ensure_images_subfolders()
         
         if subfolders['originals'] in current_image_path:
@@ -931,7 +957,10 @@ class CardForm(ttk.Frame):
         
         # Récupérer la rareté de la carte
         rarity_label = self.rarity_var.get()
-        from .config import RARITY_FROM_LABEL
+        try:
+            from .config import RARITY_FROM_LABEL
+        except ImportError:
+            from config import RARITY_FROM_LABEL
         rarity_key = RARITY_FROM_LABEL.get(rarity_label, 'commun')
         
         # Récupérer le template pour cette rareté

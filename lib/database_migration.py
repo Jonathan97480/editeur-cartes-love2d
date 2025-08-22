@@ -8,7 +8,12 @@ import os
 import sqlite3
 from datetime import datetime
 from typing import Dict, List, Any
-from .config import RARITY_VALUES
+
+# Pattern try/except pour imports relatifs/absolus
+try:
+    from .config import RARITY_VALUES
+except ImportError:
+    from config import RARITY_VALUES
 
 # ======================= Constantes =======================
 

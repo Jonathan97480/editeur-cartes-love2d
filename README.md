@@ -63,12 +63,23 @@
 - **Gestion des chemins absolus** : Support complet des chemins utilisateur
 - **Migration progressive** : Mise à jour par étapes sécurisées
 
-### 📤 **Export Love2D**
+### 📤 **Système d'Export Avancé**
+
+#### **🎮 Export Love2D Standard**
 - **Export par acteur** : Fichiers .lua séparés par acteur/faction
 - **Export global** : Toutes les cartes organisées par acteur
 - **Format Love2D complet** : Effects Actor/Enemy, illustrations incluses
 - **Export legacy** : Support joueur/IA pour compatibilité
 - Support complet des effets et statistiques
+
+#### **📦 Export de Package Complet (✨ Nouveau !)**
+- **Package ZIP complet** : Jeu Love2D prêt à jouer
+- **Images fusionnées** : Cartes avec templates déjà appliqués
+- **Polices incluses** : Fonts système utilisées automatiquement détectées
+- **Documentation Love2D** : Guide d'intégration et exemples de code
+- **Structure organisée** : Dossiers séparés (cards/, fonts/, docs/)
+- **Optimisation automatique** : Images PNG optimisées, police TTF/OTF
+- **Interface intégrée** : Bouton "📦 Package Complet" avec progression
 
 ## 🚀 Installation et Lancement
 
@@ -132,7 +143,63 @@ python test_compat.py --compat    # Force le mode compatibilité
 3. **Créer votre première carte** avec le formulaire à gauche
 4. **Migration automatique** : Si vous avez des cartes existantes, elles seront automatiquement mises à jour
 
-### 🔄 Migration et Mise à Jour
+### � **Nouveau : Export de Package Complet**
+
+#### **🚀 Créer un Package Love2D Complet**
+1. **Cliquez sur "📦 Package Complet"** dans la section Export
+2. **Choisissez le dossier de destination** 
+3. **Laissez l'outil travailler** : 
+   - ✅ Fusion automatique des images avec templates
+   - ✅ Détection et copie des polices utilisées
+   - ✅ Génération des fichiers Lua Love2D
+   - ✅ Création de la documentation
+   - ✅ Package ZIP prêt à jouer
+
+#### **📁 Structure du Package Généré**
+```
+📦 game_package.zip
+├── 📄 main.lua           # Point d'entrée Love2D
+├── 📄 conf.lua           # Configuration du jeu
+├── 📁 cards/             # Images de cartes fusionnées
+│   ├── 🖼️ joueur_*.png   # Cartes du joueur
+│   └── 🖼️ ia_*.png       # Cartes de l'IA
+├── 📁 fonts/             # Polices détectées automatiquement
+│   ├── 🔤 arial.ttf      # Polices système utilisées
+│   └── 🔤 custom.otf     # Polices personnalisées
+├── 📁 data/              # Données du jeu
+│   ├── 📄 cards_joueur.lua  # Données cartes joueur
+│   ├── 📄 cards_ia.lua      # Données cartes IA
+│   └── 📄 actors.lua        # Définitions des acteurs
+└── 📁 docs/              # Documentation Love2D
+    ├── 📄 integration_guide.md
+    ├── 📄 api_reference.md
+    └── 📄 examples.lua
+```
+
+#### **🎮 Utilisation dans Love2D**
+Le package généré inclut du code Love2D prêt à utiliser :
+```lua
+-- Exemple d'utilisation des cartes exportées
+local cards = require("data.cards_joueur")
+local fonts = require("data.fonts")
+
+function love.load()
+    -- Les polices sont automatiquement chargées
+    local cardFont = fonts.getFont("card_text", 14)
+    
+    -- Les images sont pré-fusionnées avec templates
+    local cardImage = love.graphics.newImage("cards/joueur_carte_1.png")
+end
+```
+
+#### **🔍 Fonctionnalités Avancées**
+- **Détection automatique de polices** : 263 polices système supportées
+- **Optimisation d'images** : Compression PNG automatique
+- **Support multi-format** : TTF, OTF, système et personnalisées
+- **Documentation générée** : Guide d'intégration Love2D complet
+- **Package auto-suffisant** : Aucune dépendance externe requise
+
+### �🔄 Migration et Mise à Jour
 - **Automatique** : La base de données se met à jour automatiquement
 - **Sauvegarde** : Backup automatique avant chaque migration
 - **Préservation** : Toutes vos cartes existantes sont conservées
@@ -143,6 +210,13 @@ python test_compat.py --compat    # Force le mode compatibilité
 - **Automatique** : L'application suit le thème Windows
 - **Manuel** : Choisissez entre clair et sombre
 - **Instantané** : Changement immédiat sans redémarrage
+
+### 🔤 **Nouveau : Gestionnaire de Polices Avancé**
+- **Détection automatique** : 263 polices système Windows détectées
+- **Support multi-format** : TTF, OTF, polices système et personnalisées
+- **Intégration Love2D** : Export automatique des polices utilisées
+- **Prévisualisation** : Aperçu des polices dans l'interface
+- **Optimisation** : Copie uniquement des polices réellement utilisées
 
 ### Interface
 - **Panneau gauche** : Formulaire d'édition des cartes
@@ -159,6 +233,9 @@ python test_compat.py --compat    # Force le mode compatibilité
 | `Del` | Supprimer carte |
 | `F5` | Actualiser |
 | `Ctrl+Q` | Quitter |
+| `Ctrl+E` | Export Love2D standard |
+| `Ctrl+Shift+E` | Export Package Complet |
+| `F1` | Aide et documentation |
 
 ## 📁 Structure du Projet
 
@@ -174,6 +251,8 @@ python test_compat.py --compat    # Force le mode compatibilité
 │   ├── 📄 config.py       # Configuration
 │   ├── 📄 database.py     # Gestion base de données
 │   ├── 📄 database_migration.py # Système de migration (Nouveau !)
+│   ├── 📄 font_manager.py # Gestionnaire de polices système (Nouveau !)
+│   ├── 📄 game_package_exporter.py # Export package complet (Nouveau !)
 │   ├── 📄 themes.py       # Système de thèmes
 │   ├── 📄 theme_settings.py # Interface thèmes
 │   ├── 📄 main_app.py     # Application principale
@@ -183,6 +262,9 @@ python test_compat.py --compat    # Force le mode compatibilité
 │   ├── 📄 utils.py        # Utilitaires
 │   └── 📄 tests.py        # Tests unitaires
 ├── 📁 images/             # Images générées
+├── 📁 fonts/              # Polices système et personnalisées (Nouveau !)
+├── 📁 game_packages/      # Packages Love2D exportés (Nouveau !)
+├── 📁 data/               # Base de données et configuration (Nouveau !)
 └── 📁 venv/               # Environnement virtuel
 ```
 
@@ -242,6 +324,24 @@ L'application détecte automatiquement le thème Windows et s'adapte. Vous pouve
 - **Automatiquement corrigé** : Les changements de rareté ne créent plus de superposition
 - **Migration transparente** : Cartes existantes automatiquement mises à jour
 - **Système perfectionné** : Séparation image source/affichage
+
+### Export de package ne fonctionne pas
+- **Vérifiez Python** : Le système d'export nécessite Python 3.8+
+- **Vérifiez Pillow** : Installation automatique avec `run.bat`
+- **Permissions** : Vérifiez les droits d'écriture dans game_packages/
+- **Espace disque** : Les packages peuvent faire jusqu'à 50MB
+
+### Polices ne sont pas détectées
+- **Système Windows requis** : 263 polices système supportées
+- **Polices personnalisées** : Placez les fichiers .ttf/.otf dans fonts/
+- **Permissions** : Vérifiez l'accès aux dossiers système Windows
+- **Cache** : Redémarrez l'application pour recharger la liste
+
+### Migration de base de données
+- **Automatique** : L'ancienne cartes.db est migrée vers data/cartes.db
+- **Sauvegarde** : L'original est préservé dans backups/
+- **Script UPDATE.bat** : Gère la migration automatiquement
+- **Manuel** : Copiez cartes.db vers data/ si nécessaire
 
 ### Mise à jour depuis GitHub
 - **Migration automatique** : Vos cartes existantes sont préservées

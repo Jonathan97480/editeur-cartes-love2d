@@ -22,9 +22,16 @@ import json
 from PIL import Image, ImageDraw, ImageFont
 import logging
 
-from database import CardRepo
-from font_manager import FontManager
-from config import DB_FILE
+try:
+    # Import avec préfixe de module pour intégration UI
+    from .database import CardRepo
+    from .font_manager import FontManager
+    from .config import DB_FILE
+except ImportError:
+    # Import direct pour utilisation standalone
+    from database import CardRepo
+    from font_manager import FontManager
+    from config import DB_FILE
 
 class GamePackageExporter:
     """Exporteur de package de jeu complet."""

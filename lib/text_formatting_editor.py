@@ -10,7 +10,12 @@ import sqlite3
 import json
 from PIL import Image, ImageDraw, ImageFont, ImageTk
 from pathlib import Path
-from .font_manager import get_font_manager, get_available_fonts
+
+# Pattern try/except pour imports relatifs/absolus
+try:
+    from .font_manager import get_font_manager, get_available_fonts
+except ImportError:
+    from font_manager import get_font_manager, get_available_fonts
 
 class TextFormattingEditor:
     def __init__(self, parent, card_id=None, card_data=None, repo=None):
@@ -145,20 +150,25 @@ class TextFormattingEditor:
         y = (self.window.winfo_screenheight() // 2) - (window_height // 2)
         self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
         
-        # Frame principal avec splitter
+        # Frame principal avec splitter redimensionnable
         main_frame = ttk.Frame(self.window)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Frame gauche - Contrôles (30% de la largeur pour plus de place)
-        controls_width = int((window_width - 40) * 0.3)  # 30% au lieu de 25%
-        controls_frame = ttk.LabelFrame(main_frame, text="📝 Contrôles de Formatage", padding=5)
-        controls_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 10))
-        controls_frame.configure(width=controls_width)
-        controls_frame.pack_propagate(False)  # Forcer la taille
+        # PanedWindow pour panneau redimensionnable
+        paned_window = ttk.PanedWindow(main_frame, orient=tk.HORIZONTAL)
+        paned_window.pack(fill=tk.BOTH, expand=True)
         
-        # Frame droite - Aperçu (70% de la largeur)
-        preview_frame = ttk.LabelFrame(main_frame, text="👁️ Aperçu de la Carte", padding=10)
-        preview_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        # Frame gauche - Contrôles (redimensionnable)
+        controls_width = int((window_width - 40) * 0.3)  # Largeur initiale 30%
+        controls_frame = ttk.LabelFrame(paned_window, text="📝 Contrôles de Formatage", padding=5)
+        paned_window.add(controls_frame, weight=1)
+        
+        # Frame droite - Aperçu (redimensionnable)
+        preview_frame = ttk.LabelFrame(paned_window, text="👁️ Aperçu de la Carte", padding=10)
+        paned_window.add(preview_frame, weight=2)
+        
+        # Configurer la position initiale du séparateur (30% / 70%)
+        paned_window.after(100, lambda: paned_window.sashpos(0, controls_width))
         
         self.create_controls(controls_frame)
         self.create_preview(preview_frame)
@@ -180,15 +190,26 @@ class TextFormattingEditor:
         
     def create_controls(self, parent):
         """Crée les contrôles de formatage"""
-        # Calculer la largeur disponible (30% de la fenêtre moins les marges)
-        controls_width = int((1182 - 60) * 0.3)  # ~345px
         
-        # Spécifications standardisées pour les curseurs - PLEINE LARGEUR
-        slider_length = controls_width - 40  # Utilise toute la largeur disponible
+        def get_slider_length():
+            """Calcule la longueur du slider en fonction de la largeur actuelle du panneau"""
+            try:
+                # Obtenir la largeur actuelle du panneau
+                parent.update_idletasks()
+                current_width = parent.winfo_width()
+                if current_width <= 1:  # Si pas encore initialisé
+                    current_width = 350  # Valeur par défaut
+                # Limiter à 300px maximum, avec marge de 40px
+                return min(300, max(200, current_width - 40))
+            except:
+                return 280  # Valeur de sécurité
+        
+        # Spécifications standardisées pour les curseurs - LARGEUR DYNAMIQUE
+        slider_length = get_slider_length()
         slider_margin_right = 20  # Marge réduite pour plus d'espace
         
         # Frame scrollable avec hauteur optimisée et SCROLLBAR PLUS VISIBLE
-        canvas = tk.Canvas(parent, width=controls_width-20, height=680, bg="#f8f8f8", relief=tk.SUNKEN, bd=1)
+        canvas = tk.Canvas(parent, height=680, bg="#f8f8f8", relief=tk.SUNKEN, bd=1)
         
         # Scrollbar plus visible et accessible
         scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
@@ -201,6 +222,10 @@ class TextFormattingEditor:
         
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack canvas et scrollbar
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Activer la roulette de souris pour le scroll
         def _on_mousewheel(event):
@@ -223,7 +248,7 @@ class TextFormattingEditor:
         ttk.Label(label_frame_x, textvariable=self.title_x_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
-        scale_x = ttk.Scale(pos_frame, from_=0, to=500, variable=self.title_x_var, 
+        scale_x = ttk.Scale(pos_frame, from_=0, to=280, variable=self.title_x_var, 
                            command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL)
         scale_x.pack(fill=tk.X, pady=(2, 0))
         
@@ -239,7 +264,7 @@ class TextFormattingEditor:
         ttk.Label(label_frame_y, textvariable=self.title_y_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
-        scale_y = ttk.Scale(pos_frame2, from_=0, to=600, variable=self.title_y_var,
+        scale_y = ttk.Scale(pos_frame2, from_=0, to=470, variable=self.title_y_var,
                            command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL)
         scale_y.pack(fill=tk.X, pady=(2, 0))
         
@@ -296,7 +321,7 @@ class TextFormattingEditor:
         ttk.Label(label_frame_text_x, textvariable=self.text_x_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
-        ttk.Scale(pos_frame3, from_=0, to=500, variable=self.text_x_var,
+        ttk.Scale(pos_frame3, from_=0, to=280, variable=self.text_x_var,
                  command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Position Y du texte
@@ -311,7 +336,7 @@ class TextFormattingEditor:
         ttk.Label(label_frame_text_y, textvariable=self.text_y_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
-        ttk.Scale(pos_frame4, from_=0, to=700, variable=self.text_y_var,
+        ttk.Scale(pos_frame4, from_=0, to=470, variable=self.text_y_var,
                  command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Largeur du texte
@@ -326,7 +351,7 @@ class TextFormattingEditor:
         ttk.Label(label_frame_width, textvariable=self.text_width_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
-        ttk.Scale(dim_frame, from_=50, to=400, variable=self.text_width_var,
+        ttk.Scale(dim_frame, from_=20, to=260, variable=self.text_width_var,
                  command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Hauteur du texte
@@ -341,7 +366,7 @@ class TextFormattingEditor:
         ttk.Label(label_frame_height, textvariable=self.text_height_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
-        ttk.Scale(dim_frame2, from_=50, to=300, variable=self.text_height_var,
+        ttk.Scale(dim_frame2, from_=20, to=250, variable=self.text_height_var,
                  command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Police et taille pour le texte
@@ -429,7 +454,7 @@ class TextFormattingEditor:
         # Curseur X plus grand - PLEINE LARGEUR
         scale_x_frame = ttk.Frame(pos_x_energy_frame)
         scale_x_frame.pack(fill=tk.X, pady=(5, 0))
-        ttk.Scale(scale_x_frame, from_=0, to=400, variable=self.energy_x_var,
+        ttk.Scale(scale_x_frame, from_=0, to=280, variable=self.energy_x_var,
                  command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X)
         
         # Position Y (ligne complète)
@@ -445,7 +470,7 @@ class TextFormattingEditor:
         # Curseur Y plus grand - PLEINE LARGEUR
         scale_y_frame = ttk.Frame(pos_y_energy_frame)
         scale_y_frame.pack(fill=tk.X, pady=(5, 0))
-        ttk.Scale(scale_y_frame, from_=0, to=600, variable=self.energy_y_var,
+        ttk.Scale(scale_y_frame, from_=0, to=470, variable=self.energy_y_var,
                  command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X)
         
         # Préréglages de position - AMÉLIORÉS ET PLUS VISIBLES
@@ -453,35 +478,35 @@ class TextFormattingEditor:
         presets_frame.pack(fill=tk.X, pady=(10, 10))
         
         # AMÉLIORATION: 3 lignes de boutons pour plus de visibilité
-        # Ligne 1: Positions hautes
+        # Ligne 1: Positions hautes (dimensions carte 280x470)
         row1 = ttk.Frame(presets_frame)
         row1.pack(fill=tk.X, pady=(0, 5))
         ttk.Button(row1, text="↖ Haut G.", width=10, 
-                  command=lambda: self.set_energy_position(25, 25)).pack(side=tk.LEFT, padx=(0, 5))
+                  command=lambda: self.set_energy_position(20, 20)).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(row1, text="↑ Haut C.", width=10,
-                  command=lambda: self.set_energy_position(140, 25)).pack(side=tk.LEFT, padx=5)
+                  command=lambda: self.set_energy_position(140, 20)).pack(side=tk.LEFT, padx=5)
         ttk.Button(row1, text="↗ Haut D.", width=10,
-                  command=lambda: self.set_energy_position(255, 25)).pack(side=tk.LEFT, padx=(5, 0))
+                  command=lambda: self.set_energy_position(260, 20)).pack(side=tk.LEFT, padx=(5, 0))
         
         # Ligne 2: Positions milieu
         row2 = ttk.Frame(presets_frame)
         row2.pack(fill=tk.X, pady=(5, 5))
         ttk.Button(row2, text="← Milieu G.", width=10,
-                  command=lambda: self.set_energy_position(25, 235)).pack(side=tk.LEFT, padx=(0, 5))
+                  command=lambda: self.set_energy_position(20, 235)).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(row2, text="⚫ Centre", width=10,
                   command=lambda: self.set_energy_position(140, 235)).pack(side=tk.LEFT, padx=5)
         ttk.Button(row2, text="→ Milieu D.", width=10,
-                  command=lambda: self.set_energy_position(255, 235)).pack(side=tk.LEFT, padx=(5, 0))
+                  command=lambda: self.set_energy_position(260, 235)).pack(side=tk.LEFT, padx=(5, 0))
         
-        # Ligne 3: Positions basses (NOUVELLE)
+        # Ligne 3: Positions basses (dimensions carte 280x470)
         row3 = ttk.Frame(presets_frame)
         row3.pack(fill=tk.X, pady=(5, 0))
         ttk.Button(row3, text="↙ Bas G.", width=10,
-                  command=lambda: self.set_energy_position(25, 445)).pack(side=tk.LEFT, padx=(0, 5))
+                  command=lambda: self.set_energy_position(20, 450)).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(row3, text="↓ Bas C.", width=10,
-                  command=lambda: self.set_energy_position(140, 445)).pack(side=tk.LEFT, padx=5)
+                  command=lambda: self.set_energy_position(140, 450)).pack(side=tk.LEFT, padx=5)
         ttk.Button(row3, text="↘ Bas D.", width=10,
-                  command=lambda: self.set_energy_position(255, 445)).pack(side=tk.LEFT, padx=(5, 0))
+                  command=lambda: self.set_energy_position(260, 450)).pack(side=tk.LEFT, padx=(5, 0))
         
         # Police et taille
         font_energy_frame = ttk.Frame(energy_frame)
@@ -538,10 +563,6 @@ class TextFormattingEditor:
         self.content_text_widget.pack(fill=tk.X)
         self.content_text_widget.insert('1.0', self.content_text)
         self.content_text_widget.bind('<KeyRelease>', self.on_text_change)
-        
-        # Configuration du canvas et scrollbar
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
         
     def create_preview(self, parent):
         """Crée l'aperçu de la carte"""

@@ -1,0 +1,56 @@
+{
+  "score_final": 100.0,
+  "grade": "PARFAIT",
+  "scores": {
+    "structure": 100,
+    "imports": 100,
+    "database": 100,
+    "export": 100,
+    "tests": 100,
+    "integration": 100,
+    "final": 100.0
+  },
+  "details": {
+    "structure": {
+      "fichiers_presents": 9,
+      "fichiers_total": 9,
+      "pourcentage": 100.0,
+      "tailles": {
+        "app_final.py": 29924,
+        "data/cartes.db": 57344,
+        "lib/config.py": 2112,
+        "lib/database.py": 11737,
+        "lib/ui_components.py": 65727,
+        "lib/utils.py": 21800,
+        "lib/text_formatting_editor.py": 44280,
+        "lib/lua_export.py": 5244,
+        "lib/tests.py": 4325
+      }
+    },
+    "imports": {
+      "modules_ok": 9,
+      "modules_total": 9,
+      "pourcentage": 100.0,
+      "erreurs": []
+    },
+    "database": {
+      "nb_cartes": 10,
+      "nb_colonnes": 35,
+      "nb_formatage": 15
+    },
+    "export": {
+      "taille": 22760,
+      "textformatting": true,
+      "format_correct": true
+    },
+    "tests": {
+      "success_rate": 100.0,
+      "tests_run": 7
+    },
+    "integration": {
+      "integration_complete": true
+    },
+    "grade": "PARFAIT"
+  },
+  "timestamp": "2025-08-22 18:09:25"
+}

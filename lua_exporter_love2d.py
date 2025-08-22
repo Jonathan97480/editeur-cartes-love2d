@@ -117,7 +117,7 @@ class Love2DLuaExporter:
         """Exporte toutes les cartes au format Love2D avec formatage"""
         cards = self.repo.list_cards()
         
-        lua_content = "local Cards = {\n"
+        lua_content = "local cards = {\n"
         
         for i, card in enumerate(cards, 1):
             lua_content += self.build_card_lua_love2d(card, i)
@@ -126,7 +126,7 @@ class Love2DLuaExporter:
             else:
                 lua_content += "\n"
         
-        lua_content += "}\n\nreturn Cards\n"
+        lua_content += "}\n\nreturn cards\n"
         
         return lua_content
 

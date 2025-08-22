@@ -110,18 +110,64 @@ if %ERRORLEVEL% NEQ 0 (
 echo ✅ Mise à jour terminée
 
 echo.
-echo 3️⃣  Restauration des données personnelles...
+echo 3️⃣  Migration et restauration des données...
 
-REM Restaurer la base de données si elle n'existe plus
-if not exist "cartes.db" if exist "%BACKUP_DIR%\cartes.db" (
-    copy "%BACKUP_DIR%\cartes.db" "cartes.db" >nul
-    echo ✅ Base de données restaurée
+REM Migration automatique de la base de données
+echo 🔄 Vérification de la migration de base de données...
+
+REM Si l'ancienne DB existe dans la racine et pas dans data/, migrer
+if exist "cartes.db" (
+    if not exist "data" mkdir data
+    
+    if not exist "data\cartes.db" (
+        echo 📦 Migration de la base de données vers data/...
+        copy "cartes.db" "data\cartes.db" >nul
+        if %ERRORLEVEL% EQU 0 (
+            echo ✅ Base de données migrée vers data/cartes.db
+            echo 🔄 Sauvegarde de l'ancienne version...
+            move "cartes.db" "%BACKUP_DIR%\cartes_ancienne.db" >nul
+            echo ✅ Ancienne base sauvegardée
+        ) else (
+            echo ❌ Erreur lors de la migration
+        )
+    ) else (
+        echo ℹ️  Base de données déjà dans data/, sauvegarde de l'ancienne version
+        move "cartes.db" "%BACKUP_DIR%\cartes_racine_obsolete.db" >nul
+    )
+) else (
+    echo ✅ Structure de base de données à jour
 )
 
-if not exist "data\cartes.db" if exist "%BACKUP_DIR%\cartes_data.db" (
-    if not exist "data" mkdir data
-    copy "%BACKUP_DIR%\cartes_data.db" "data\cartes.db" >nul
-    echo ✅ Base de données (data/) restaurée
+REM Restaurer la base de données si elle n'existe plus
+if not exist "data\cartes.db" (
+    if exist "%BACKUP_DIR%\cartes_data.db" (
+        if not exist "data" mkdir data
+        copy "%BACKUP_DIR%\cartes_data.db" "data\cartes.db" >nul
+        echo ✅ Base de données (data/) restaurée depuis la sauvegarde
+    ) else if exist "%BACKUP_DIR%\cartes.db" (
+        if not exist "data" mkdir data
+        copy "%BACKUP_DIR%\cartes.db" "data\cartes.db" >nul
+        echo ✅ Base de données migrée depuis la sauvegarde racine
+    )
+)
+
+REM Exécuter la migration automatique Python si disponible
+if exist "lib\database_migration.py" (
+    echo 🔧 Lancement de la migration automatique...
+    
+    python --version >nul 2>&1
+    if %ERRORLEVEL% EQU 0 (
+        python -c "import sys; sys.path.append('.'); from lib.database_migration import run_migration; run_migration('data/cartes.db')" 2>nul
+        if %ERRORLEVEL% EQU 0 (
+            echo ✅ Migration automatique terminée
+        ) else (
+            echo ℹ️  Migration automatique sera effectuée au prochain lancement
+        )
+    ) else (
+        echo ℹ️  Python non trouvé - migration au prochain lancement de l'app
+    )
+) else (
+    echo ℹ️  Système de migration non disponible (version ancienne)
 )
 
 REM Restaurer les images personnalisées si le dossier n'existe plus
@@ -131,7 +177,35 @@ if not exist "images" if exist "%BACKUP_DIR%\images" (
 )
 
 echo.
-echo 4️⃣  Vérification de l'installation...
+echo 4️⃣  Vérification de l'installation et nouvelles fonctionnalités...
+
+REM Créer les nouveaux dossiers nécessaires
+if not exist "data" mkdir data
+if not exist "fonts" mkdir fonts
+if not exist "game_packages" mkdir game_packages
+
+echo ✅ Structure de dossiers mise à jour
+
+REM Vérifier les nouvelles fonctionnalités
+echo 🔍 Vérification des nouvelles fonctionnalités...
+
+if exist "lib\game_package_exporter.py" (
+    echo ✅ Système d'export de package complet disponible
+) else (
+    echo ⚠️  Export de package complet non disponible (version ancienne)
+)
+
+if exist "lib\font_manager.py" (
+    echo ✅ Gestionnaire de polices avancé disponible
+) else (
+    echo ℹ️  Gestionnaire de polices non disponible (version ancienne)
+)
+
+if exist "NOUVEAU_SYSTEME_EXPORT.md" (
+    echo ✅ Documentation du nouveau système d'export présente
+) else (
+    echo ℹ️  Documentation d'export non disponible
+)
 
 REM Vérifier que Love2D est accessible
 echo 🔍 Vérification de Love2D...
@@ -161,20 +235,45 @@ if "%LOVE2D_FOUND%"=="0" (
 echo.
 echo 5️⃣  Configuration de l'environnement de développement...
 
-REM Configurer l'environnement Python si le script existe
-if exist "dev\configure_python_env.py" (
-    echo 🐍 Configuration de l'environnement Python...
+REM Vérifier Python et les dépendances pour les nouvelles fonctionnalités
+echo 🐍 Vérification de l'environnement Python...
+
+python --version >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    echo ✅ Python détecté
     
-    REM Chercher Python
-    python --version >nul 2>&1
+    REM Vérifier les dépendances importantes
+    echo 🔍 Vérification des dépendances...
+    
+    python -c "import PIL" >nul 2>&1
     if %ERRORLEVEL% EQU 0 (
+        echo ✅ PIL/Pillow disponible (fusion d'images)
+    ) else (
+        echo ⚠️  PIL/Pillow manquant - exécutez run.bat pour installer
+    )
+    
+    python -c "import tkinter" >nul 2>&1
+    if %ERRORLEVEL% EQU 0 (
+        echo ✅ Tkinter disponible (interface)
+    ) else (
+        echo ⚠️  Tkinter manquant - réinstallez Python avec Tkinter
+    )
+    
+    REM Configuration automatique si le script existe
+    if exist "dev\configure_python_env.py" (
+        echo 🔧 Configuration de l'environnement Python...
         python dev\configure_python_env.py
         echo ✅ Environnement Python configuré
     ) else (
-        echo ⚠️  Python non trouvé - configuration manuelle requise
+        echo ℹ️  Configuration Python automatique non disponible
     )
 ) else (
-    echo ℹ️  Configuration Python non disponible (version simplifiée)
+    echo ⚠️  Python non trouvé
+    echo.
+    echo 💡 Pour utiliser toutes les fonctionnalités (export package, polices) :
+    echo    • Installez Python depuis https://python.org
+    echo    • Exécutez run.bat pour l'installation automatique
+    echo    • Ou utilisez START.bat pour Love2D uniquement
 )
 
 echo.
@@ -184,14 +283,23 @@ echo ╚════════════════════════
 echo.
 echo ✅ Projet mis à jour avec succès
 echo 💾 Vos données sont sauvegardées dans : %BACKUP_DIR%
+echo 📦 Migration de base de données automatique effectuée
 echo.
 echo 🚀 Pour lancer le projet :
-echo    • Double-cliquez sur START.bat
-echo    • Ou lancez Love2D avec le dossier du projet
+echo    • Double-cliquez sur run.bat (recommandé - toutes fonctionnalités)
+echo    • Ou START.bat pour Love2D uniquement
+echo.
+echo 🆕 Nouvelles fonctionnalités disponibles :
+echo    • 📦 Export de package complet Love2D avec images fusionnées
+echo    • 🔤 Gestionnaire de polices avancé (263 polices système)
+echo    • 🖼️  Fusion automatique d'images avec templates optimisés
+echo    • 🔄 Migration automatique de base de données
+echo    • 📚 Documentation Love2D intégrée
 echo.
 echo 🛠️  Pour le développement :
 echo    • Scripts disponibles dans le dossier dev/
 echo    • Documentation dans GUIDE_ENVIRONNEMENT_PYTHON.md
+echo    • Nouveau guide : NOUVEAU_SYSTEME_EXPORT.md
 echo.
 
 echo Appuyez sur une touche pour fermer...

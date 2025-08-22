@@ -3,8 +3,13 @@
 """
 Export des cartes au format Lua
 """
-from .utils import to_int, lua_escape, get_card_image_for_export
-from .database import CardRepo
+# Pattern try/except pour imports relatifs/absolus
+try:
+    from .utils import to_int, lua_escape, get_card_image_for_export
+    from .database import CardRepo
+except ImportError:
+    from utils import to_int, lua_escape, get_card_image_for_export
+    from database import CardRepo
 
 # ======================= Export Lua =======================
 
@@ -132,4 +137,4 @@ def export_lua(repo: CardRepo, side: str, filepath: str) -> None:
     from lua_exporter_love2d import Love2DLuaExporter
     exporter = Love2DLuaExporter(repo)
     exporter.export_to_file(filepath)
-    print(f"✅ Export Love2D avec TextFormatting: {filepath}")
+    print(f"✅ Export Love2D avec TextFormatting et format cards corrigé: {filepath}")

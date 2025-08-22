@@ -6,9 +6,16 @@ Tests unitaires pour l'éditeur de cartes Love2D
 import os
 import tempfile
 import unittest
-from .database import Card, CardRepo, ensure_db
-from .lua_export import build_hero_lua, build_enemy_lua, build_types_lua, build_card_lua, export_lua
-from .utils import lua_escape
+
+# Pattern try/except pour imports relatifs/absolus
+try:
+    from .database import Card, CardRepo, ensure_db
+    from .lua_export import build_hero_lua, build_enemy_lua, build_types_lua, build_card_lua, export_lua
+    from .utils import lua_escape
+except ImportError:
+    from database import Card, CardRepo, ensure_db
+    from lua_export import build_hero_lua, build_enemy_lua, build_types_lua, build_card_lua, export_lua
+    from utils import lua_escape
 
 class TestLuaHelpers(unittest.TestCase):
     def test_lua_escape_quotes_and_newlines(self):
@@ -67,9 +74,10 @@ class TestExport(unittest.TestCase):
             export_lua(r, 'joueur', outp)
             with open(outp, 'r', encoding='utf-8') as f:
                 content = f.read()
-            self.assertTrue(content.startswith('local Cards ='))
-            self.assertTrue(content.strip().endswith('return Cards'))
-            self.assertIn("--[[ CARTE 1 ]]", content)
+            self.assertTrue(content.startswith('local cards ='))  # Format corrigé (minuscule)
+            self.assertTrue(content.strip().endswith('return cards'))  # Format corrigé (minuscule)
+            # Nouvelle assertion adaptée au format actuel avec icône
+            self.assertIn("--[[ CARTE 1", content)  # Format: "--[[ CARTE 1 - 🎮 Joueur ]]"
             self.assertIn("Rarete = 'commun'", content)
             self.assertIn("Type = { 'attaque' }", content)
 

@@ -8,7 +8,12 @@ import re
 import sys
 from datetime import datetime
 from tkinter import messagebox
-from .config import APP_SETTINGS, IMAGES_FOLDER, APP_TITLE
+
+# Pattern try/except pour imports relatifs/absolus
+try:
+    from .config import APP_SETTINGS, IMAGES_FOLDER, APP_TITLE
+except ImportError:
+    from config import APP_SETTINGS, IMAGES_FOLDER, APP_TITLE
 
 try:
     from PIL import Image
@@ -215,7 +220,10 @@ def resolve_relative_path(relative_path: str) -> str:
     
     # Si le chemin commence par 'images/', le convertir en absolu
     if normalized_path.startswith('images/'):
-        from .config import IMAGES_FOLDER
+        try:
+            from .config import IMAGES_FOLDER
+        except ImportError:
+            from config import IMAGES_FOLDER
         # Remplacer 'images/' par le chemin absolu du dossier images
         absolute_path = os.path.join(IMAGES_FOLDER, normalized_path[7:])  # Supprimer 'images/'
         return absolute_path.replace('\\', '/')
@@ -228,7 +236,10 @@ def copy_templates_to_folder() -> dict:
     Copie les templates configurés vers le dossier templates/ et retourne les nouveaux chemins.
     Retourne un dictionnaire {rareté: nouveau_chemin} pour les templates copiés.
     """
-    from .config import APP_SETTINGS, save_settings
+    try:
+        from .config import APP_SETTINGS, save_settings
+    except ImportError:
+        from config import APP_SETTINGS, save_settings
     
     try:
         subfolders = ensure_images_subfolders()

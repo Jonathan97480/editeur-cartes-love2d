@@ -6,7 +6,12 @@ Modèle de données et gestion de la base de données
 import json
 import sqlite3
 from datetime import datetime
-from .config import RARITY_VALUES
+
+# Pattern try/except pour imports relatifs/absolus
+try:
+    from .config import RARITY_VALUES
+except ImportError:
+    from config import RARITY_VALUES
 
 # ======================= Modèle de données =======================
 
@@ -234,7 +239,10 @@ class CardRepo:
 
 def ensure_db(db_path: str) -> None:
     """Assure que la base de données existe et est à jour avec le système de migration."""
-    from .database_migration import ensure_db_with_migration
+    try:
+        from .database_migration import ensure_db_with_migration
+    except ImportError:
+        from database_migration import ensure_db_with_migration
     
     success = ensure_db_with_migration(db_path)
     if not success:
