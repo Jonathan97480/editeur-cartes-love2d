@@ -893,7 +893,8 @@ class CardForm(ttk.Frame):
             cursor.execute("""
                 SELECT title_x, title_y, title_font, title_size, title_color,
                        text_x, text_y, text_width, text_height, text_font,
-                       text_size, text_color, text_align, line_spacing, text_wrap
+                       text_size, text_color, text_align, line_spacing, text_wrap,
+                       energy_x, energy_y, energy_font, energy_size, energy_color
                 FROM cards WHERE id = ?
             """, (self.current_id,))
             
@@ -907,6 +908,7 @@ class CardForm(ttk.Frame):
                     'nom': card.name,
                     'description': card.description,
                     'img': card.img,
+                    'powerblow': card.powerblow,
                     'title_x': formatting_data[0] or 50,
                     'title_y': formatting_data[1] or 30,
                     'title_font': formatting_data[2] or 'Arial',
@@ -921,7 +923,12 @@ class CardForm(ttk.Frame):
                     'text_color': formatting_data[11] or '#000000',
                     'text_align': formatting_data[12] or 'left',
                     'line_spacing': formatting_data[13] or 1.2,
-                    'text_wrap': bool(formatting_data[14]) if formatting_data[14] is not None else True
+                    'text_wrap': bool(formatting_data[14]) if formatting_data[14] is not None else True,
+                    'energy_x': formatting_data[15] or 25,
+                    'energy_y': formatting_data[16] or 25,
+                    'energy_font': formatting_data[17] or 'Arial',
+                    'energy_size': formatting_data[18] or 14,
+                    'energy_color': formatting_data[19] or '#FFFFFF'
                 }
             else:
                 # Données par défaut si pas de formatage
@@ -930,9 +937,11 @@ class CardForm(ttk.Frame):
                     'nom': card.name,
                     'description': card.description,
                     'img': card.img,
+                    'powerblow': card.powerblow,
                     'title_x': 50, 'title_y': 30, 'title_font': 'Arial', 'title_size': 16, 'title_color': '#000000',
                     'text_x': 50, 'text_y': 100, 'text_width': 200, 'text_height': 150, 'text_font': 'Arial',
-                    'text_size': 12, 'text_color': '#000000', 'text_align': 'left', 'line_spacing': 1.2, 'text_wrap': True
+                    'text_size': 12, 'text_color': '#000000', 'text_align': 'left', 'line_spacing': 1.2, 'text_wrap': True,
+                    'energy_x': 25, 'energy_y': 25, 'energy_font': 'Arial', 'energy_size': 14, 'energy_color': '#FFFFFF'
                 }
             
             # Créer un repo de formatage personnalisé
