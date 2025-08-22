@@ -619,15 +619,21 @@ class TextFormattingEditor:
         # Effacer le canvas
         self.preview_canvas.delete("all")
         
-        # Obtenir les vraies dimensions du canvas
+        # Forcer la mise à jour du canvas pour obtenir les vraies dimensions
+        self.preview_canvas.update_idletasks()
         canvas_width = self.preview_canvas.winfo_width()
         canvas_height = self.preview_canvas.winfo_height()
         
-        # Si les dimensions ne sont pas encore disponibles, utiliser les valeurs par défaut
-        if canvas_width <= 1:
-            canvas_width = int((1182 - 60) * 0.7) - 20  # ~765px
-        if canvas_height <= 1:
-            canvas_height = int(canvas_width * (7/5))  # Ratio carte 5:7 inversé
+        # Si les dimensions sont encore invalides, utiliser les dimensions configurées
+        if canvas_width <= 1 or canvas_height <= 1:
+            # Récupérer les dimensions depuis la configuration du canvas (convertir en int)
+            try:
+                canvas_width = int(self.preview_canvas['width'])
+                canvas_height = int(self.preview_canvas['height'])
+            except:
+                # Valeurs de secours basées sur les calculs d'origine
+                canvas_width = 485  # Calculé dans create_preview_section
+                canvas_height = 680
         
         card_width = 280
         card_height = 392
