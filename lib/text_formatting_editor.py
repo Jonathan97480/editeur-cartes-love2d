@@ -10,6 +10,7 @@ import sqlite3
 import json
 from PIL import Image, ImageDraw, ImageFont, ImageTk
 from pathlib import Path
+from .font_manager import get_font_manager, get_available_fonts
 
 class TextFormattingEditor:
     def __init__(self, parent, card_id=None, card_data=None, repo=None):
@@ -17,6 +18,10 @@ class TextFormattingEditor:
         self.card_id = card_id
         self.card_data = card_data or {}
         self.repo = repo  # Repo pour sauvegarder
+        
+        # Initialiser le gestionnaire de polices
+        self.font_manager = get_font_manager()
+        self.available_fonts = get_available_fonts()
         
         # Valeurs par défaut
         self.title_x = self.card_data.get('title_x', 50)
@@ -167,6 +172,7 @@ class TextFormattingEditor:
         
         ttk.Button(button_frame, text="💾 Sauvegarder", command=self.save_formatting).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(button_frame, text="🔄 Réinitialiser", command=self.reset_values).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="🎨 Actualiser polices", command=self.refresh_fonts).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="❌ Annuler", command=self.window.destroy).pack(side=tk.RIGHT)
         
         # Mise à jour initiale (après chargement de l'image)
@@ -243,8 +249,10 @@ class TextFormattingEditor:
         
         ttk.Label(font_frame, text="Police:").pack(side=tk.LEFT)
         self.title_font_var = tk.StringVar(value=self.title_font)
+        
+        # Utiliser le gestionnaire de polices pour obtenir toutes les polices disponibles
         font_combo = ttk.Combobox(font_frame, textvariable=self.title_font_var, 
-                                 values=list(font.families()), state="readonly", width=15)
+                                 values=self.available_fonts, state="readonly", width=15)
         font_combo.pack(side=tk.LEFT, padx=5)
         font_combo.bind('<<ComboboxSelected>>', self.on_value_change)
         
@@ -342,8 +350,10 @@ class TextFormattingEditor:
         
         ttk.Label(font_frame2, text="Police:").pack(side=tk.LEFT)
         self.text_font_var = tk.StringVar(value=self.text_font)
+        
+        # Utiliser le gestionnaire de polices pour le texte aussi
         font_combo2 = ttk.Combobox(font_frame2, textvariable=self.text_font_var,
-                                  values=list(font.families()), state="readonly")
+                                  values=self.available_fonts, state="readonly")
         font_combo2.pack(side=tk.LEFT, padx=5)
         font_combo2.bind('<<ComboboxSelected>>', self.on_value_change)
         
@@ -479,8 +489,10 @@ class TextFormattingEditor:
         
         ttk.Label(font_energy_frame, text="Police:").pack(side=tk.LEFT)
         self.energy_font_var = tk.StringVar(value=self.energy_font)
+        
+        # Utiliser le gestionnaire de polices pour l'énergie aussi
         energy_font_combo = ttk.Combobox(font_energy_frame, textvariable=self.energy_font_var, 
-                                        values=['Arial', 'Times New Roman', 'Helvetica', 'Courier'], 
+                                        values=self.available_fonts, 
                                         width=15)
         energy_font_combo.pack(side=tk.LEFT, padx=(5, 20))
         energy_font_combo.bind('<<ComboboxSelected>>', self.on_value_change)
@@ -868,6 +880,33 @@ class TextFormattingEditor:
         self.text_wrap_var.set(True)
         
         self.update_preview()
+    
+    def refresh_fonts(self):
+        """Actualise la liste des polices disponibles."""
+        try:
+            # Recharger les polices du gestionnaire
+            self.font_manager.refresh_fonts()
+            self.available_fonts = get_available_fonts()
+            
+            # Mettre à jour les comboboxes si elles existent
+            if hasattr(self, 'title_font_var'):
+                # Sauvegarder les valeurs actuelles
+                title_font = self.title_font_var.get()
+                text_font = self.text_font_var.get()
+                energy_font = self.energy_font_var.get()
+                
+                # Recréer l'interface complète serait complexe,
+                # donc on informe l'utilisateur
+                messagebox.showinfo(
+                    "🎨 Polices actualisées",
+                    f"Les polices ont été rechargées !\n\n"
+                    f"📊 {len(self.available_fonts)} polices disponibles\n"
+                    f"🎨 {len(self.font_manager.get_custom_fonts())} polices personnalisées\n\n"
+                    f"💡 Redémarrez l'éditeur pour voir les nouvelles polices."
+                )
+            
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Impossible d'actualiser les polices:\n{e}")
 
 def open_text_formatting_editor(parent, card_id=None, card_data=None):
     """Fonction utilitaire pour ouvrir l'éditeur"""
