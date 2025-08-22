@@ -12,6 +12,7 @@ echo 🎮 MODES DE LANCEMENT
 echo.
 echo   [1] Lancer éditeur Python (Mode Edition)
 echo   [2] Menu développeur (Scripts dev/)
+echo   [D] Diagnostic système (DIAGNOSTIC.bat)
 echo   [U] Mise à jour automatique (UPDATE.bat)
 echo   [H] Aide et documentation
 echo   [Q] Quitter
@@ -24,10 +25,19 @@ if /i "%choice%"=="1" (
     cls  
     echo 🐍 Lancement de l'éditeur Python...
     echo.
-    if exist "dev\run_app.bat" (
+    if exist "LAUNCH_PORTABLE.bat" (
+        call LAUNCH_PORTABLE.bat
+    ) else if exist "dev\run_app.bat" (
         call dev\run_app.bat
     ) else (
-        python app_final.py
+        echo 🔍 Lancement direct avec Python...
+        where python >nul 2>&1
+        if errorlevel 1 (
+            echo ❌ Python non trouvé. Utilisez LAUNCH_PORTABLE.bat
+            pause
+        ) else (
+            python app_final.py
+        )
     )
     goto end
 )
@@ -42,6 +52,18 @@ if /i "%choice%"=="2" (
         pause
     )
     goto end
+)
+if /i "%choice%"=="d" (
+    cls
+    echo 🔍 Diagnostic système...
+    echo.
+    if exist "DIAGNOSTIC.bat" (
+        call DIAGNOSTIC.bat
+    ) else (
+        echo ❌ Script DIAGNOSTIC.bat non trouvé
+        pause
+    )
+    goto choice
 )
 if /i "%choice%"=="u" (
     cls
@@ -70,7 +92,7 @@ if /i "%choice%"=="h" (
 if /i "%choice%"=="q" goto quit
 
 echo.
-echo ❌ Choix invalide. Veuillez sélectionner 1, 2, U, H ou Q.
+echo ❌ Choix invalide. Veuillez sélectionner 1, 2, D, U, H ou Q.
 echo.
 goto choice
 
