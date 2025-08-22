@@ -117,7 +117,9 @@ def copy_image_to_originals(source_path: str, card_name: str) -> str | None:
         import shutil
         shutil.copy2(source_path, target_path)
         
-        return target_path
+        # Convertir en chemin relatif avant retour
+        relative_path = convert_to_relative_path(target_path)
+        return relative_path
         
     except Exception as e:
         print(f"Erreur lors de la copie d'image : {e}")
@@ -201,7 +203,26 @@ def convert_to_relative_path(absolute_path: str) -> str:
         except ValueError:
             pass
     
-    # Si pas de dossier 'images' trouvé, retourner le chemin normalisé
+    # Si pas de dossier 'images' trouvé, essayer d'autres extractions
+    # Essayer d'extraire depuis d'autres dossiers connus
+    known_folders = ['data/', 'lib/', 'assets/', 'fonts/']
+    for folder in known_folders:
+        if folder in normalized_path:
+            parts = normalized_path.split(folder)
+            try:
+                idx = parts[0].split('/').index(folder.rstrip('/'))
+                relative_path = '/'.join(parts[0].split('/')[idx:]) + '/' + parts[1]
+                return relative_path
+            except (ValueError, IndexError):
+                continue
+    
+    # Dernier recours : si c'est un chemin absolu Windows, extraire juste le nom de fichier
+    if normalized_path.startswith(('C:', 'c:', 'D:', 'd:', 'E:', 'e:')):
+        filename = normalized_path.split('/')[-1]
+        if '.' in filename:  # Si c'est un fichier
+            return f"images/cards/{filename}"
+    
+    # Si vraiment impossible, retourner le chemin normalisé
     return normalized_path
 
 def resolve_relative_path(relative_path: str) -> str:

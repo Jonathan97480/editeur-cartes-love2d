@@ -16,6 +16,52 @@ except ImportError:
     from config import (APP_TITLE, RARITY_LABELS, RARITY_FROM_LABEL, 
                        TYPE_LABELS, TYPE_FROM_LABEL, TYPE_ORDER, APP_SETTINGS)
     from database import Card, CardRepo
+
+def validate_and_convert_path(path_value: str) -> str:
+    """
+    Valide et convertit un chemin en relatif portable.
+    Utilisé pour prévenir l'enregistrement de chemins absolus.
+    """
+    if not path_value or not isinstance(path_value, str):
+        return ''
+    
+    path_value = path_value.strip()
+    if not path_value:
+        return ''
+    
+    # Normaliser les séparateurs
+    normalized_path = path_value.replace('\\', '/').replace('\\\\', '/')
+    
+    # Si c'est déjà un chemin relatif correct, le retourner
+    if not (normalized_path.startswith('C:') or normalized_path.startswith('c:') or 
+            normalized_path.startswith('D:') or normalized_path.startswith('d:') or
+            normalized_path.startswith('E:') or normalized_path.startswith('e:')):
+        return normalized_path
+    
+    print(f"⚠️  CHEMIN ABSOLU DÉTECTÉ : {normalized_path}")
+    
+    # Essayer d'extraire la partie relative
+    known_folders = ['images/', 'data/', 'lib/', 'assets/', 'fonts/']
+    
+    for folder in known_folders:
+        if folder in normalized_path:
+            parts = normalized_path.split(folder)
+            if len(parts) > 1:
+                relative_path = folder + parts[-1]
+                print(f"✅ CONVERTI EN RELATIF : {relative_path}")
+                return relative_path
+    
+    # Dernier recours : extraire juste le nom de fichier
+    filename = normalized_path.split('/')[-1]
+    if '.' in filename:  # Si c'est vraiment un fichier
+        relative_path = f"images/cards/{filename}"
+        print(f"🔧 FALLBACK VERS : {relative_path}")
+        return relative_path
+    
+    # Si vraiment impossible, retourner vide pour éviter la corruption
+    print(f"❌ IMPOSSIBLE DE CONVERTIR : {normalized_path}")
+    return ''
+
 # CORRECTION: Utiliser directement Love2DLuaExporter
 def export_lua(repo, side, filepath):
     """Export avec Love2DLuaExporter - garantit TextFormatting"""
@@ -637,7 +683,10 @@ class CardForm(ttk.Frame):
             c.side = 'joueur'  # Par défaut
             
         c.name = self.name_var.get().strip()
-        c.img = self.img_var.get().strip()
+        # Valider et corriger le chemin d'image avant sauvegarde
+        raw_img_path = self.img_var.get().strip()
+        validated_img_path = validate_and_convert_path(raw_img_path)
+        c.img = validated_img_path
         # Gérer l'image originale
         c.original_img = getattr(self, '_original_image_path', c.img)
         c.description = self.desc_txt.get('1.0', 'end').rstrip('\n').strip()
@@ -1348,7 +1397,8 @@ class CardList(ttk.Frame):
                     progress_window.after(0, lambda: export_success(package_path))
                     
                 except Exception as e:
-                    progress_window.after(0, lambda: export_error(str(e)))
+                    error_msg = str(e)  # Capturer la valeur de l'erreur
+                    progress_window.after(0, lambda msg=error_msg: export_error(msg))
             
             def export_success(package_path):
                 progress_bar.stop()

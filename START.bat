@@ -25,6 +25,12 @@ if /i "%choice%"=="1" (
     cls  
     echo 🐍 Lancement de l'éditeur Python...
     echo.
+    
+    REM Système de prévention automatique des chemins absolus
+    echo �️ Vérification et prévention automatique...
+    python auto_prevent_absolute_paths.py
+    echo.
+    
     if exist "LAUNCH_PORTABLE.bat" (
         call LAUNCH_PORTABLE.bat
     ) else if exist "dev\run_app.bat" (

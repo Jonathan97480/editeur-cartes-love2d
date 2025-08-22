@@ -87,34 +87,13 @@ class TextFormattingEditor:
                 # Charger l'image
                 self.card_image = Image.open(image_path)
                 
-                # S'adapter dynamiquement à la taille du canvas
-                # Le canvas sera créé avec des dimensions calculées
-                if hasattr(self, 'preview_canvas'):
-                    canvas_width = self.preview_canvas.winfo_reqwidth()
-                    canvas_height = self.preview_canvas.winfo_reqheight()
-                else:
-                    # Valeurs par défaut basées sur la nouvelle taille
-                    preview_width = ((1182 - 60) * 3) // 4  # ~830px
-                    card_ratio = 5/7
-                    canvas_width = preview_width - 40
-                    canvas_height = int(canvas_width * (1/card_ratio))
+                # Pour l'éditeur de formatage, utiliser les dimensions exactes Love2D
+                # pour un positionnement précis
+                love2d_width = 280
+                love2d_height = 392
                 
-                # Redimensionner l'image pour s'adapter au canvas avec marge, mais garder les proportions
-                # Ne pas forcer la taille exacte du canvas, mais s'adapter en gardant le ratio
-                original_width, original_height = self.card_image.size
-                max_width = canvas_width - 40  # Marge plus grande
-                max_height = canvas_height - 40
-                
-                # Calculer le ratio de redimensionnement en gardant les proportions
-                ratio_width = max_width / original_width
-                ratio_height = max_height / original_height
-                ratio = min(ratio_width, ratio_height)  # Prendre le plus petit ratio
-                
-                # Nouvelles dimensions
-                new_width = int(original_width * ratio)
-                new_height = int(original_height * ratio)
-                
-                self.card_image = self.card_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                # Redimensionner l'image aux dimensions exactes Love2D
+                self.card_image = self.card_image.resize((love2d_width, love2d_height), Image.Resampling.LANCZOS)
                 self.card_image_tk = ImageTk.PhotoImage(self.card_image)
             else:
                 print(f"⚠️ Image non trouvée : {image_path}")
@@ -566,22 +545,12 @@ class TextFormattingEditor:
         
     def create_preview(self, parent):
         """Crée l'aperçu de la carte"""
-        # Calculer la largeur disponible pour l'aperçu (70% de la fenêtre)
-        preview_width = int((1182 - 60) * 0.7)  # ~785px
-        preview_height = 700  # Hauteur réduite pour laisser place aux boutons
+        # Canvas qui prend tout l'espace disponible dans le panneau d'aperçu
+        self.preview_canvas = tk.Canvas(parent, bg='white', relief=tk.SUNKEN, bd=2)
+        self.preview_canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Ajuster les dimensions pour maintenir un ratio correct pour une carte
-        card_ratio = 5/7  # Ratio typique d'une carte (largeur/hauteur)
-        if preview_width * (1/card_ratio) <= preview_height:
-            canvas_width = preview_width - 20  # Marge réduite pour plus d'espace
-            canvas_height = int(canvas_width * (1/card_ratio))
-        else:
-            canvas_height = preview_height - 20  # Marge réduite
-            canvas_width = int(canvas_height * card_ratio)
-        
-        self.preview_canvas = tk.Canvas(parent, width=canvas_width, height=canvas_height, 
-                                      bg='white', relief=tk.SUNKEN, bd=2)
-        self.preview_canvas.pack(padx=10, pady=10)
+        # Lier l'événement de redimensionnement pour recentrer la carte
+        self.preview_canvas.bind('<Configure>', lambda e: self.update_preview())
         
     def on_value_change(self, event=None):
         """Callback pour les changements de valeurs"""
@@ -624,31 +593,27 @@ class TextFormattingEditor:
         canvas_width = self.preview_canvas.winfo_width()
         canvas_height = self.preview_canvas.winfo_height()
         
-        # Si les dimensions sont encore invalides, utiliser les dimensions configurées
-        if canvas_width <= 1 or canvas_height <= 1:
-            # Récupérer les dimensions depuis la configuration du canvas (convertir en int)
-            try:
-                canvas_width = int(self.preview_canvas['width'])
-                canvas_height = int(self.preview_canvas['height'])
-            except:
-                # Valeurs de secours basées sur les calculs d'origine
-                canvas_width = 485  # Calculé dans create_preview_section
-                canvas_height = 680
+        # Si les dimensions sont encore invalides, utiliser des valeurs minimales
+        if canvas_width <= 1:
+            canvas_width = 600  # Largeur minimale
+        if canvas_height <= 1:
+            canvas_height = 700  # Hauteur minimale
         
+        # Dimensions réelles de la carte Love2D
         card_width = 280
         card_height = 392
         
-        # Centrer la carte dans le canvas réel
-        card_x = (canvas_width - card_width) // 2
-        card_y = (canvas_height - card_height) // 2
+        # Centrer la carte dans le canvas avec plus de précision
+        card_x = max(10, (canvas_width - card_width) // 2)
+        card_y = max(10, (canvas_height - card_height) // 2)
         
         # Dessiner l'image de la carte ou un fond par défaut
         if self.card_image_tk:
-            # Afficher l'image réelle de la carte
+            # Afficher l'image réelle de la carte centrée
             self.preview_canvas.create_image(
-                card_x, card_y,
+                card_x + card_width//2, card_y + card_height//2,
                 image=self.card_image_tk,
-                anchor='nw'
+                anchor='center'
             )
         else:
             # Dessiner un fond par défaut si pas d'image
