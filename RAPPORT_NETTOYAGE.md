@@ -1,0 +1,174 @@
+# 🧹 RAPPORT DE NETTOYAGE DU PROJET
+
+**Date**: 2025-08-22 21:25:14
+
+## 📊 Statistiques
+
+- **Fichiers supprimés**: 72
+- **Dossiers supprimés**: 78
+
+## 📄 Fichiers supprimés
+
+- `C:\Users\berou\Downloads\Nouveau dossier\.gitignore_new`
+- `C:\Users\berou\Downloads\Nouveau dossier\CORRECTION_CHARGEMENT_ENERGIE_FINAL.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\CORRECTION_ENERGIE_RESUME.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\DIAGNOSTIC.bat`
+- `C:\Users\berou\Downloads\Nouveau dossier\INSTALLATION_GUIDE.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\LAUNCH_PORTABLE.bat`
+- `C:\Users\berou\Downloads\Nouveau dossier\LAUNCH_WITH_RESIZABLE_PANEL.bat`
+- `C:\Users\berou\Downloads\Nouveau dossier\LUA_ORGANISATION_INDEX.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\NOUVEAU_SYSTEME_EXPORT.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\ORGANISATION_COMPLETE_PROJET.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\RAPPORT_AUDIT.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\RAPPORT_AUDIT_COMPLET.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\RAPPORT_CORRECTIONS.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\RAPPORT_CORRECTIONS_URGENTES.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\RAPPORT_FINAL_ORGANISATION.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\RAPPORT_TESTS_POST_ORGANISATION.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\README_GITHUB.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\README_NEW.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\RESTART_WITH_300PX_SLIDERS.bat`
+- `C:\Users\berou\Downloads\Nouveau dossier\RÉSUMÉ_CORRECTION_CHEMINS.txt`
+- `C:\Users\berou\Downloads\Nouveau dossier\RÉSUMÉ_CORRECTION_SOURCES_CHEMINS.txt`
+- `C:\Users\berou\Downloads\Nouveau dossier\START_NEW.bat`
+- `C:\Users\berou\Downloads\Nouveau dossier\VALIDATION_EXPORTS_ENERGIE.md`
+- `C:\Users\berou\Downloads\Nouveau dossier\amelioration_interface_position.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\audit_complet.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\audit_test_export.lua`
+- `C:\Users\berou\Downloads\Nouveau dossier\auto_prevent_absolute_paths.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\cards_format_corrected.lua`
+- `C:\Users\berou\Downloads\Nouveau dossier\check_database_paths.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\check_paths_at_startup.bat`
+- `C:\Users\berou\Downloads\Nouveau dossier\commit_message.txt`
+- `C:\Users\berou\Downloads\Nouveau dossier\commit_message_temp.txt`
+- `C:\Users\berou\Downloads\Nouveau dossier\commit_msg.txt`
+- `C:\Users\berou\Downloads\Nouveau dossier\commit_organisation.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\demo_export_final.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\demo_fonts.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\export_package.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\finaliser_organisation_tests.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\fix_absolute_path_sources.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\fix_database_paths.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\fix_imports.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\install_fonts.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\maintenance_complete.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\nettoyer_projet.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\nettoyer_projet_complet.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\organiser_documentation.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\organize_fonts.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\package_export_ui.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\path_fix_documentation.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\prevent_absolute_paths.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\restart_editor_300px.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\secure_commit_system.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\settings.json`
+- `C:\Users\berou\Downloads\Nouveau dossier\standardize_sliders.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_chargement_energie_editeur.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_commit_love2d.lua`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_config.json`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_corrected_paths.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_editor_fonts.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_energy_correction.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_energy_formatting.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_export_auto.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_export_love2d_final.lua`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_font_manager.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_package_exporter.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_resizable_panel.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_sliders_300px.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_validation_energie_complete.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_verification_energie.lua`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_verification_final.lua`
+- `C:\Users\berou\Downloads\Nouveau dossier\validate_tests_auto.py`
+- `C:\Users\berou\Downloads\Nouveau dossier\verification_reorganisation.py`
+
+## 📁 Dossiers supprimés
+
+- `C:\Users\berou\Downloads\Nouveau dossier\.pytest_cache/`
+- `C:\Users\berou\Downloads\Nouveau dossier\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\backups/`
+- `C:\Users\berou\Downloads\Nouveau dossier\build/`
+- `C:\Users\berou\Downloads\Nouveau dossier\commit_reports/`
+- `C:\Users\berou\Downloads\Nouveau dossier\dbBackup/`
+- `C:\Users\berou\Downloads\Nouveau dossier\demo_exports/`
+- `C:\Users\berou\Downloads\Nouveau dossier\dev_temp/`
+- `C:\Users\berou\Downloads\Nouveau dossier\dist/`
+- `C:\Users\berou\Downloads\Nouveau dossier\imagesBackup/`
+- `C:\Users\berou\Downloads\Nouveau dossier\legacy/`
+- `C:\Users\berou\Downloads\Nouveau dossier\lib\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\love2d_test/`
+- `C:\Users\berou\Downloads\Nouveau dossier\luaBackup/`
+- `C:\Users\berou\Downloads\Nouveau dossier\lua_backup/`
+- `C:\Users\berou\Downloads\Nouveau dossier\lua_tests/`
+- `C:\Users\berou\Downloads\Nouveau dossier\rapports/`
+- `C:\Users\berou\Downloads\Nouveau dossier\temp/`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_correction/`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_features/`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_output/`
+- `C:\Users\berou\Downloads\Nouveau dossier\test_packages/`
+- `C:\Users\berou\Downloads\Nouveau dossier\tests\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\tests\interface\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\PIL\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\cli\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\commands\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\distributions\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\index\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\locations\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\metadata\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\metadata\importlib\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\models\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\network\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\operations\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\operations\build\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\operations\install\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\req\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\resolution\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\resolution\legacy\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\resolution\resolvelib\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\utils\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_internal\vcs\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\cachecontrol\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\cachecontrol\caches\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\certifi\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\dependency_groups\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\distlib\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\distro\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\idna\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\msgpack\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\packaging\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\packaging\licenses\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\pkg_resources\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\platformdirs\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\pygments\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\pygments\filters\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\pygments\formatters\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\pygments\lexers\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\pygments\styles\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\pyproject_hooks\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\requests\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\resolvelib\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\resolvelib\resolvers\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\rich\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\tomli\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\tomli_w\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\truststore\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\urllib3\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\urllib3\contrib\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\urllib3\contrib\_securetransport\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\urllib3\packages\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\urllib3\packages\backports\__pycache__/`
+- `C:\Users\berou\Downloads\Nouveau dossier\venv\Lib\site-packages\pip\_vendor\urllib3\util\__pycache__/`
+
+## ✅ Structure finale préservée
+
+- `lib/` - Modules principaux
+- `tests/` - Tests organisés
+- `docs/` et `guides/` - Documentation
+- `images/` et `fonts/` - Assets
+- `data/` - Base de données
+- `exports/` et `result_export_lua/` - Exports organisés
+- Scripts essentiels (`START.bat`, `app_final.py`, etc.)

@@ -1,9 +1,0 @@
-fix: template overlay resolution
-
-- Add original_img field to separate source from display image  
-- Image generation now always uses original image as source
-- Remove cartes.db from Git tracking (contains user data)
-- Automatic migration of existing cards
-- Enhanced debug messages for better traceability
-
-Fixes issue where changing rarity multiple times created template overlay
