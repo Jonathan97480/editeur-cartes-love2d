@@ -1,84 +1,106 @@
 @echo off
-title Editeur de cartes Love2D - Guide de lancement
+title Editeur de cartes Love2D - Lancement
 color 0A
 cls
 
 echo ================================================================
 echo               EDITEUR DE CARTES LOVE2D
-echo                 Guide de lancement
+echo                    Version GitHub
 echo ================================================================
 echo.
-echo Fichiers de lancement disponibles :
+echo 🎮 MODES DE LANCEMENT
 echo.
-echo   launch.bat         Menu complet avec tous les modes
-echo   launch_simple.bat  Menu simplifié pour usage rapide
-echo   run_final.bat      Lancement direct mode stable
-echo   run.bat            Lancement auto avec environnement
-echo.
-echo ================================================================
-echo.
-echo Quel fichier voulez-vous exécuter ?
-echo.
-echo   [1] launch.bat (menu complet)
-echo   [2] launch_simple.bat (menu simple) 
-echo   [3] run_final.bat (direct stable)
-echo   [4] run.bat (auto avec venv)
-echo   [H] Ouvrir l'aide (MODES.md)
+echo   [1] Lancer Love2D (Mode Jeu)
+echo   [2] Lancer éditeur Python (Mode Edition)
+echo   [3] Menu développeur (Scripts dev/)
+echo   [U] Mise à jour automatique (UPDATE.bat)
+echo   [H] Aide et documentation
 echo   [Q] Quitter
 echo.
 
 :choice
-set /p choice="Votre choix [1-4, H, Q] : "
+set /p choice="Votre choix : "
 
 if /i "%choice%"=="1" (
-    cls
-    echo Lancement de launch.bat...
+    cls  
+    echo 🎮 Lancement de Love2D...
     echo.
-    call launch.bat
+    REM Chercher Love2D dans les emplacements courants
+    if exist "C:\Program Files\LOVE\love.exe" (
+        "C:\Program Files\LOVE\love.exe" .
+    ) else if exist "C:\Program Files (x86)\LOVE\love.exe" (
+        "C:\Program Files (x86)\LOVE\love.exe" .
+    ) else (
+        echo ❌ Love2D non trouvé
+        echo.
+        echo 💡 Installez Love2D depuis : https://love2d.org/
+        echo    Puis relancez ce script
+        pause
+    )
     goto end
 )
 if /i "%choice%"=="2" (
     cls  
-    echo Lancement de launch_simple.bat...
+    echo 🐍 Lancement de l'éditeur Python...
     echo.
-    call launch_simple.bat
+    if exist "dev\run_app.bat" (
+        call dev\run_app.bat
+    ) else (
+        python app_final.py
+    )
     goto end
 )
 if /i "%choice%"=="3" (
     cls
-    echo Lancement de run_final.bat...
+    echo 🛠️ Menu développeur...
     echo.
-    call run_final.bat
+    if exist "dev\git.bat" (
+        call dev\git.bat
+    ) else (
+        echo ❌ Scripts de développement non trouvés dans dev/
+        pause
+    )
     goto end
 )
-if /i "%choice%"=="4" (
+if /i "%choice%"=="u" (
     cls
-    echo Lancement de run.bat...
+    echo 🔄 Mise à jour automatique...
     echo.
-    call run.bat
+    if exist "UPDATE.bat" (
+        call UPDATE.bat
+    ) else (
+        echo ❌ Script UPDATE.bat non trouvé
+        pause
+    )
     goto end
 )
 if /i "%choice%"=="h" (
     echo.
-    echo Ouverture du guide des modes...
-    start notepad MODES.md
+    echo 📖 Ouverture de la documentation...
+    if exist "README_GITHUB.md" (
+        start notepad README_GITHUB.md
+    ) else if exist "README.md" (
+        start notepad README.md
+    ) else (
+        echo ❌ Documentation non trouvée
+    )
     goto choice
 )
 if /i "%choice%"=="q" goto quit
 
 echo.
-echo Choix invalide. Veuillez sélectionner 1, 2, 3, 4, H ou Q.
+echo ❌ Choix invalide. Veuillez sélectionner 1, 2, 3, U, H ou Q.
 echo.
 goto choice
 
 :quit
 echo.
-echo Au revoir !
+echo 👋 Au revoir !
 exit /b 0
 
 :end
 echo.
-echo Retour au guide principal.
+echo ✅ Terminé. Retour au menu principal.
 pause
 cls
-goto 0
+goto choice
