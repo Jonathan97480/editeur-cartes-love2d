@@ -299,36 +299,60 @@ def generate_lua_content(cards):
 def export_lua_for_actor(card_repo, actor_manager: ActorManager, actor_id: int, filename: str = None):
     """
     Exporte les cartes d'un acteur spécifique vers un fichier Lua.
-    
-    Args:
-        card_repo: Instance de CardRepo
-        actor_manager: Instance d'ActorManager
-        actor_id: ID de l'acteur
-        filename: Nom du fichier (optionnel, généré automatiquement si non fourni)
+    CORRIGÉ: Utilise maintenant Love2DLuaExporter avec TextFormatting
     """
-    from .lua_export import LUA_HEADER, LUA_FOOTER, build_card_lua
-    
     actor = actor_manager.get_actor_by_id(actor_id)
     if not actor:
         raise ValueError(f"Acteur avec ID {actor_id} introuvable")
-    
-    cards = actor_manager.get_actor_cards(actor_id)
-    
+
     if filename is None:
         # Générer un nom de fichier basé sur le nom de l'acteur
         safe_name = actor['name'].lower().replace(' ', '_').replace("'", "")
         filename = f"cards_{safe_name}.lua"
+
+    # CORRECTION: Utiliser Love2DLuaExporter au lieu de l'ancien système
+    try:
+        import sys, os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+        from lua_exporter_love2d import Love2DLuaExporter
+        
+        # Créer un exporteur temporaire qui filtre par acteur
+        class ActorLuaExporter(Love2DLuaExporter):
+            def __init__(self, repo, target_actor_id):
+                super().__init__(repo)
+                self.target_actor_id = target_actor_id
+                self.actor_manager = actor_manager
+            
+            def get_cards_for_side(self, side):
+                # Récupérer seulement les cartes de cet acteur
+                actor_cards = self.actor_manager.get_actor_cards(self.target_actor_id)
+                return actor_cards
+        
+        # Utiliser le nouvel exporteur
+        exporter = ActorLuaExporter(card_repo, actor_id)
+        exporter.export_to_file(filename)
+        
+        cards = actor_manager.get_actor_cards(actor_id)
+        print(f"✅ Export Love2D {actor['icon']} {actor['name']} : {len(cards)} cartes → {filename}")
+        print(f"🎯 AVEC TextFormatting et dimensions Love2D")
+        
+    except Exception as e:
+        print(f"❌ Erreur Love2D export, fallback vers ancien système: {e}")
+        # Fallback vers l'ancien système
+        from .lua_export import LUA_HEADER, LUA_FOOTER, build_card_lua
+        
+        cards = actor_manager.get_actor_cards(actor_id)
+        
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(LUA_HEADER)
+            for i, card in enumerate(cards, start=1):
+                f.write(f"    --[[ CARTE {i} - {actor['icon']} {actor['name']} ]]\n")
+                f.write(build_card_lua(card))
+                f.write(",\n\n" if i < len(cards) else "\n")
+            f.write(LUA_FOOTER)
+        
+        print(f"⚠️ Export fallback {actor['icon']} {actor['name']} : {len(cards)} cartes → {filename}")
     
-    # Utiliser le même format que l'export standard Lua
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(LUA_HEADER)
-        for i, card in enumerate(cards, start=1):
-            f.write(f"    --[[ CARTE {i} - {actor['icon']} {actor['name']} ]]\n")
-            f.write(build_card_lua(card))
-            f.write(",\n\n" if i < len(cards) else "\n")
-        f.write(LUA_FOOTER)
-    
-    print(f"📤 Export {actor['icon']} {actor['name']} : {len(cards)} cartes → {filename}")
     return filename
 
 

@@ -93,6 +93,13 @@ class Card:
             self.text_align = row['text_align'] if 'text_align' in row.keys() else 'left'
             self.line_spacing = row['line_spacing'] if 'line_spacing' in row.keys() else 1.2
             self.text_wrap = row['text_wrap'] if 'text_wrap' in row.keys() else 1
+            
+            # Champs de formatage du coût en énergie (avec valeurs par défaut)
+            self.energy_x = row['energy_x'] if 'energy_x' in row.keys() else 25
+            self.energy_y = row['energy_y'] if 'energy_y' in row.keys() else 25
+            self.energy_font = row['energy_font'] if 'energy_font' in row.keys() else 'Arial'
+            self.energy_size = row['energy_size'] if 'energy_size' in row.keys() else 14
+            self.energy_color = row['energy_color'] if 'energy_color' in row.keys() else '#FFFFFF'
         else:
             (
                 self.id,

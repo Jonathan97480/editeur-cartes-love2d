@@ -1,4 +1,0 @@
-local Cards = {
-}
-
-return Cards

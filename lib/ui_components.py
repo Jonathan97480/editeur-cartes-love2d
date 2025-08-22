@@ -9,7 +9,17 @@ from tkinter import ttk, filedialog, messagebox
 from .config import (APP_TITLE, RARITY_LABELS, RARITY_FROM_LABEL, 
                      TYPE_LABELS, TYPE_FROM_LABEL, TYPE_ORDER, APP_SETTINGS)
 from .database import Card, CardRepo
-from .lua_export import export_lua
+# from .lua_export import export_lua  # Ancien système SANS TextFormatting
+# CORRECTION: Utiliser directement Love2DLuaExporter
+def export_lua(repo, side, filepath):
+    """Export avec Love2DLuaExporter - garantit TextFormatting"""
+    import sys, os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+    from lua_exporter_love2d import Love2DLuaExporter
+    exporter = Love2DLuaExporter(repo)
+    exporter.export_to_file(filepath)
+    print(f"✅ Export Love2D avec TextFormatting: {filepath}")
+
 from .utils import to_int, create_card_image, sanitize_filename
 
 def get_available_actors():
@@ -797,39 +807,107 @@ class CardForm(ttk.Frame):
         
         # Ouvrir l'éditeur de formatage
         try:
-            from .text_formatting_editor import open_text_formatting_editor
-            from .database_simple import CardRepo as SimpleRepo
-            from .config import DB_FILE
-            import os
+            # Utiliser le système principal unifié
+            from .text_formatting_editor import TextFormattingEditor
+            import sqlite3
             
-            # Utiliser le système simplifié pour l'éditeur de formatage
-            db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), DB_FILE)
-            simple_repo = SimpleRepo(db_path)
+            # Récupérer les données de formatage depuis la base principale
+            conn = sqlite3.connect(self.repo.db_file)
+            cursor = conn.cursor()
             
-            # Adapter les données de carte pour le nouveau système
-            simple_card_data = {
-                'id': self.current_id,
-                'nom': card.name,
-                'description': card.description,
-                'img': card.img,  # Ajouter le chemin de l'image
-                'title_x': getattr(card, 'title_x', 50),
-                'title_y': getattr(card, 'title_y', 30),
-                'title_font': getattr(card, 'title_font', 'Arial'),
-                'title_size': getattr(card, 'title_size', 16),
-                'title_color': getattr(card, 'title_color', '#000000'),
-                'text_x': getattr(card, 'text_x', 50),
-                'text_y': getattr(card, 'text_y', 100),
-                'text_width': getattr(card, 'text_width', 200),
-                'text_height': getattr(card, 'text_height', 150),
-                'text_font': getattr(card, 'text_font', 'Arial'),
-                'text_size': getattr(card, 'text_size', 12),
-                'text_color': getattr(card, 'text_color', '#000000'),
-                'text_align': getattr(card, 'text_align', 'left'),
-                'line_spacing': getattr(card, 'line_spacing', 1.2),
-                'text_wrap': getattr(card, 'text_wrap', 1)
-            }
+            cursor.execute("""
+                SELECT title_x, title_y, title_font, title_size, title_color,
+                       text_x, text_y, text_width, text_height, text_font,
+                       text_size, text_color, text_align, line_spacing, text_wrap
+                FROM cards WHERE id = ?
+            """, (self.current_id,))
             
-            open_text_formatting_editor(self.winfo_toplevel(), self.current_id, simple_card_data)
+            formatting_data = cursor.fetchone()
+            conn.close()
+            
+            if formatting_data:
+                # Adapter les données pour l'éditeur
+                card_data = {
+                    'id': self.current_id,
+                    'nom': card.name,
+                    'description': card.description,
+                    'img': card.img,
+                    'title_x': formatting_data[0] or 50,
+                    'title_y': formatting_data[1] or 30,
+                    'title_font': formatting_data[2] or 'Arial',
+                    'title_size': formatting_data[3] or 16,
+                    'title_color': formatting_data[4] or '#000000',
+                    'text_x': formatting_data[5] or 50,
+                    'text_y': formatting_data[6] or 100,
+                    'text_width': formatting_data[7] or 200,
+                    'text_height': formatting_data[8] or 150,
+                    'text_font': formatting_data[9] or 'Arial',
+                    'text_size': formatting_data[10] or 12,
+                    'text_color': formatting_data[11] or '#000000',
+                    'text_align': formatting_data[12] or 'left',
+                    'line_spacing': formatting_data[13] or 1.2,
+                    'text_wrap': bool(formatting_data[14]) if formatting_data[14] is not None else True
+                }
+            else:
+                # Données par défaut si pas de formatage
+                card_data = {
+                    'id': self.current_id,
+                    'nom': card.name,
+                    'description': card.description,
+                    'img': card.img,
+                    'title_x': 50, 'title_y': 30, 'title_font': 'Arial', 'title_size': 16, 'title_color': '#000000',
+                    'text_x': 50, 'text_y': 100, 'text_width': 200, 'text_height': 150, 'text_font': 'Arial',
+                    'text_size': 12, 'text_color': '#000000', 'text_align': 'left', 'line_spacing': 1.2, 'text_wrap': True
+                }
+            
+            # Créer un repo de formatage personnalisé
+            class FormattingRepo:
+                def __init__(self, main_repo):
+                    self.main_repo = main_repo
+                
+                def get_card(self, card_id):
+                    # Retourner une pseudo-carte avec les bonnes données
+                    card = self.main_repo.get(card_id)
+                    if card:
+                        # Simuler l'objet database_simple Card
+                        class FormattingCard:
+                            pass
+                        
+                        fc = FormattingCard()
+                        fc.id = card.id
+                        fc.nom = card.name
+                        fc.description = card.description
+                        fc.img = card.img
+                        return fc
+                    return None
+                
+                def save_card(self, card_data):
+                    # Sauvegarder dans le système principal
+                    conn = sqlite3.connect(self.main_repo.db_file)
+                    cursor = conn.cursor()
+                    
+                    cursor.execute("""
+                        UPDATE cards SET 
+                            title_x=?, title_y=?, title_font=?, title_size=?, title_color=?,
+                            text_x=?, text_y=?, text_width=?, text_height=?, text_font=?,
+                            text_size=?, text_color=?, text_align=?, line_spacing=?, text_wrap=?
+                        WHERE id=?
+                    """, (
+                        card_data.title_x, card_data.title_y, card_data.title_font,
+                        card_data.title_size, card_data.title_color,
+                        card_data.text_x, card_data.text_y, card_data.text_width,
+                        card_data.text_height, card_data.text_font, card_data.text_size,
+                        card_data.text_color, card_data.text_align, card_data.line_spacing,
+                        int(card_data.text_wrap), card_data.id
+                    ))
+                    
+                    conn.commit()
+                    conn.close()
+            
+            formatting_repo = FormattingRepo(self.repo)
+            
+            # Créer l'éditeur avec le repo personnalisé
+            editor = TextFormattingEditor(self.winfo_toplevel(), self.current_id, card_data, formatting_repo)
             
             # Rafraîchir les données après fermeture de l'éditeur
             if callable(self.on_saved):
@@ -948,6 +1026,7 @@ class CardList(ttk.Frame):
         exp = ttk.Frame(self); exp.pack(fill='x', **pad)
         ttk.Button(exp, text='🎭 Exporter Acteur', command=self.export_actor_selection).pack(side='left')
         ttk.Button(exp, text='📤 Exporter Tout', command=self.export_all_actors).pack(side='left', padx=6)
+        ttk.Button(exp, text='🎮 Export Love2D+Format', command=self.export_love2d_with_formatting).pack(side='left', padx=6)
 
     def _side_value(self):
         v = self.side_filter.get()
@@ -1124,3 +1203,41 @@ class CardList(ttk.Frame):
             
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Erreur lors de l'export de tous les acteurs :\n{e}")
+
+    def export_love2d_with_formatting(self):
+        """Exporte toutes les cartes au format Love2D avec formatage de texte."""
+        try:
+            # Import du nouvel exporteur
+            from lua_exporter_love2d import Love2DLuaExporter
+            
+            # Demander le fichier de destination
+            filepath = filedialog.asksaveasfilename(
+                title='Export Love2D avec formatage',
+                initialfile='cards_joueur_with_formatting.lua',
+                defaultextension='.lua',
+                filetypes=[('Fichier Lua', '*.lua')]
+            )
+            
+            if not filepath:
+                return
+            
+            # Créer l'exporteur et effectuer l'export
+            exporter = Love2DLuaExporter(self.repo)
+            size = exporter.export_to_file(filepath)
+            
+            # Compter les cartes exportées
+            cards = self.repo.list_cards()
+            card_count = len(cards)
+            
+            messagebox.showinfo(
+                APP_TITLE, 
+                f"Export Love2D réussi !\n\n"
+                f"📁 Fichier: {filepath}\n"
+                f"📊 Cartes exportées: {card_count}\n"
+                f"📝 Taille: {size:,} caractères\n\n"
+                f"✅ Inclut les données de formatage de texte\n"
+                f"   (position titre, position texte, polices, etc.)"
+            )
+            
+        except Exception as e:
+            messagebox.showerror(APP_TITLE, f"Erreur lors de l'export Love2D :\n{e}")

@@ -124,6 +124,16 @@ class Card:
             'text_wrap': self.text_wrap
         }
 
+    @property
+    def img(self):
+        """Propriété de compatibilité pour image_path."""
+        return self.image_path
+    
+    @img.setter
+    def img(self, value):
+        """Setter pour la propriété de compatibilité."""
+        self.image_path = value
+
 class CardRepo:
     def __init__(self, db_file: str):
         self.db_file = db_file

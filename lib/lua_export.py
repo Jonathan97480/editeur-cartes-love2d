@@ -120,11 +120,16 @@ def build_card_lua(card) -> str:
     )
 
 def export_lua(repo: CardRepo, side: str, filepath: str) -> None:
-    cards = repo.list_cards(side=side)
-    with open(filepath, 'w', encoding='utf-8') as f:
-        f.write(LUA_HEADER)
-        for i, c in enumerate(cards, start=1):
-            f.write(f"    --[[ CARTE {i} ]]\n")
-            f.write(build_card_lua(c))
-            f.write(",\n\n" if i < len(cards) else "\n")
-        f.write(LUA_FOOTER)
+    """Export Lua avec Love2DLuaExporter"""
+    # FORCER L'UTILISATION DE Love2DLuaExporter
+    import sys
+    import os
+    
+    # Ajouter le répertoire racine au path
+    root_dir = os.path.dirname(os.path.dirname(__file__))
+    sys.path.insert(0, root_dir)
+    
+    from lua_exporter_love2d import Love2DLuaExporter
+    exporter = Love2DLuaExporter(repo)
+    exporter.export_to_file(filepath)
+    print(f"✅ Export Love2D avec TextFormatting: {filepath}")

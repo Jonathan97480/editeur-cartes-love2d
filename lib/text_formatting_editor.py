@@ -12,10 +12,11 @@ from PIL import Image, ImageDraw, ImageFont, ImageTk
 from pathlib import Path
 
 class TextFormattingEditor:
-    def __init__(self, parent, card_id=None, card_data=None):
+    def __init__(self, parent, card_id=None, card_data=None, repo=None):
         self.parent = parent
         self.card_id = card_id
         self.card_data = card_data or {}
+        self.repo = repo  # Repo pour sauvegarder
         
         # Valeurs par défaut
         self.title_x = self.card_data.get('title_x', 50)
@@ -34,6 +35,16 @@ class TextFormattingEditor:
         self.text_align = self.card_data.get('text_align', 'left')
         self.line_spacing = self.card_data.get('line_spacing', 1.2)
         self.text_wrap = self.card_data.get('text_wrap', 1)
+        
+        # Formatage du coût en énergie
+        self.energy_x = self.card_data.get('energy_x', 25)
+        self.energy_y = self.card_data.get('energy_y', 25)
+        self.energy_font = self.card_data.get('energy_font', 'Arial')
+        self.energy_size = self.card_data.get('energy_size', 14)
+        self.energy_color = self.card_data.get('energy_color', '#FFFFFF')
+        
+        # Coût en énergie (PowerBlow)
+        self.energy_value = self.card_data.get('powerblow', 0)
         
         # Texte d'exemple
         self.title_text = self.card_data.get('nom', 'Titre de la carte')
@@ -133,14 +144,14 @@ class TextFormattingEditor:
         main_frame = ttk.Frame(self.window)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Frame gauche - Contrôles (1/4 de la largeur)
-        controls_width = (window_width - 40) // 4  # 40 pour padding total
-        controls_frame = ttk.LabelFrame(main_frame, text="📝 Contrôles de Formatage", padding=10)
+        # Frame gauche - Contrôles (30% de la largeur pour plus de place)
+        controls_width = int((window_width - 40) * 0.3)  # 30% au lieu de 25%
+        controls_frame = ttk.LabelFrame(main_frame, text="📝 Contrôles de Formatage", padding=5)
         controls_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 10))
         controls_frame.configure(width=controls_width)
         controls_frame.pack_propagate(False)  # Forcer la taille
         
-        # Frame droite - Aperçu (3/4 de la largeur)
+        # Frame droite - Aperçu (70% de la largeur)
         preview_frame = ttk.LabelFrame(main_frame, text="👁️ Aperçu de la Carte", padding=10)
         preview_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         
@@ -163,15 +174,17 @@ class TextFormattingEditor:
         
     def create_controls(self, parent):
         """Crée les contrôles de formatage"""
-        # Calculer la largeur disponible (1/4 de la fenêtre moins les marges)
-        controls_width = (1182 - 60) // 4  # ~280px
+        # Calculer la largeur disponible (30% de la fenêtre moins les marges)
+        controls_width = int((1182 - 60) * 0.3)  # ~345px
         
-        # Spécifications standardisées pour les curseurs
-        slider_length = 199  # Longueur maximale fixe
-        slider_margin_right = 45  # Marge droite pour le texte
+        # Spécifications standardisées pour les curseurs - PLEINE LARGEUR
+        slider_length = controls_width - 40  # Utilise toute la largeur disponible
+        slider_margin_right = 20  # Marge réduite pour plus d'espace
         
-        # Frame scrollable avec hauteur réduite pour laisser place aux boutons
-        canvas = tk.Canvas(parent, width=controls_width-20, height=680)  # Réduit de 800 à 680
+        # Frame scrollable avec hauteur optimisée et SCROLLBAR PLUS VISIBLE
+        canvas = tk.Canvas(parent, width=controls_width-20, height=680, bg="#f8f8f8", relief=tk.SUNKEN, bd=1)
+        
+        # Scrollbar plus visible et accessible
         scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
         
@@ -182,6 +195,11 @@ class TextFormattingEditor:
         
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Activer la roulette de souris pour le scroll
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind("<MouseWheel>", _on_mousewheel)
         
         # === CONTRÔLES TITRE ===
         title_frame = ttk.LabelFrame(scrollable_frame, text="📍 Formatage du Titre", padding=5)
@@ -200,8 +218,8 @@ class TextFormattingEditor:
         
         # Curseur
         scale_x = ttk.Scale(pos_frame, from_=0, to=500, variable=self.title_x_var, 
-                           command=self.on_value_change, length=199, orient=tk.HORIZONTAL)
-        scale_x.pack(side=tk.LEFT, pady=(2, 0))
+                           command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL)
+        scale_x.pack(fill=tk.X, pady=(2, 0))
         
         # Position Y
         pos_frame2 = ttk.Frame(title_frame)
@@ -216,8 +234,8 @@ class TextFormattingEditor:
         
         # Curseur
         scale_y = ttk.Scale(pos_frame2, from_=0, to=600, variable=self.title_y_var,
-                           command=self.on_value_change, length=199, orient=tk.HORIZONTAL)
-        scale_y.pack(side=tk.LEFT, pady=(2, 0))
+                           command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL)
+        scale_y.pack(fill=tk.X, pady=(2, 0))
         
         # Police et taille
         font_frame = ttk.Frame(title_frame)
@@ -239,11 +257,11 @@ class TextFormattingEditor:
         label_frame_size.pack(fill=tk.X)
         ttk.Label(label_frame_size, text="Taille:").pack(side=tk.LEFT)
         self.title_size_var = tk.IntVar(value=self.title_size)
-        ttk.Label(label_frame_size, textvariable=self.title_size_var).pack(side=tk.RIGHT, padx=(0, 45))
+        ttk.Label(label_frame_size, textvariable=self.title_size_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
         ttk.Scale(size_frame, from_=8, to=48, variable=self.title_size_var,
-                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Couleur
         color_frame = ttk.Frame(title_frame)
@@ -267,11 +285,11 @@ class TextFormattingEditor:
         label_frame_text_x.pack(fill=tk.X)
         ttk.Label(label_frame_text_x, text="Position X:").pack(side=tk.LEFT)
         self.text_x_var = tk.IntVar(value=self.text_x)
-        ttk.Label(label_frame_text_x, textvariable=self.text_x_var).pack(side=tk.RIGHT, padx=(0, 45))
+        ttk.Label(label_frame_text_x, textvariable=self.text_x_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
         ttk.Scale(pos_frame3, from_=0, to=500, variable=self.text_x_var,
-                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Position Y du texte
         pos_frame4 = ttk.Frame(text_frame)
@@ -282,11 +300,11 @@ class TextFormattingEditor:
         label_frame_text_y.pack(fill=tk.X)
         ttk.Label(label_frame_text_y, text="Position Y:").pack(side=tk.LEFT)
         self.text_y_var = tk.IntVar(value=self.text_y)
-        ttk.Label(label_frame_text_y, textvariable=self.text_y_var).pack(side=tk.RIGHT, padx=(0, 45))
+        ttk.Label(label_frame_text_y, textvariable=self.text_y_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
         ttk.Scale(pos_frame4, from_=0, to=700, variable=self.text_y_var,
-                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Largeur du texte
         dim_frame = ttk.Frame(text_frame)
@@ -297,11 +315,11 @@ class TextFormattingEditor:
         label_frame_width.pack(fill=tk.X)
         ttk.Label(label_frame_width, text="Largeur:").pack(side=tk.LEFT)
         self.text_width_var = tk.IntVar(value=self.text_width)
-        ttk.Label(label_frame_width, textvariable=self.text_width_var).pack(side=tk.RIGHT, padx=(0, 45))
+        ttk.Label(label_frame_width, textvariable=self.text_width_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
         ttk.Scale(dim_frame, from_=50, to=400, variable=self.text_width_var,
-                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Hauteur du texte
         dim_frame2 = ttk.Frame(text_frame)
@@ -312,11 +330,11 @@ class TextFormattingEditor:
         label_frame_height.pack(fill=tk.X)
         ttk.Label(label_frame_height, text="Hauteur:").pack(side=tk.LEFT)
         self.text_height_var = tk.IntVar(value=self.text_height)
-        ttk.Label(label_frame_height, textvariable=self.text_height_var).pack(side=tk.RIGHT, padx=(0, 45))
+        ttk.Label(label_frame_height, textvariable=self.text_height_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
         ttk.Scale(dim_frame2, from_=50, to=300, variable=self.text_height_var,
-                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Police et taille pour le texte
         font_frame2 = ttk.Frame(text_frame)
@@ -338,11 +356,11 @@ class TextFormattingEditor:
         label_frame_text_size.pack(fill=tk.X)
         ttk.Label(label_frame_text_size, text="Taille:").pack(side=tk.LEFT)
         self.text_size_var = tk.IntVar(value=self.text_size)
-        ttk.Label(label_frame_text_size, textvariable=self.text_size_var).pack(side=tk.RIGHT, padx=(0, 45))
+        ttk.Label(label_frame_text_size, textvariable=self.text_size_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
         ttk.Scale(size_frame2, from_=8, to=24, variable=self.text_size_var,
-                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Couleur du texte
         color_frame2 = ttk.Frame(text_frame)
@@ -373,17 +391,126 @@ class TextFormattingEditor:
         label_frame_spacing.pack(fill=tk.X)
         ttk.Label(label_frame_spacing, text="Espacement:").pack(side=tk.LEFT)
         self.line_spacing_var = tk.DoubleVar(value=self.line_spacing)
-        ttk.Label(label_frame_spacing, textvariable=self.line_spacing_var).pack(side=tk.RIGHT, padx=(0, 45))
+        ttk.Label(label_frame_spacing, textvariable=self.line_spacing_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
         ttk.Scale(spacing_frame, from_=0.8, to=3.0, variable=self.line_spacing_var,
-                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
-        ttk.Label(spacing_frame, textvariable=self.line_spacing_var).pack(side=tk.RIGHT)
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Retour à la ligne automatique
         self.text_wrap_var = tk.BooleanVar(value=bool(self.text_wrap))
         ttk.Checkbutton(text_frame, text="Retour à la ligne automatique",
                        variable=self.text_wrap_var, command=self.on_value_change).pack(pady=5)
+        
+        # === FORMATAGE DU COÛT EN ÉNERGIE ===
+        energy_frame = ttk.LabelFrame(scrollable_frame, text="⚡ Formatage du Coût en Énergie", padding=10)
+        energy_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Position X (ligne complète)
+        pos_x_energy_frame = ttk.Frame(energy_frame)
+        pos_x_energy_frame.pack(fill=tk.X, pady=(0, 5))
+        
+        label_frame_energy_x = ttk.Frame(pos_x_energy_frame)
+        label_frame_energy_x.pack(fill=tk.X)
+        ttk.Label(label_frame_energy_x, text="Position X:").pack(side=tk.LEFT)
+        self.energy_x_var = tk.IntVar(value=self.energy_x)
+        ttk.Label(label_frame_energy_x, textvariable=self.energy_x_var).pack(side=tk.RIGHT)
+        
+        # Curseur X plus grand - PLEINE LARGEUR
+        scale_x_frame = ttk.Frame(pos_x_energy_frame)
+        scale_x_frame.pack(fill=tk.X, pady=(5, 0))
+        ttk.Scale(scale_x_frame, from_=0, to=400, variable=self.energy_x_var,
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X)
+        
+        # Position Y (ligne complète)
+        pos_y_energy_frame = ttk.Frame(energy_frame)
+        pos_y_energy_frame.pack(fill=tk.X, pady=(5, 5))
+        
+        label_frame_energy_y = ttk.Frame(pos_y_energy_frame)
+        label_frame_energy_y.pack(fill=tk.X)
+        ttk.Label(label_frame_energy_y, text="Position Y:").pack(side=tk.LEFT)
+        self.energy_y_var = tk.IntVar(value=self.energy_y)
+        ttk.Label(label_frame_energy_y, textvariable=self.energy_y_var).pack(side=tk.RIGHT)
+        
+        # Curseur Y plus grand - PLEINE LARGEUR
+        scale_y_frame = ttk.Frame(pos_y_energy_frame)
+        scale_y_frame.pack(fill=tk.X, pady=(5, 0))
+        ttk.Scale(scale_y_frame, from_=0, to=600, variable=self.energy_y_var,
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X)
+        
+        # Préréglages de position - AMÉLIORÉS ET PLUS VISIBLES
+        presets_frame = ttk.LabelFrame(energy_frame, text="🎯 Préréglages Position", padding=8)
+        presets_frame.pack(fill=tk.X, pady=(10, 10))
+        
+        # AMÉLIORATION: 3 lignes de boutons pour plus de visibilité
+        # Ligne 1: Positions hautes
+        row1 = ttk.Frame(presets_frame)
+        row1.pack(fill=tk.X, pady=(0, 5))
+        ttk.Button(row1, text="↖ Haut G.", width=10, 
+                  command=lambda: self.set_energy_position(25, 25)).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(row1, text="↑ Haut C.", width=10,
+                  command=lambda: self.set_energy_position(140, 25)).pack(side=tk.LEFT, padx=5)
+        ttk.Button(row1, text="↗ Haut D.", width=10,
+                  command=lambda: self.set_energy_position(255, 25)).pack(side=tk.LEFT, padx=(5, 0))
+        
+        # Ligne 2: Positions milieu
+        row2 = ttk.Frame(presets_frame)
+        row2.pack(fill=tk.X, pady=(5, 5))
+        ttk.Button(row2, text="← Milieu G.", width=10,
+                  command=lambda: self.set_energy_position(25, 235)).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(row2, text="⚫ Centre", width=10,
+                  command=lambda: self.set_energy_position(140, 235)).pack(side=tk.LEFT, padx=5)
+        ttk.Button(row2, text="→ Milieu D.", width=10,
+                  command=lambda: self.set_energy_position(255, 235)).pack(side=tk.LEFT, padx=(5, 0))
+        
+        # Ligne 3: Positions basses (NOUVELLE)
+        row3 = ttk.Frame(presets_frame)
+        row3.pack(fill=tk.X, pady=(5, 0))
+        ttk.Button(row3, text="↙ Bas G.", width=10,
+                  command=lambda: self.set_energy_position(25, 445)).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(row3, text="↓ Bas C.", width=10,
+                  command=lambda: self.set_energy_position(140, 445)).pack(side=tk.LEFT, padx=5)
+        ttk.Button(row3, text="↘ Bas D.", width=10,
+                  command=lambda: self.set_energy_position(255, 445)).pack(side=tk.LEFT, padx=(5, 0))
+        
+        # Police et taille
+        font_energy_frame = ttk.Frame(energy_frame)
+        font_energy_frame.pack(fill=tk.X, pady=(0, 5))
+        
+        ttk.Label(font_energy_frame, text="Police:").pack(side=tk.LEFT)
+        self.energy_font_var = tk.StringVar(value=self.energy_font)
+        energy_font_combo = ttk.Combobox(font_energy_frame, textvariable=self.energy_font_var, 
+                                        values=['Arial', 'Times New Roman', 'Helvetica', 'Courier'], 
+                                        width=15)
+        energy_font_combo.pack(side=tk.LEFT, padx=(5, 20))
+        energy_font_combo.bind('<<ComboboxSelected>>', self.on_value_change)
+        
+        ttk.Label(font_energy_frame, text="Taille:").pack(side=tk.LEFT)
+        self.energy_size_var = tk.IntVar(value=self.energy_size)
+        ttk.Label(font_energy_frame, textvariable=self.energy_size_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
+        
+        # Curseur taille énergie sur sa propre ligne pour plus de place
+        size_energy_frame = ttk.Frame(energy_frame)
+        size_energy_frame.pack(fill=tk.X, pady=(5, 5))
+        ttk.Scale(size_energy_frame, from_=8, to=32, variable=self.energy_size_var,
+                 command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X)
+        
+        # Couleur
+        color_energy_frame = ttk.Frame(energy_frame)
+        color_energy_frame.pack(fill=tk.X, pady=(0, 5))
+        
+        ttk.Label(color_energy_frame, text="Couleur:").pack(side=tk.LEFT)
+        self.energy_color_var = tk.StringVar(value=self.energy_color)
+        self.energy_color_display = tk.Label(color_energy_frame, text="   ", bg=self.energy_color, width=4, relief="raised")
+        self.energy_color_display.pack(side=tk.LEFT, padx=(5, 10))
+        ttk.Button(color_energy_frame, text="Choisir couleur", 
+                  command=self.choose_energy_color).pack(side=tk.LEFT)
+        
+        # Affichage de la valeur d'énergie
+        value_energy_frame = ttk.Frame(energy_frame)
+        value_energy_frame.pack(fill=tk.X, pady=(5, 0))
+        ttk.Label(value_energy_frame, text=f"💎 Valeur énergétique: {self.energy_value}", 
+                 font=('Arial', 10, 'bold')).pack(side=tk.LEFT)
         
         # === ZONE DE TEXTE ÉDITABLE ===
         edit_frame = ttk.LabelFrame(scrollable_frame, text="✏️ Édition du Texte", padding=10)
@@ -406,8 +533,8 @@ class TextFormattingEditor:
         
     def create_preview(self, parent):
         """Crée l'aperçu de la carte"""
-        # Calculer la largeur disponible pour l'aperçu (3/4 de la fenêtre)
-        preview_width = ((1182 - 60) * 3) // 4  # ~830px
+        # Calculer la largeur disponible pour l'aperçu (70% de la fenêtre)
+        preview_width = int((1182 - 60) * 0.7)  # ~785px
         preview_height = 700  # Hauteur réduite pour laisser place aux boutons
         
         # Ajuster les dimensions pour maintenir un ratio correct pour une carte
@@ -439,6 +566,20 @@ class TextFormattingEditor:
         if color:
             color_var.set(color)
             self.update_preview()
+    
+    def choose_energy_color(self):
+        """Ouvre le sélecteur de couleur pour l'énergie"""
+        color = colorchooser.askcolor(color=self.energy_color_var.get())[1]
+        if color:
+            self.energy_color_var.set(color)
+            self.energy_color_display.config(bg=color)
+            self.update_preview()
+    
+    def set_energy_position(self, x, y):
+        """Définit la position de l'énergie avec des préréglages"""
+        self.energy_x_var.set(x)
+        self.energy_y_var.set(y)
+        self.update_preview()
             
     def update_preview(self):
         """Met à jour l'aperçu de la carte"""
@@ -491,6 +632,27 @@ class TextFormattingEditor:
             anchor='nw'
         )
         
+        # Dessiner le coût en énergie
+        energy_x = card_x + self.energy_x_var.get()
+        energy_y = card_y + self.energy_y_var.get()
+        
+        # Dessiner un cercle de fond pour l'énergie (optionnel)
+        energy_radius = self.energy_size_var.get() + 5
+        self.preview_canvas.create_oval(
+            energy_x - energy_radius, energy_y - energy_radius,
+            energy_x + energy_radius, energy_y + energy_radius,
+            fill='#1e3a8a', outline='#fbbf24', width=2
+        )
+        
+        # Dessiner la valeur de l'énergie
+        self.preview_canvas.create_text(
+            energy_x, energy_y,
+            text=str(self.energy_value),
+            font=(self.energy_font_var.get(), self.energy_size_var.get(), 'bold'),
+            fill=self.energy_color_var.get(),
+            anchor='center'
+        )
+        
         # Dessiner le cadre du texte (pour visualisation)
         text_x = card_x + self.text_x_var.get()
         text_y = card_y + self.text_y_var.get()
@@ -514,14 +676,20 @@ class TextFormattingEditor:
         
         # Ajouter des guides visuels
         self.preview_canvas.create_text(
-            card_x + 5, card_y + card_height - 20,
+            card_x + 5, card_y + card_height - 35,
             text=f"Position titre: ({self.title_x_var.get()}, {self.title_y_var.get()})",
             font=('Arial', 8), fill='#666666', anchor='sw'
         )
         
         self.preview_canvas.create_text(
-            card_x + 5, card_y + card_height - 5,
+            card_x + 5, card_y + card_height - 20,
             text=f"Zone texte: ({self.text_x_var.get()}, {self.text_y_var.get()}) {text_width}x{text_height}",
+            font=('Arial', 8), fill='#666666', anchor='sw'
+        )
+        
+        self.preview_canvas.create_text(
+            card_x + 5, card_y + card_height - 5,
+            text=f"Énergie: ({self.energy_x_var.get()}, {self.energy_y_var.get()}) val:{self.energy_value}",
             font=('Arial', 8), fill='#666666', anchor='sw'
         )
         
@@ -588,49 +756,97 @@ class TextFormattingEditor:
             return
             
         try:
-            # Utiliser le système de base de données simplifié pour le formatage
-            import sys
-            import os
-            sys.path.insert(0, os.path.dirname(__file__))
-            from database_simple import CardRepo
-            
-            # Chemin vers la base de données
-            db_path = Path(__file__).parent.parent / "cartes.db"
-            repo = CardRepo(str(db_path))
-            
-            # Récupérer la carte existante
-            card = repo.get_card(self.card_id)
-            
-            if not card:
-                messagebox.showerror("Erreur", f"Carte non trouvée pour l'ID {self.card_id}.")
-                return
-            
-            # Mettre à jour les paramètres de formatage
-            card.title_x = self.title_x_var.get()
-            card.title_y = self.title_y_var.get()
-            card.title_font = self.title_font_var.get()
-            card.title_size = self.title_size_var.get()
-            card.title_color = self.title_color_var.get()
-            
-            card.text_x = self.text_x_var.get()
-            card.text_y = self.text_y_var.get()
-            card.text_width = self.text_width_var.get()
-            card.text_height = self.text_height_var.get()
-            card.text_font = self.text_font_var.get()
-            card.text_size = self.text_size_var.get()
-            card.text_color = self.text_color_var.get()
-            card.text_align = self.text_align_var.get()
-            card.line_spacing = self.line_spacing_var.get()
-            card.text_wrap = int(self.text_wrap_var.get())
-            
-            # Sauvegarder en base
-            repo.save_card(card)
-            
-            messagebox.showinfo("Succès", "Paramètres de formatage sauvegardés !")
-            self.window.destroy()
+            if self.repo:
+                # Utiliser le repo personnalisé
+                # Créer un objet avec les données de formatage
+                class FormattingData:
+                    pass
+                
+                card_data = FormattingData()
+                card_data.id = self.card_id
+                card_data.title_x = self.title_x_var.get()
+                card_data.title_y = self.title_y_var.get()
+                card_data.title_font = self.title_font_var.get()
+                card_data.title_size = self.title_size_var.get()
+                card_data.title_color = self.title_color_var.get()
+                
+                card_data.text_x = self.text_x_var.get()
+                card_data.text_y = self.text_y_var.get()
+                card_data.text_width = self.text_width_var.get()
+                card_data.text_height = self.text_height_var.get()
+                card_data.text_font = self.text_font_var.get()
+                card_data.text_size = self.text_size_var.get()
+                card_data.text_color = self.text_color_var.get()
+                card_data.text_align = self.text_align_var.get()
+                card_data.line_spacing = self.line_spacing_var.get()
+                card_data.text_wrap = bool(self.text_wrap_var.get())
+                
+                # Données de formatage de l'énergie
+                card_data.energy_x = self.energy_x_var.get()
+                card_data.energy_y = self.energy_y_var.get()
+                card_data.energy_font = self.energy_font_var.get()
+                card_data.energy_size = self.energy_size_var.get()
+                card_data.energy_color = self.energy_color_var.get()
+                
+                # Sauvegarder via le repo personnalisé
+                self.repo.save_card(card_data)
+                
+                messagebox.showinfo("Succès", "Paramètres de formatage sauvegardés !")
+                self.window.destroy()
+            else:
+                # Fallback vers l'ancien système pour compatibilité
+                # Utiliser le système de base de données simplifié pour le formatage
+                import sys
+                import os
+                sys.path.insert(0, os.path.dirname(__file__))
+                from database_simple import CardRepo
+                
+                # Chemin vers la base de données
+                db_path = Path(__file__).parent.parent / "data/cartes.db"
+                repo = CardRepo(str(db_path))
+                
+                # Récupérer la carte existante
+                card = repo.get_card(self.card_id)
+                
+                if not card:
+                    messagebox.showerror("Erreur", f"Carte non trouvée pour l'ID {self.card_id}.")
+                    return
+                
+                # Mettre à jour les paramètres de formatage
+                card.title_x = self.title_x_var.get()
+                card.title_y = self.title_y_var.get()
+                card.title_font = self.title_font_var.get()
+                card.title_size = self.title_size_var.get()
+                card.title_color = self.title_color_var.get()
+                
+                card.text_x = self.text_x_var.get()
+                card.text_y = self.text_y_var.get()
+                card.text_width = self.text_width_var.get()
+                card.text_height = self.text_height_var.get()
+                card.text_font = self.text_font_var.get()
+                card.text_size = self.text_size_var.get()
+                card.text_color = self.text_color_var.get()
+                card.text_align = self.text_align_var.get()
+                card.line_spacing = self.line_spacing_var.get()
+                card.text_wrap = int(self.text_wrap_var.get())
+                
+                # Paramètres d'énergie
+                card.energy_x = self.energy_x_var.get()
+                card.energy_y = self.energy_y_var.get()
+                card.energy_font = self.energy_font_var.get()
+                card.energy_size = self.energy_size_var.get()
+                card.energy_color = self.energy_color_var.get()
+                
+                # Sauvegarder en base
+                repo.save_card(card)
+                
+                messagebox.showinfo("Succès", "Paramètres de formatage sauvegardés !")
+                self.window.destroy()
             
         except Exception as e:
             messagebox.showerror("Erreur", f"Erreur lors de la sauvegarde: {e}")
+            import traceback
+            traceback.print_exc()
             
     def reset_values(self):
         """Réinitialise les valeurs par défaut"""
