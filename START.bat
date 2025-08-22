@@ -10,9 +10,8 @@ echo ================================================================
 echo.
 echo 🎮 MODES DE LANCEMENT
 echo.
-echo   [1] Lancer Love2D (Mode Jeu)
-echo   [2] Lancer éditeur Python (Mode Edition)
-echo   [3] Menu développeur (Scripts dev/)
+echo   [1] Lancer éditeur Python (Mode Edition)
+echo   [2] Menu développeur (Scripts dev/)
 echo   [U] Mise à jour automatique (UPDATE.bat)
 echo   [H] Aide et documentation
 echo   [Q] Quitter
@@ -23,24 +22,6 @@ set /p choice="Votre choix : "
 
 if /i "%choice%"=="1" (
     cls  
-    echo 🎮 Lancement de Love2D...
-    echo.
-    REM Chercher Love2D dans les emplacements courants
-    if exist "C:\Program Files\LOVE\love.exe" (
-        "C:\Program Files\LOVE\love.exe" .
-    ) else if exist "C:\Program Files (x86)\LOVE\love.exe" (
-        "C:\Program Files (x86)\LOVE\love.exe" .
-    ) else (
-        echo ❌ Love2D non trouvé
-        echo.
-        echo 💡 Installez Love2D depuis : https://love2d.org/
-        echo    Puis relancez ce script
-        pause
-    )
-    goto end
-)
-if /i "%choice%"=="2" (
-    cls  
     echo 🐍 Lancement de l'éditeur Python...
     echo.
     if exist "dev\run_app.bat" (
@@ -50,7 +31,7 @@ if /i "%choice%"=="2" (
     )
     goto end
 )
-if /i "%choice%"=="3" (
+if /i "%choice%"=="2" (
     cls
     echo 🛠️ Menu développeur...
     echo.
@@ -89,7 +70,7 @@ if /i "%choice%"=="h" (
 if /i "%choice%"=="q" goto quit
 
 echo.
-echo ❌ Choix invalide. Veuillez sélectionner 1, 2, 3, U, H ou Q.
+echo ❌ Choix invalide. Veuillez sélectionner 1, 2, U, H ou Q.
 echo.
 goto choice
 
