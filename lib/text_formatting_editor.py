@@ -264,7 +264,7 @@ class TextFormattingEditor:
         ttk.Label(label_frame_y, textvariable=self.title_y_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
-        scale_y = ttk.Scale(pos_frame2, from_=0, to=470, variable=self.title_y_var,
+        scale_y = ttk.Scale(pos_frame2, from_=0, to=500, variable=self.title_y_var,
                            command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL)
         scale_y.pack(fill=tk.X, pady=(2, 0))
         
@@ -336,7 +336,7 @@ class TextFormattingEditor:
         ttk.Label(label_frame_text_y, textvariable=self.text_y_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
         # Curseur
-        ttk.Scale(pos_frame4, from_=0, to=470, variable=self.text_y_var,
+        ttk.Scale(pos_frame4, from_=0, to=500, variable=self.text_y_var,
                  command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(2, 0))
         
         # Largeur du texte
@@ -470,7 +470,7 @@ class TextFormattingEditor:
         # Curseur Y plus grand - PLEINE LARGEUR
         scale_y_frame = ttk.Frame(pos_y_energy_frame)
         scale_y_frame.pack(fill=tk.X, pady=(5, 0))
-        ttk.Scale(scale_y_frame, from_=0, to=470, variable=self.energy_y_var,
+        ttk.Scale(scale_y_frame, from_=0, to=500, variable=self.energy_y_var,
                  command=self.on_value_change, length=slider_length, orient=tk.HORIZONTAL).pack(fill=tk.X)
         
         # Préréglages de position - AMÉLIORÉS ET PLUS VISIBLES
@@ -478,7 +478,7 @@ class TextFormattingEditor:
         presets_frame.pack(fill=tk.X, pady=(10, 10))
         
         # AMÉLIORATION: 3 lignes de boutons pour plus de visibilité
-        # Ligne 1: Positions hautes (dimensions carte 280x470)
+        # Ligne 1: Positions hautes (dimensions carré blanc étendu)
         row1 = ttk.Frame(presets_frame)
         row1.pack(fill=tk.X, pady=(0, 5))
         ttk.Button(row1, text="↖ Haut G.", width=10, 
@@ -498,7 +498,7 @@ class TextFormattingEditor:
         ttk.Button(row2, text="→ Milieu D.", width=10,
                   command=lambda: self.set_energy_position(260, 235)).pack(side=tk.LEFT, padx=(5, 0))
         
-        # Ligne 3: Positions basses (dimensions carte 280x470)
+        # Ligne 3: Positions basses (dimensions carré blanc étendu)
         row3 = ttk.Frame(presets_frame)
         row3.pack(fill=tk.X, pady=(5, 0))
         ttk.Button(row3, text="↙ Bas G.", width=10,
@@ -619,13 +619,20 @@ class TextFormattingEditor:
         # Effacer le canvas
         self.preview_canvas.delete("all")
         
-        # Taille du canvas et de la carte
-        canvas_width = 380
-        canvas_height = 580
-        card_width = 280
-        card_height = 470
+        # Obtenir les vraies dimensions du canvas
+        canvas_width = self.preview_canvas.winfo_width()
+        canvas_height = self.preview_canvas.winfo_height()
         
-        # Centrer la carte
+        # Si les dimensions ne sont pas encore disponibles, utiliser les valeurs par défaut
+        if canvas_width <= 1:
+            canvas_width = int((1182 - 60) * 0.7) - 20  # ~765px
+        if canvas_height <= 1:
+            canvas_height = int(canvas_width * (7/5))  # Ratio carte 5:7 inversé
+        
+        card_width = 280
+        card_height = 392
+        
+        # Centrer la carte dans le canvas réel
         card_x = (canvas_width - card_width) // 2
         card_y = (canvas_height - card_height) // 2
         
