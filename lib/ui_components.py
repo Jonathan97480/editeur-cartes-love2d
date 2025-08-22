@@ -1027,6 +1027,7 @@ class CardList(ttk.Frame):
         ttk.Button(exp, text='🎭 Exporter Acteur', command=self.export_actor_selection).pack(side='left')
         ttk.Button(exp, text='📤 Exporter Tout', command=self.export_all_actors).pack(side='left', padx=6)
         ttk.Button(exp, text='🎮 Export Love2D+Format', command=self.export_love2d_with_formatting).pack(side='left', padx=6)
+        ttk.Button(exp, text='📦 Package Complet', command=self.export_game_package).pack(side='left', padx=6)
 
     def _side_value(self):
         v = self.side_filter.get()
@@ -1241,3 +1242,131 @@ class CardList(ttk.Frame):
             
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Erreur lors de l'export Love2D :\n{e}")
+
+    def export_game_package(self):
+        """Exporte un package complet de jeu avec fichier Lua, images fusionnées et polices."""
+        try:
+            # Vérifier qu'il y a des cartes
+            cards = self.repo.list_cards()
+            if not cards:
+                messagebox.showwarning(APP_TITLE, "Aucune carte à exporter!")
+                return
+            
+            # Dialog pour le nom du package
+            from tkinter import simpledialog
+            package_name = simpledialog.askstring(
+                "Export Package", 
+                "Nom du package de jeu:",
+                initialvalue="mon_jeu_cartes"
+            )
+            
+            if not package_name:
+                return
+            
+            # Nettoyer le nom du package
+            package_name = package_name.strip().replace(' ', '_')
+            
+            # Choisir le dossier de destination
+            output_dir = filedialog.askdirectory(
+                title="Choisir le dossier de destination",
+                initialdir="exports"
+            )
+            
+            if not output_dir:
+                return
+            
+            # Créer une fenêtre de progression
+            progress_window = tk.Toplevel(self)
+            progress_window.title("Export en cours...")
+            progress_window.geometry("400x150")
+            progress_window.resizable(False, False)
+            progress_window.transient(self)
+            progress_window.grab_set()
+            
+            # Centrer la fenêtre
+            progress_window.geometry("+%d+%d" % (
+                progress_window.winfo_toplevel().winfo_x() + 50,
+                progress_window.winfo_toplevel().winfo_y() + 50))
+            
+            # Contenu de la fenêtre de progression
+            ttk.Label(progress_window, text="🎮 Export du package en cours...", 
+                     font=("Arial", 12, "bold")).pack(pady=10)
+            
+            status_var = tk.StringVar(value="Initialisation...")
+            status_label = ttk.Label(progress_window, textvariable=status_var)
+            status_label.pack(pady=5)
+            
+            progress_bar = ttk.Progressbar(progress_window, mode='indeterminate')
+            progress_bar.pack(fill='x', padx=20, pady=10)
+            progress_bar.start(10)
+            
+            # Effectuer l'export en arrière-plan
+            def do_export():
+                try:
+                    # Import de l'exporteur
+                    status_var.set("Chargement de l'exporteur...")
+                    from game_package_exporter import GamePackageExporter
+                    
+                    # Créer l'exporteur
+                    status_var.set("Analyse des ressources...")
+                    exporter = GamePackageExporter(self.repo, output_dir)
+                    
+                    # Effectuer l'export
+                    status_var.set("Création du package...")
+                    package_path = exporter.export_complete_package(package_name)
+                    
+                    # Succès
+                    progress_window.after(0, lambda: export_success(package_path))
+                    
+                except Exception as e:
+                    progress_window.after(0, lambda: export_error(str(e)))
+            
+            def export_success(package_path):
+                progress_bar.stop()
+                progress_window.destroy()
+                
+                # Calculer les statistiques
+                import os
+                import zipfile
+                
+                size = os.path.getsize(package_path)
+                
+                with zipfile.ZipFile(package_path, 'r') as zipf:
+                    files = zipf.namelist()
+                    image_files = [f for f in files if f.endswith('.png')]
+                    font_files = [f for f in files if f.endswith(('.ttf', '.otf'))]
+                
+                # Message de succès
+                message = (
+                    f"🎉 Package créé avec succès!\n\n"
+                    f"📁 Fichier: {os.path.basename(package_path)}\n"
+                    f"📏 Taille: {size:,} octets ({size/1024:.1f} KB)\n\n"
+                    f"📦 Contenu:\n"
+                    f"   • {len(cards)} cartes avec données complètes\n"
+                    f"   • {len(image_files)} images fusionnées\n"
+                    f"   • {len(font_files)} polices incluses\n"
+                    f"   • Documentation Love2D\n\n"
+                    f"✨ Prêt pour intégration dans votre jeu!\n\n"
+                    f"Ouvrir le dossier contenant le package?"
+                )
+                
+                if messagebox.askyesno(APP_TITLE, message):
+                    # Ouvrir le dossier
+                    folder_path = os.path.dirname(package_path)
+                    os.startfile(folder_path)  # Windows
+            
+            def export_error(error_message):
+                progress_bar.stop()
+                progress_window.destroy()
+                messagebox.showerror(APP_TITLE, f"Erreur lors de l'export du package:\n\n{error_message}")
+            
+            # Lancer l'export en thread
+            import threading
+            thread = threading.Thread(target=do_export)
+            thread.daemon = True
+            thread.start()
+            
+        except Exception as e:
+            messagebox.showerror(APP_TITLE, f"Erreur lors de l'export du package :\n{e}")
+            import traceback
+            traceback.print_exc()
