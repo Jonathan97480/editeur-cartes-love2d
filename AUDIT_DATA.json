@@ -1,86 +1,111 @@
 {
-  "metadata": {
-    "audit_date": "2025-08-22T21:35:00",
-    "project_name": "editeur-cartes-love2d",
-    "audit_version": "1.0",
-    "auditor": "GitHub Copilot Auto-Audit"
-  },
-  "structure": {
-    "total_files": 1738,
-    "python_files": 657,
-    "directories": 393,
-    "essential_files_present": true,
-    "organization_score": 100
-  },
-  "modules": {
-    "lib_directory": true,
-    "main_modules": {
-      "main_app.py": {"size_kb": 7, "status": "operational"},
-      "ui_components.py": {"size_kb": 67, "status": "robust"},
-      "database.py": {"size_kb": 11, "status": "efficient"},
-      "text_formatting_editor.py": {"size_kb": 42, "status": "complete"},
-      "lua_export.py": {"size_kb": 5, "status": "functional"}
+    "metadata": {
+        "audit_date": "2025-08-22T21:35:00",
+        "project_name": "editeur-cartes-love2d",
+        "audit_version": "1.0",
+        "auditor": "GitHub Copilot Auto-Audit"
     },
-    "module_count": 26
-  },
-  "database": {
-    "exists": true,
-    "location": "data/cartes.db",
-    "operational": true,
-    "card_count": 10,
-    "integrity_verified": true
-  },
-  "tests": {
-    "directory_exists": true,
-    "test_files_count": 65,
-    "categories": [
-      "actors", "database", "export", "export_avance", 
-      "formatage", "github", "integration", "interface",
-      "migration", "rarity", "template", "unitaires", 
-      "utils", "validation"
-    ],
-    "coverage_estimate": 95
-  },
-  "documentation": {
-    "readme_exists": true,
-    "docs_directory": true,
-    "guides_directory": true,
-    "quality_score": 100
-  },
-  "export_capabilities": {
-    "lua_exporter_love2d": true,
-    "game_package_exporter": true,
-    "zip_export": true,
-    "love2d_compatibility": true
-  },
-  "security": {
-    "no_hardcoded_paths": true,
-    "secure_db_queries": true,
-    "no_exposed_secrets": true,
-    "security_score": 100
-  },
-  "quality_metrics": {
-    "global_score": 100,
-    "status": "EXCELLENT",
-    "cleanup_impact": {
-      "files_removed": 72,
-      "directories_removed": 78,
-      "efficiency_gain": 8
+    "structure": {
+        "total_files": 1738,
+        "python_files": 657,
+        "directories": 393,
+        "essential_files_present": true,
+        "organization_score": 100
+    },
+    "modules": {
+        "lib_directory": true,
+        "main_modules": {
+            "main_app.py": {
+                "size_kb": 7,
+                "status": "operational"
+            },
+            "ui_components.py": {
+                "size_kb": 67,
+                "status": "robust"
+            },
+            "database.py": {
+                "size_kb": 11,
+                "status": "efficient"
+            },
+            "text_formatting_editor.py": {
+                "size_kb": 42,
+                "status": "complete"
+            },
+            "lua_export.py": {
+                "size_kb": 5,
+                "status": "functional"
+            }
+        },
+        "module_count": 26
+    },
+    "database": {
+        "exists": true,
+        "location": "data/cartes.db",
+        "operational": true,
+        "card_count": 10,
+        "integrity_verified": true
+    },
+    "tests": {
+        "directory_exists": true,
+        "test_files_count": 65,
+        "categories": [
+            "actors",
+            "database",
+            "export",
+            "export_avance",
+            "formatage",
+            "github",
+            "integration",
+            "interface",
+            "migration",
+            "rarity",
+            "template",
+            "unitaires",
+            "utils",
+            "validation"
+        ],
+        "coverage_estimate": 95
+    },
+    "documentation": {
+        "readme_exists": true,
+        "docs_directory": true,
+        "guides_directory": true,
+        "quality_score": 100
+    },
+    "export_capabilities": {
+        "lua_exporter_love2d": true,
+        "game_package_exporter": true,
+        "zip_export": true,
+        "love2d_compatibility": true
+    },
+    "security": {
+        "no_hardcoded_paths": true,
+        "secure_db_queries": true,
+        "no_exposed_secrets": true,
+        "security_score": 100
+    },
+    "quality_metrics": {
+        "global_score": 100,
+        "status": "EXCELLENT",
+        "cleanup_impact": {
+            "files_removed": 72,
+            "directories_removed": 78,
+            "efficiency_gain": 8
+        }
+    },
+    "recommendations": {
+        "current_status": "Project in excellent condition",
+        "maintenance_suggestions": [
+            "Continue automated testing",
+            "Keep documentation updated",
+            "Monitor performance regularly",
+            "Plan for future enhancements"
+        ],
+        "future_enhancements": [
+            "CI/CD pipeline setup",
+            "Modern UI framework migration",
+            "Plugin architecture",
+            "Extended export formats"
+        ]
     }
-  },
-  "recommendations": {
-    "current_status": "Project in excellent condition",
-    "maintenance_suggestions": [
-      "Continue automated testing",
-      "Keep documentation updated", 
-      "Monitor performance regularly",
-      "Plan for future enhancements"
-    ],
-    "future_enhancements": [
-      "CI/CD pipeline setup",
-      "Modern UI framework migration",
-      "Plugin architecture",
-      "Extended export formats"
-    ]
-  }
 }
