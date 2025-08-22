@@ -190,3 +190,19 @@ backup_*
 # Fichiers temporaires
 temp/
 tmp/
+
+# Dossier de données sensibles
+data/
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Sauvegardes automatiques
+*_backup_*
+backup_*
+
+# Fichiers temporaires
+temp/
+tmp/

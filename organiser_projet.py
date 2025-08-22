@@ -14,6 +14,17 @@ from pathlib import Path
 import sqlite3
 import json
 
+def get_python_executable():
+    """Retourne le chemin vers l'exécutable Python correct"""
+    # Chemin vers l'environnement Conda configuré
+    conda_python = r"C:/Users/berou/AppData/Local/NVIDIA/ChatWithRTX/env_nvd_rag/python.exe"
+    
+    if os.path.exists(conda_python):
+        return conda_python
+    
+    # Fallback vers l'exécutable Python actuel
+    return sys.executable
+
 def log_info(message):
     """Affiche un message d'information"""
     print(f"ℹ️  {message}")
@@ -432,9 +443,10 @@ def executer_tests():
     log_info("Exécution des tests de validation...")
     
     try:
-        # Lancer les tests intégrés
+        # Lancer les tests intégrés avec le bon environnement Python
+        python_exe = get_python_executable()
         result = subprocess.run([
-            sys.executable, "app_final.py", "--test"
+            python_exe, "app_final.py", "--test"
         ], capture_output=True, text=True, cwd=".", encoding='utf-8', errors='replace')
         
         # Vérifier si les tests ont réussi en analysant la sortie
