@@ -39,29 +39,116 @@ class TextFormattingEditor:
         self.title_text = self.card_data.get('nom', 'Titre de la carte')
         self.content_text = self.card_data.get('description', 'Description de la carte avec du texte plus long pour tester le retour à la ligne automatique.')
         
+        # Image de la carte
+        self.card_image_path = self.card_data.get('img', None)
+        self.card_image = None
+        self.card_image_tk = None
+        
         self.create_window()
+        # L'image sera chargée dans create_window() avant le premier update_preview
+        
+    def load_card_image(self):
+        """Charge l'image de la carte pour l'aperçu"""
+        if not self.card_image_path:
+            return
+            
+        try:
+            # Construire le chemin de l'image
+            if Path(self.card_image_path).is_absolute():
+                # Chemin absolu
+                image_path = Path(self.card_image_path.strip())
+            else:
+                # Chemin relatif
+                base_path = Path(__file__).parent.parent
+                image_path = base_path / self.card_image_path.strip()
+            
+            if image_path.exists():
+                # Charger l'image
+                self.card_image = Image.open(image_path)
+                
+                # S'adapter dynamiquement à la taille du canvas
+                # Le canvas sera créé avec des dimensions calculées
+                if hasattr(self, 'preview_canvas'):
+                    canvas_width = self.preview_canvas.winfo_reqwidth()
+                    canvas_height = self.preview_canvas.winfo_reqheight()
+                else:
+                    # Valeurs par défaut basées sur la nouvelle taille
+                    preview_width = ((1182 - 60) * 3) // 4  # ~830px
+                    card_ratio = 5/7
+                    canvas_width = preview_width - 40
+                    canvas_height = int(canvas_width * (1/card_ratio))
+                
+                # Redimensionner l'image pour s'adapter au canvas avec marge, mais garder les proportions
+                # Ne pas forcer la taille exacte du canvas, mais s'adapter en gardant le ratio
+                original_width, original_height = self.card_image.size
+                max_width = canvas_width - 40  # Marge plus grande
+                max_height = canvas_height - 40
+                
+                # Calculer le ratio de redimensionnement en gardant les proportions
+                ratio_width = max_width / original_width
+                ratio_height = max_height / original_height
+                ratio = min(ratio_width, ratio_height)  # Prendre le plus petit ratio
+                
+                # Nouvelles dimensions
+                new_width = int(original_width * ratio)
+                new_height = int(original_height * ratio)
+                
+                self.card_image = self.card_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                self.card_image_tk = ImageTk.PhotoImage(self.card_image)
+            else:
+                print(f"⚠️ Image non trouvée : {image_path}")
+                
+        except Exception as e:
+            print(f"❌ Erreur lors du chargement de l'image : {e}")
+            self.card_image = None
+            self.card_image_tk = None
+            
+        # Rafraîchir l'aperçu après chargement
+        # (sera appelé une fois que le canvas est créé)
         
     def create_window(self):
         """Crée la fenêtre d'édition"""
         self.window = tk.Toplevel(self.parent)
         self.window.title("🎨 Éditeur de Formatage de Texte")
-        self.window.geometry("1200x800")
+        
+        # Taille par défaut optimisée
+        window_width = 1182
+        window_height = 780
+        self.window.geometry(f"{window_width}x{window_height}")
         self.window.grab_set()  # Modal
+        
+        # Permettre le redimensionnement pour s'adapter à tous les écrans
+        self.window.resizable(True, True)
+        
+        # Définir une taille minimale pour garder l'interface utilisable
+        self.window.minsize(900, 600)
+        
+        # Centrer la fenêtre
+        self.window.update_idletasks()
+        x = (self.window.winfo_screenwidth() // 2) - (window_width // 2)
+        y = (self.window.winfo_screenheight() // 2) - (window_height // 2)
+        self.window.geometry(f"{window_width}x{window_height}+{x}+{y}")
         
         # Frame principal avec splitter
         main_frame = ttk.Frame(self.window)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Frame gauche - Contrôles
+        # Frame gauche - Contrôles (1/4 de la largeur)
+        controls_width = (window_width - 40) // 4  # 40 pour padding total
         controls_frame = ttk.LabelFrame(main_frame, text="📝 Contrôles de Formatage", padding=10)
         controls_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 10))
+        controls_frame.configure(width=controls_width)
+        controls_frame.pack_propagate(False)  # Forcer la taille
         
-        # Frame droite - Aperçu
+        # Frame droite - Aperçu (3/4 de la largeur)
         preview_frame = ttk.LabelFrame(main_frame, text="👁️ Aperçu de la Carte", padding=10)
         preview_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         
         self.create_controls(controls_frame)
         self.create_preview(preview_frame)
+        
+        # Charger l'image avant la mise à jour initiale
+        self.load_card_image()
         
         # Boutons action
         button_frame = ttk.Frame(self.window)
@@ -71,13 +158,20 @@ class TextFormattingEditor:
         ttk.Button(button_frame, text="🔄 Réinitialiser", command=self.reset_values).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="❌ Annuler", command=self.window.destroy).pack(side=tk.RIGHT)
         
-        # Mise à jour initiale
+        # Mise à jour initiale (après chargement de l'image)
         self.update_preview()
         
     def create_controls(self, parent):
         """Crée les contrôles de formatage"""
-        # Frame scrollable
-        canvas = tk.Canvas(parent, width=350)
+        # Calculer la largeur disponible (1/4 de la fenêtre moins les marges)
+        controls_width = (1182 - 60) // 4  # ~280px
+        
+        # Spécifications standardisées pour les curseurs
+        slider_length = 199  # Longueur maximale fixe
+        slider_margin_right = 45  # Marge droite pour le texte
+        
+        # Frame scrollable avec hauteur réduite pour laisser place aux boutons
+        canvas = tk.Canvas(parent, width=controls_width-20, height=680)  # Réduit de 800 à 680
         scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
         
@@ -90,51 +184,70 @@ class TextFormattingEditor:
         canvas.configure(yscrollcommand=scrollbar.set)
         
         # === CONTRÔLES TITRE ===
-        title_frame = ttk.LabelFrame(scrollable_frame, text="📍 Formatage du Titre", padding=10)
-        title_frame.pack(fill=tk.X, pady=(0, 10))
+        title_frame = ttk.LabelFrame(scrollable_frame, text="📍 Formatage du Titre", padding=5)
+        title_frame.pack(fill=tk.X, pady=(0, 5))
         
-        # Position
+        # Position X
         pos_frame = ttk.Frame(title_frame)
-        pos_frame.pack(fill=tk.X, pady=5)
+        pos_frame.pack(fill=tk.X, pady=2)
         
-        ttk.Label(pos_frame, text="Position X:").pack(side=tk.LEFT)
+        # Label et valeur au-dessus
+        label_frame_x = ttk.Frame(pos_frame)
+        label_frame_x.pack(fill=tk.X)
+        ttk.Label(label_frame_x, text="Position X:").pack(side=tk.LEFT)
         self.title_x_var = tk.IntVar(value=self.title_x)
-        ttk.Scale(pos_frame, from_=0, to=300, variable=self.title_x_var, 
-                 command=self.on_value_change).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(pos_frame, textvariable=self.title_x_var).pack(side=tk.RIGHT)
+        ttk.Label(label_frame_x, textvariable=self.title_x_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
         
+        # Curseur
+        scale_x = ttk.Scale(pos_frame, from_=0, to=500, variable=self.title_x_var, 
+                           command=self.on_value_change, length=199, orient=tk.HORIZONTAL)
+        scale_x.pack(side=tk.LEFT, pady=(2, 0))
+        
+        # Position Y
         pos_frame2 = ttk.Frame(title_frame)
-        pos_frame2.pack(fill=tk.X, pady=5)
+        pos_frame2.pack(fill=tk.X, pady=2)
         
-        ttk.Label(pos_frame2, text="Position Y:").pack(side=tk.LEFT)
+        # Label et valeur au-dessus
+        label_frame_y = ttk.Frame(pos_frame2)
+        label_frame_y.pack(fill=tk.X)
+        ttk.Label(label_frame_y, text="Position Y:").pack(side=tk.LEFT)
         self.title_y_var = tk.IntVar(value=self.title_y)
-        ttk.Scale(pos_frame2, from_=0, to=300, variable=self.title_y_var,
-                 command=self.on_value_change).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(pos_frame2, textvariable=self.title_y_var).pack(side=tk.RIGHT)
+        ttk.Label(label_frame_y, textvariable=self.title_y_var).pack(side=tk.RIGHT, padx=(0, slider_margin_right))
+        
+        # Curseur
+        scale_y = ttk.Scale(pos_frame2, from_=0, to=600, variable=self.title_y_var,
+                           command=self.on_value_change, length=199, orient=tk.HORIZONTAL)
+        scale_y.pack(side=tk.LEFT, pady=(2, 0))
         
         # Police et taille
         font_frame = ttk.Frame(title_frame)
-        font_frame.pack(fill=tk.X, pady=5)
+        font_frame.pack(fill=tk.X, pady=2)
         
         ttk.Label(font_frame, text="Police:").pack(side=tk.LEFT)
         self.title_font_var = tk.StringVar(value=self.title_font)
         font_combo = ttk.Combobox(font_frame, textvariable=self.title_font_var, 
-                                 values=list(font.families()), state="readonly")
-        font_combo.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+                                 values=list(font.families()), state="readonly", width=15)
+        font_combo.pack(side=tk.LEFT, padx=5)
         font_combo.bind('<<ComboboxSelected>>', self.on_value_change)
         
+        # Taille
         size_frame = ttk.Frame(title_frame)
-        size_frame.pack(fill=tk.X, pady=5)
+        size_frame.pack(fill=tk.X, pady=2)
         
-        ttk.Label(size_frame, text="Taille:").pack(side=tk.LEFT)
+        # Label et valeur au-dessus
+        label_frame_size = ttk.Frame(size_frame)
+        label_frame_size.pack(fill=tk.X)
+        ttk.Label(label_frame_size, text="Taille:").pack(side=tk.LEFT)
         self.title_size_var = tk.IntVar(value=self.title_size)
+        ttk.Label(label_frame_size, textvariable=self.title_size_var).pack(side=tk.RIGHT, padx=(0, 45))
+        
+        # Curseur
         ttk.Scale(size_frame, from_=8, to=48, variable=self.title_size_var,
-                 command=self.on_value_change).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(size_frame, textvariable=self.title_size_var).pack(side=tk.RIGHT)
+                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
         
         # Couleur
         color_frame = ttk.Frame(title_frame)
-        color_frame.pack(fill=tk.X, pady=5)
+        color_frame.pack(fill=tk.X, pady=2)
         
         ttk.Label(color_frame, text="Couleur:").pack(side=tk.LEFT)
         self.title_color_var = tk.StringVar(value=self.title_color)
@@ -145,67 +258,95 @@ class TextFormattingEditor:
         text_frame = ttk.LabelFrame(scrollable_frame, text="📝 Formatage du Texte", padding=10)
         text_frame.pack(fill=tk.X, pady=(0, 10))
         
-        # Position et dimensions
+        # Position X du texte
         pos_frame3 = ttk.Frame(text_frame)
-        pos_frame3.pack(fill=tk.X, pady=5)
+        pos_frame3.pack(fill=tk.X, pady=2)
         
-        ttk.Label(pos_frame3, text="Position X:").pack(side=tk.LEFT)
+        # Label et valeur au-dessus
+        label_frame_text_x = ttk.Frame(pos_frame3)
+        label_frame_text_x.pack(fill=tk.X)
+        ttk.Label(label_frame_text_x, text="Position X:").pack(side=tk.LEFT)
         self.text_x_var = tk.IntVar(value=self.text_x)
-        ttk.Scale(pos_frame3, from_=0, to=300, variable=self.text_x_var,
-                 command=self.on_value_change).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(pos_frame3, textvariable=self.text_x_var).pack(side=tk.RIGHT)
+        ttk.Label(label_frame_text_x, textvariable=self.text_x_var).pack(side=tk.RIGHT, padx=(0, 45))
         
+        # Curseur
+        ttk.Scale(pos_frame3, from_=0, to=500, variable=self.text_x_var,
+                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
+        
+        # Position Y du texte
         pos_frame4 = ttk.Frame(text_frame)
-        pos_frame4.pack(fill=tk.X, pady=5)
+        pos_frame4.pack(fill=tk.X, pady=2)
         
-        ttk.Label(pos_frame4, text="Position Y:").pack(side=tk.LEFT)
+        # Label et valeur au-dessus
+        label_frame_text_y = ttk.Frame(pos_frame4)
+        label_frame_text_y.pack(fill=tk.X)
+        ttk.Label(label_frame_text_y, text="Position Y:").pack(side=tk.LEFT)
         self.text_y_var = tk.IntVar(value=self.text_y)
-        ttk.Scale(pos_frame4, from_=0, to=400, variable=self.text_y_var,
-                 command=self.on_value_change).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(pos_frame4, textvariable=self.text_y_var).pack(side=tk.RIGHT)
+        ttk.Label(label_frame_text_y, textvariable=self.text_y_var).pack(side=tk.RIGHT, padx=(0, 45))
         
-        # Largeur et hauteur
+        # Curseur
+        ttk.Scale(pos_frame4, from_=0, to=700, variable=self.text_y_var,
+                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
+        
+        # Largeur du texte
         dim_frame = ttk.Frame(text_frame)
-        dim_frame.pack(fill=tk.X, pady=5)
+        dim_frame.pack(fill=tk.X, pady=2)
         
-        ttk.Label(dim_frame, text="Largeur:").pack(side=tk.LEFT)
+        # Label et valeur au-dessus
+        label_frame_width = ttk.Frame(dim_frame)
+        label_frame_width.pack(fill=tk.X)
+        ttk.Label(label_frame_width, text="Largeur:").pack(side=tk.LEFT)
         self.text_width_var = tk.IntVar(value=self.text_width)
+        ttk.Label(label_frame_width, textvariable=self.text_width_var).pack(side=tk.RIGHT, padx=(0, 45))
+        
+        # Curseur
         ttk.Scale(dim_frame, from_=50, to=400, variable=self.text_width_var,
-                 command=self.on_value_change).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(dim_frame, textvariable=self.text_width_var).pack(side=tk.RIGHT)
+                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
         
+        # Hauteur du texte
         dim_frame2 = ttk.Frame(text_frame)
-        dim_frame2.pack(fill=tk.X, pady=5)
+        dim_frame2.pack(fill=tk.X, pady=2)
         
-        ttk.Label(dim_frame2, text="Hauteur:").pack(side=tk.LEFT)
+        # Label et valeur au-dessus
+        label_frame_height = ttk.Frame(dim_frame2)
+        label_frame_height.pack(fill=tk.X)
+        ttk.Label(label_frame_height, text="Hauteur:").pack(side=tk.LEFT)
         self.text_height_var = tk.IntVar(value=self.text_height)
+        ttk.Label(label_frame_height, textvariable=self.text_height_var).pack(side=tk.RIGHT, padx=(0, 45))
+        
+        # Curseur
         ttk.Scale(dim_frame2, from_=50, to=300, variable=self.text_height_var,
-                 command=self.on_value_change).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(dim_frame2, textvariable=self.text_height_var).pack(side=tk.RIGHT)
+                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
         
         # Police et taille pour le texte
         font_frame2 = ttk.Frame(text_frame)
-        font_frame2.pack(fill=tk.X, pady=5)
+        font_frame2.pack(fill=tk.X, pady=2)
         
         ttk.Label(font_frame2, text="Police:").pack(side=tk.LEFT)
         self.text_font_var = tk.StringVar(value=self.text_font)
         font_combo2 = ttk.Combobox(font_frame2, textvariable=self.text_font_var,
                                   values=list(font.families()), state="readonly")
-        font_combo2.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        font_combo2.pack(side=tk.LEFT, padx=5)
         font_combo2.bind('<<ComboboxSelected>>', self.on_value_change)
         
+        # Taille du texte
         size_frame2 = ttk.Frame(text_frame)
-        size_frame2.pack(fill=tk.X, pady=5)
+        size_frame2.pack(fill=tk.X, pady=2)
         
-        ttk.Label(size_frame2, text="Taille:").pack(side=tk.LEFT)
+        # Label et valeur au-dessus
+        label_frame_text_size = ttk.Frame(size_frame2)
+        label_frame_text_size.pack(fill=tk.X)
+        ttk.Label(label_frame_text_size, text="Taille:").pack(side=tk.LEFT)
         self.text_size_var = tk.IntVar(value=self.text_size)
+        ttk.Label(label_frame_text_size, textvariable=self.text_size_var).pack(side=tk.RIGHT, padx=(0, 45))
+        
+        # Curseur
         ttk.Scale(size_frame2, from_=8, to=24, variable=self.text_size_var,
-                 command=self.on_value_change).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(size_frame2, textvariable=self.text_size_var).pack(side=tk.RIGHT)
+                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
         
         # Couleur du texte
         color_frame2 = ttk.Frame(text_frame)
-        color_frame2.pack(fill=tk.X, pady=5)
+        color_frame2.pack(fill=tk.X, pady=2)
         
         ttk.Label(color_frame2, text="Couleur:").pack(side=tk.LEFT)
         self.text_color_var = tk.StringVar(value=self.text_color)
@@ -214,23 +355,29 @@ class TextFormattingEditor:
         
         # Alignement
         align_frame = ttk.Frame(text_frame)
-        align_frame.pack(fill=tk.X, pady=5)
+        align_frame.pack(fill=tk.X, pady=2)
         
         ttk.Label(align_frame, text="Alignement:").pack(side=tk.LEFT)
         self.text_align_var = tk.StringVar(value=self.text_align)
         align_combo = ttk.Combobox(align_frame, textvariable=self.text_align_var,
                                   values=['left', 'center', 'right'], state="readonly")
-        align_combo.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        align_combo.pack(side=tk.LEFT, padx=5)
         align_combo.bind('<<ComboboxSelected>>', self.on_value_change)
         
         # Espacement des lignes
         spacing_frame = ttk.Frame(text_frame)
-        spacing_frame.pack(fill=tk.X, pady=5)
+        spacing_frame.pack(fill=tk.X, pady=2)
         
-        ttk.Label(spacing_frame, text="Espacement:").pack(side=tk.LEFT)
+        # Label et valeur au-dessus
+        label_frame_spacing = ttk.Frame(spacing_frame)
+        label_frame_spacing.pack(fill=tk.X)
+        ttk.Label(label_frame_spacing, text="Espacement:").pack(side=tk.LEFT)
         self.line_spacing_var = tk.DoubleVar(value=self.line_spacing)
+        ttk.Label(label_frame_spacing, textvariable=self.line_spacing_var).pack(side=tk.RIGHT, padx=(0, 45))
+        
+        # Curseur
         ttk.Scale(spacing_frame, from_=0.8, to=3.0, variable=self.line_spacing_var,
-                 command=self.on_value_change).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+                 command=self.on_value_change, length=199, orient=tk.HORIZONTAL).pack(side=tk.LEFT, pady=(2, 0))
         ttk.Label(spacing_frame, textvariable=self.line_spacing_var).pack(side=tk.RIGHT)
         
         # Retour à la ligne automatique
@@ -259,7 +406,21 @@ class TextFormattingEditor:
         
     def create_preview(self, parent):
         """Crée l'aperçu de la carte"""
-        self.preview_canvas = tk.Canvas(parent, width=400, height=600, bg='white', relief=tk.SUNKEN, bd=2)
+        # Calculer la largeur disponible pour l'aperçu (3/4 de la fenêtre)
+        preview_width = ((1182 - 60) * 3) // 4  # ~830px
+        preview_height = 700  # Hauteur réduite pour laisser place aux boutons
+        
+        # Ajuster les dimensions pour maintenir un ratio correct pour une carte
+        card_ratio = 5/7  # Ratio typique d'une carte (largeur/hauteur)
+        if preview_width * (1/card_ratio) <= preview_height:
+            canvas_width = preview_width - 20  # Marge réduite pour plus d'espace
+            canvas_height = int(canvas_width * (1/card_ratio))
+        else:
+            canvas_height = preview_height - 20  # Marge réduite
+            canvas_width = int(canvas_height * card_ratio)
+        
+        self.preview_canvas = tk.Canvas(parent, width=canvas_width, height=canvas_height, 
+                                      bg='white', relief=tk.SUNKEN, bd=2)
         self.preview_canvas.pack(padx=10, pady=10)
         
     def on_value_change(self, event=None):
@@ -284,21 +445,39 @@ class TextFormattingEditor:
         # Effacer le canvas
         self.preview_canvas.delete("all")
         
-        # Dessiner le fond de carte (rectangle avec bordure)
-        canvas_width = 400
-        canvas_height = 600
-        card_width = 300
-        card_height = 500
+        # Taille du canvas et de la carte
+        canvas_width = 380
+        canvas_height = 580
+        card_width = 280
+        card_height = 470
         
         # Centrer la carte
         card_x = (canvas_width - card_width) // 2
         card_y = (canvas_height - card_height) // 2
         
-        # Dessiner la carte
-        self.preview_canvas.create_rectangle(
-            card_x, card_y, card_x + card_width, card_y + card_height,
-            fill='#f0f0f0', outline='#333333', width=2
-        )
+        # Dessiner l'image de la carte ou un fond par défaut
+        if self.card_image_tk:
+            # Afficher l'image réelle de la carte
+            self.preview_canvas.create_image(
+                card_x, card_y,
+                image=self.card_image_tk,
+                anchor='nw'
+            )
+        else:
+            # Dessiner un fond par défaut si pas d'image
+            self.preview_canvas.create_rectangle(
+                card_x, card_y, card_x + card_width, card_y + card_height,
+                fill='#f0f0f0', outline='#333333', width=2
+            )
+            
+            # Ajouter un texte d'indication
+            self.preview_canvas.create_text(
+                card_x + card_width//2, card_y + card_height//2,
+                text="Image de carte\nnon trouvée",
+                font=('Arial', 16),
+                fill='#666666',
+                justify='center'
+            )
         
         # Dessiner le titre
         title_x = card_x + self.title_x_var.get()
@@ -409,30 +588,43 @@ class TextFormattingEditor:
             return
             
         try:
+            # Utiliser le système de base de données simplifié pour le formatage
+            import sys
+            import os
+            sys.path.insert(0, os.path.dirname(__file__))
+            from database_simple import CardRepo
+            
+            # Chemin vers la base de données
             db_path = Path(__file__).parent.parent / "cartes.db"
-            conn = sqlite3.connect(str(db_path))
-            cursor = conn.cursor()
+            repo = CardRepo(str(db_path))
             
-            # Mise à jour des paramètres de formatage
-            cursor.execute("""
-                UPDATE cards SET
-                    title_x = ?, title_y = ?, title_font = ?, title_size = ?, title_color = ?,
-                    text_x = ?, text_y = ?, text_width = ?, text_height = ?,
-                    text_font = ?, text_size = ?, text_color = ?, text_align = ?,
-                    line_spacing = ?, text_wrap = ?
-                WHERE id = ?
-            """, (
-                self.title_x_var.get(), self.title_y_var.get(), self.title_font_var.get(),
-                self.title_size_var.get(), self.title_color_var.get(),
-                self.text_x_var.get(), self.text_y_var.get(), self.text_width_var.get(),
-                self.text_height_var.get(), self.text_font_var.get(), self.text_size_var.get(),
-                self.text_color_var.get(), self.text_align_var.get(),
-                self.line_spacing_var.get(), int(self.text_wrap_var.get()),
-                self.card_id
-            ))
+            # Récupérer la carte existante
+            card = repo.get_card(self.card_id)
             
-            conn.commit()
-            conn.close()
+            if not card:
+                messagebox.showerror("Erreur", f"Carte non trouvée pour l'ID {self.card_id}.")
+                return
+            
+            # Mettre à jour les paramètres de formatage
+            card.title_x = self.title_x_var.get()
+            card.title_y = self.title_y_var.get()
+            card.title_font = self.title_font_var.get()
+            card.title_size = self.title_size_var.get()
+            card.title_color = self.title_color_var.get()
+            
+            card.text_x = self.text_x_var.get()
+            card.text_y = self.text_y_var.get()
+            card.text_width = self.text_width_var.get()
+            card.text_height = self.text_height_var.get()
+            card.text_font = self.text_font_var.get()
+            card.text_size = self.text_size_var.get()
+            card.text_color = self.text_color_var.get()
+            card.text_align = self.text_align_var.get()
+            card.line_spacing = self.line_spacing_var.get()
+            card.text_wrap = int(self.text_wrap_var.get())
+            
+            # Sauvegarder en base
+            repo.save_card(card)
             
             messagebox.showinfo("Succès", "Paramètres de formatage sauvegardés !")
             self.window.destroy()

@@ -9,6 +9,16 @@
 - **`run_organize.bat`** - Organise automatiquement le projet
 - **`validate_all.bat`** - Validation complète du projet
 
+### 🔒 Scripts de sécurité et validation
+- **`test_security.bat`** - Tests de sécurité complets avec pré-commit
+- **`test_quick_security.bat`** - Tests de sécurité rapides
+- **`test_application_complet.bat`** - Test complet simulation utilisateur
+- **`validation_complete.bat`** - Validation complète (sécurité + application)
+
+### 🧪 Tests spécialisés
+- **`test_application_complete.py`** - Test Python complet de l'application
+- **`test_debug_carte_non_trouvee.py`** - Test debug pour problèmes de cartes
+
 ### 🔄 Scripts Git spécialisés
 - **`git_commit.bat`** - Commit avec validation automatique
 - **`git_status.bat`** - Statut Git enrichi
@@ -35,6 +45,10 @@ dev/git.bat push              # Push avec tests
 ```bash
 dev/run_tests.bat             # Tests automatisés
 dev/validate_all.bat          # Validation complète
+dev/test_security.bat         # Tests de sécurité complets
+dev/test_quick_security.bat   # Tests de sécurité rapides
+dev/test_application_complet.bat  # Test complet simulation utilisateur
+dev/validation_complete.bat   # Validation sécurité + application
 ```
 
 ### Lancement de l'application
@@ -48,6 +62,16 @@ dev/run_app.bat               # Avec environnement Python
 1. **`git.bat`** - Gestion Git complète
 2. **`run_tests.bat`** - Tests avant commit
 3. **`validate_all.bat`** - Validation périodique
+4. **`test_application_complet.bat`** - Test complet fonctionnel
+
+### Pour la validation avant commit
+1. **`test_quick_security.bat`** - Validation rapide (inclut test complet)
+2. **`test_security.bat`** - Validation complète avec rapports
+3. **`validation_complete.bat`** - Validation totale du projet
+
+### Pour le debug et diagnostic
+1. **`test_application_complete.py`** - Test détaillé avec logs
+2. **`test_debug_carte_non_trouvee.py`** - Debug spécifique cartes
 
 ### Pour la configuration
 1. **`configure_python_env.py`** - Configuration environnement

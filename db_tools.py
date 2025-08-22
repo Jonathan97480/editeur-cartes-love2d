@@ -159,6 +159,7 @@ def main():
     parser.add_argument('--backup', action='store_true', help='Sauvegarde manuelle')
     parser.add_argument('--validate', action='store_true', help='Validation rapide intégrité')
     parser.add_argument('--all', action='store_true', help='Exécuter toutes les opérations')
+    parser.add_argument('--no-pause', action='store_true', help='Ne pas attendre d\'entrée utilisateur')
     
     args = parser.parse_args()
     
@@ -174,7 +175,7 @@ def main():
         try:
             if not os.path.exists(default_db_path()):
                 print("Erreur: Base de donnees non trouvee")
-                return False
+                return False, args
             
             # Test de connexion basique
             import sqlite3
@@ -186,14 +187,14 @@ def main():
             
             if table_count > 0:
                 print(f"Succes: Base de donnees valide ({table_count} tables)")
-                return True
+                return True, args
             else:
                 print("Erreur: Base de donnees vide ou corrompue")
-                return False
+                return False, args
                 
         except Exception as e:
             print(f"Erreur validation: {e}")
-            return False
+            return False, args
     
     if args.all or args.backup:
         print()
@@ -210,11 +211,11 @@ def main():
         if not force_migration():
             success = False
     
-    return success
+    return success, args  # Retourner aussi args pour la gestion de la pause
 
 if __name__ == "__main__":
     try:
-        success = main()
+        success, args = main()
         if not success:
             sys.exit(1)
     except KeyboardInterrupt:
@@ -227,5 +228,8 @@ if __name__ == "__main__":
         sys.exit(1)
     
     print("\n" + "=" * 50)
-    print("Appuyez sur Entrée pour fermer...")
-    input()
+    
+    # Ne pas attendre d'entrée si --no-pause ou --validate (pour tests automatiques)
+    if not (args.no_pause or args.validate):
+        print("Appuyez sur Entrée pour fermer...")
+        input()

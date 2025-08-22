@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "timestamp": "20250822_092130",
+    "date": "2025-08-22T09:21:36.753051",
+    "project": "editeur-cartes-love2d",
+    "python_executable": "C:/Users/berou/AppData/Local/NVIDIA/ChatWithRTX/env_nvd_rag/python.exe"
+  },
+  "tests": {
+    "timestamp": "20250822_092130",
+    "status": "FAIL",
+    "tests": {
+      "syntax": {
+        "status": "PASS",
+        "files_tested": 26,
+        "errors": []
+      },
+      "main_app": {
+        "status": "PASS",
+        "output": "[INFO] Execution des tests...\n[INFO] Creation de la nouvelle base de donnees...\n[SUCCESS] Base de donnees creee avec le schema actuel\n",
+        "errors": "test_build_enemy_lua_full_structure (lib.tests.TestLuaHelpers) ... ok\ntest_build_hero_lua_full_structure (lib.tests.TestLuaHelpers) ... ok\ntest_build_types_lua (lib.tests.TestLuaHelpers) ... ok\ntest_lua_escape_quotes_and_newlines (lib.tests.TestLuaHelpers) ... ok\ntest_build_card_lua_includes_rarete_and_type (lib.tests.TestRarityAndTypes) ... ok\ntest_defaults (lib.tests.TestRarityAndTypes) ... ok\ntest_export_lua_creates_file_with_header_footer (lib.tests.TestExport) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.047s\n\nOK\n"
+      },
+      "database": {
+        "status": "PASS",
+        "output": "Validation rapide de la base de donnees...\nSucces: Base de donnees valide (5 tables)\n\n==================================================\n",
+        "errors": ""
+      },
+      "configuration": {
+        "status": "PASS",
+        "output": "Configuration de l'environnement Python\n==================================================\n🔍 Test de l'environnement Python...\n📍 Exécutable Python: C:/Users/berou/AppData/Local/NVIDIA/ChatWithRTX/env_nvd_rag/python.exe\n✅ Version: Python 3.10.13\n✅ Import basique: OK\n✅ Tests du projet: OK\n\n🛠️  Création des scripts de lancement...\n✅ Scripts de lancement créés:\n   - run_app.bat (Windows)\n   - run_app.ps1 (PowerShell)\n✅ Script de tests créé: run_tests.bat\n✅ Script d'organisation créé: run_organize.bat\n\n🎉 Configuration terminée avec succès !\n\n💡 Utilisation:\n   • Double-cliquez sur run_app.bat pour lancer l'application\n   • Double-cliquez sur run_tests.bat pour lancer les tests\n   • Double-cliquez sur run_organize.bat pour organiser le projet\n\n📝 Note: Ces scripts utilisent le bon environnement Python\n   et évitent l'erreur 'Python est introuvable'\n",
+        "errors": ""
+      },
+      "validation": {
+        "status": "FAIL",
+        "output": "VALIDATION AUTOMATISEE DES TESTS\n============================================================\n📅 Date : 2025-08-22 09:21:32\n\n🔍 VALIDATION SYNTAXE ET IMPORTS\n==================================================\n📝 Test syntaxe : test_actors_complet\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_clear_data\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_compat\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_correction\n   ✅ Syntaxe OK\n   ❌ Erreur import: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"C:\\Users\\berou\\Dow...\n📝 Test syntaxe : test_correction_import\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_deck_viewer\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_deck_viewer_actors\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_export_paths\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_export_reel\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_final_lua\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_final_verification\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_gestion_acteurs\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_github_migration\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_guide\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_image_display\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_image_persistence\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_integration\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_integration_simple\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_interface_acteurs\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_interface_complete\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_liaisons_acteurs\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_load_card_fix\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_lua_export\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_lua_integrity\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_migration\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_new\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_nouveau_export\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_nouveau_raccourci\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_original_images\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_rarity_advanced\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_rarity_change\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_rarity_complete\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_rarity_validation\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_scenario_github\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_selection_multiple\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_simple\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_template_migration\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_template_organization\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_utils\n   ✅ Syntaxe OK\n   ✅ Import OK\n📝 Test syntaxe : test_validation_finale\n   ✅ Syntaxe OK\n   ✅ Import OK\n\n🚀 VALIDATION EXÉCUTION DIRECTE\n==================================================\n🧪 Test direct : test_simple\n   ✅ Exécution OK\n🧪 Test direct : test_compat\n   ✅ Exécution OK\n🧪 Test direct : test_migration\n   ❌ Échec: Traceback (most recent call last):\n  File \"C:\\Users\\berou\\Downloads\\Nouveau dossier\\tests\\test_migra...\n🧪 Test direct : test_lua_export\n   ❌ Échec: Traceback (most recent call last):\n  File \"C:\\Users\\berou\\Downloads\\Nouveau dossier\\tests\\test_lua_e...\n🧪 Test direct : test_template_organization\n   ❌ Échec: Traceback (most recent call last):\n  File \"C:\\Users\\berou\\Downloads\\Nouveau dossier\\tests\\test_templ...\n\n============================================================\nRAPPORT DE VALIDATION AUTOMATISEE\n============================================================\n📝 Syntaxe & Imports : 39/40 OK (97.5%)\n🚀 Exécution directe : 2/5 OK (40.0%)\n\n📋 DÉTAIL DES RÉSULTATS :\n------------------------------\n✅ ✅ test_actors_complet       - Non testé\n✅ ✅ test_clear_data           - Non testé\n✅ ✅ test_compat               - Direct execution OK\n❌ ✅ test_correction           - Non testé\n✅ ✅ test_correction_import    - Non testé\n✅ ✅ test_deck_viewer          - Non testé\n✅ ✅ test_deck_viewer_actors   - Non testé\n✅ ✅ test_export_paths         - Non testé\n✅ ✅ test_export_reel          - Non testé\n✅ ✅ test_final_lua            - Non testé\n✅ ✅ test_final_verification   - Non testé\n✅ ✅ test_gestion_acteurs      - Non testé\n✅ ✅ test_github_migration     - Non testé\n✅ ✅ test_guide                - Non testé\n✅ ✅ test_image_display        - Non testé\n✅ ✅ test_image_persistence    - Non testé\n✅ ✅ test_integration          - Non testé\n✅ ✅ test_integration_simple   - Non testé\n✅ ✅ test_interface_acteurs    - Non testé\n✅ ✅ test_interface_complete   - Non testé\n✅ ✅ test_liaisons_acteurs     - Non testé\n✅ ✅ test_load_card_fix        - Non testé\n✅ ❌ test_lua_export           - Direct execution failed\n✅ ✅ test_lua_integrity        - Non testé\n✅ ❌ test_migration            - Direct execution failed\n✅ ✅ test_new                  - Non testé\n✅ ✅ test_nouveau_export       - Non testé\n✅ ✅ test_nouveau_raccourci    - Non testé\n✅ ✅ test_original_images      - Non testé\n✅ ✅ test_rarity_advanced      - Non testé\n✅ ✅ test_rarity_change        - Non testé\n✅ ✅ test_rarity_complete      - Non testé\n✅ ✅ test_rarity_validation    - Non testé\n✅ ✅ test_scenario_github      - Non testé\n✅ ✅ test_selection_multiple   - Non testé\n✅ ✅ test_simple               - Direct execution OK\n✅ ✅ test_template_migration   - Non testé\n✅ ❌ test_template_organization - Direct execution failed\n✅ ✅ test_utils                - Non testé\n✅ ✅ test_validation_finale    - Non testé\n\n🎯 ANALYSE GLOBALE :\n   🔧 Très bon ! Quelques ajustements mineurs nécessaires.\n   ➡️  Corriger les derniers problèmes de syntaxe.\n\nValidation automatisee terminee !\n",
+        "errors": ""
+      }
+    },
+    "summary": {
+      "total_tests": 5,
+      "passed_tests": 4,
+      "failed_tests": 1,
+      "success_rate": 80.0
+    }
+  },
+  "audit": {
+    "timestamp": "20250822_092130",
+    "status": "PASS",
+    "checks": {
+      "sensitive_files": {
+        "status": "PASS",
+        "files_found": [],
+        "count": 0
+      },
+      "permissions": {
+        "status": "PASS",
+        "issues": [],
+        "files_checked": 4
+      },
+      "structure": {
+        "status": "PASS",
+        "missing_directories": [],
+        "missing_files": [],
+        "structure_score": 100.0
+      },
+      "git_status": {
+        "status": "PASS",
+        "staged_files": 0,
+        "modified_files": 0,
+        "recent_commits": [
+          "7094721 docs: Rapport de déploiement système formatage texte",
+          "36d6f24 docs: Rapport de synchronisation GitHub complet",
+          "e42eda9 feat: Système complet de formatage de texte pour cartes Love2D",
+          "fb623a8 docs: Documentation finale - Vérification environnement + Récapitulatif mission complète",
+          "f66c81f feat: Système de sécurité pré-commit complet avec validation automatique"
+        ]
+      },
+      "environment": {
+        "status": "PASS",
+        "python_version": "Python 3.10.13",
+        "python_path": "C:/Users/berou/AppData/Local/NVIDIA/ChatWithRTX/env_nvd_rag/python.exe",
+        "working_directory": "C:\\Users\\berou\\Downloads\\Nouveau dossier"
+      }
+    },
+    "summary": {
+      "total_checks": 5,
+      "passed_checks": 5,
+      "warning_checks": 0,
+      "failed_checks": 0,
+      "security_score": 100.0
+    }
+  },
+  "overall_status": "FAIL"
+}

@@ -26,6 +26,22 @@ echo.
 "%PYTHON_EXE%" pre_commit_security.py
 
 echo.
+echo 🧪 Test complet de l'application (simulation utilisateur)...
+echo.
+
+"%PYTHON_EXE%" dev\test_application_complete.py
+
+if errorlevel 1 (
+    echo ❌ Test complet de l'application échoué
+    echo ⚠️  L'application pourrait avoir des problèmes fonctionnels
+    echo.
+) else (
+    echo ✅ Test complet de l'application réussi
+    echo 🎉 Toutes les fonctionnalités sont opérationnelles
+    echo.
+)
+
+echo.
 echo 📋 Test terminé. Vérifiez les rapports dans commit_reports\
 echo.
 

@@ -1,0 +1,9 @@
+RAPPORT SÉCURITÉ PRE-COMMIT - 2025-08-22 09:20:53
+============================================================
+
+STATUT GLOBAL: FAIL
+
+TESTS: 4/5 réussis (80.0%)
+AUDIT: 100.0% sécurité
+
+❌ COMMIT BLOQUÉ

@@ -3,25 +3,23 @@
 """
 Test du système de migration de la base de données
 """
-# Configurer l'environnement de test
-from test_utils import setup_test_environment
-setup_test_environment()
-
-
-import os
 import sys
+import os
 from pathlib import Path
 
 # Ajouter le dossier parent au path pour les imports
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Configurer l'environnement de test
+from test_utils import setup_test_environment
+setup_test_environment()
 
 from lib.database_migration import migrate_database, get_db_version, ensure_db_with_migration
 from lib.config import DB_FILE
 
 def default_db_path():
     """Retourne le chemin par défaut de la base de données."""
-
-    return str(Path(__file__).parent / DB_FILE)
+    return str(Path(__file__).parent.parent / DB_FILE)
 
 def test_migration():
     """Test du système de migration."""
@@ -66,5 +64,3 @@ if __name__ == "__main__":
         import traceback
         traceback.print_exc()
         sys.exit(1)
-    
-    input("\nAppuyez sur Entrée pour fermer...")

@@ -59,6 +59,16 @@ if exist "lib" if exist "lang" if exist "config" (
 )
 
 echo.
+echo 🧪 Test complet application (simulation utilisateur)...
+"%PYTHON_EXE%" dev\test_application_complete.py >nul 2>&1
+if errorlevel 1 (
+    echo ❌ Test complet application échoué
+    set "TEST_FAILED=1"
+) else (
+    echo ✅ Test complet application OK
+)
+
+echo.
 echo 🎯 RÉSULTAT FINAL
 echo ================
 if "%TEST_FAILED%"=="1" (

@@ -78,21 +78,21 @@ class Card:
             self.updated_at = row['updated_at']
             
             # Champs de formatage de texte (avec valeurs par défaut)
-            self.title_x = row.get('title_x', 50)
-            self.title_y = row.get('title_y', 30)
-            self.title_font = row.get('title_font', 'Arial')
-            self.title_size = row.get('title_size', 16)
-            self.title_color = row.get('title_color', '#000000')
-            self.text_x = row.get('text_x', 50)
-            self.text_y = row.get('text_y', 100)
-            self.text_width = row.get('text_width', 200)
-            self.text_height = row.get('text_height', 150)
-            self.text_font = row.get('text_font', 'Arial')
-            self.text_size = row.get('text_size', 12)
-            self.text_color = row.get('text_color', '#000000')
-            self.text_align = row.get('text_align', 'left')
-            self.line_spacing = row.get('line_spacing', 1.2)
-            self.text_wrap = row.get('text_wrap', 1)
+            self.title_x = row['title_x'] if 'title_x' in row.keys() else 50
+            self.title_y = row['title_y'] if 'title_y' in row.keys() else 30
+            self.title_font = row['title_font'] if 'title_font' in row.keys() else 'Arial'
+            self.title_size = row['title_size'] if 'title_size' in row.keys() else 16
+            self.title_color = row['title_color'] if 'title_color' in row.keys() else '#000000'
+            self.text_x = row['text_x'] if 'text_x' in row.keys() else 50
+            self.text_y = row['text_y'] if 'text_y' in row.keys() else 100
+            self.text_width = row['text_width'] if 'text_width' in row.keys() else 200
+            self.text_height = row['text_height'] if 'text_height' in row.keys() else 150
+            self.text_font = row['text_font'] if 'text_font' in row.keys() else 'Arial'
+            self.text_size = row['text_size'] if 'text_size' in row.keys() else 12
+            self.text_color = row['text_color'] if 'text_color' in row.keys() else '#000000'
+            self.text_align = row['text_align'] if 'text_align' in row.keys() else 'left'
+            self.line_spacing = row['line_spacing'] if 'line_spacing' in row.keys() else 1.2
+            self.text_wrap = row['text_wrap'] if 'text_wrap' in row.keys() else 1
         else:
             (
                 self.id,

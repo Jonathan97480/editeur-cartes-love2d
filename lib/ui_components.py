@@ -790,36 +790,46 @@ class CardForm(ttk.Frame):
                 return
         
         # Récupérer les données actuelles de la carte
-        card = self.repo.get_by_id(self.current_id)
+        card = self.repo.get(self.current_id)
         if not card:
             messagebox.showerror(APP_TITLE, "Erreur : impossible de récupérer les données de la carte.")
             return
         
-        # Créer un dictionnaire avec les données de la carte pour l'éditeur
-        card_data = {
-            'nom': card.name,
-            'description': card.description,
-            'title_x': getattr(card, 'title_x', 50),
-            'title_y': getattr(card, 'title_y', 30),
-            'title_font': getattr(card, 'title_font', 'Arial'),
-            'title_size': getattr(card, 'title_size', 16),
-            'title_color': getattr(card, 'title_color', '#000000'),
-            'text_x': getattr(card, 'text_x', 50),
-            'text_y': getattr(card, 'text_y', 100),
-            'text_width': getattr(card, 'text_width', 200),
-            'text_height': getattr(card, 'text_height', 150),
-            'text_font': getattr(card, 'text_font', 'Arial'),
-            'text_size': getattr(card, 'text_size', 12),
-            'text_color': getattr(card, 'text_color', '#000000'),
-            'text_align': getattr(card, 'text_align', 'left'),
-            'line_spacing': getattr(card, 'line_spacing', 1.2),
-            'text_wrap': getattr(card, 'text_wrap', 1)
-        }
-        
         # Ouvrir l'éditeur de formatage
         try:
             from .text_formatting_editor import open_text_formatting_editor
-            open_text_formatting_editor(self.winfo_toplevel(), self.current_id, card_data)
+            from .database_simple import CardRepo as SimpleRepo
+            from .config import DB_FILE
+            import os
+            
+            # Utiliser le système simplifié pour l'éditeur de formatage
+            db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), DB_FILE)
+            simple_repo = SimpleRepo(db_path)
+            
+            # Adapter les données de carte pour le nouveau système
+            simple_card_data = {
+                'id': self.current_id,
+                'nom': card.name,
+                'description': card.description,
+                'img': card.img,  # Ajouter le chemin de l'image
+                'title_x': getattr(card, 'title_x', 50),
+                'title_y': getattr(card, 'title_y', 30),
+                'title_font': getattr(card, 'title_font', 'Arial'),
+                'title_size': getattr(card, 'title_size', 16),
+                'title_color': getattr(card, 'title_color', '#000000'),
+                'text_x': getattr(card, 'text_x', 50),
+                'text_y': getattr(card, 'text_y', 100),
+                'text_width': getattr(card, 'text_width', 200),
+                'text_height': getattr(card, 'text_height', 150),
+                'text_font': getattr(card, 'text_font', 'Arial'),
+                'text_size': getattr(card, 'text_size', 12),
+                'text_color': getattr(card, 'text_color', '#000000'),
+                'text_align': getattr(card, 'text_align', 'left'),
+                'line_spacing': getattr(card, 'line_spacing', 1.2),
+                'text_wrap': getattr(card, 'text_wrap', 1)
+            }
+            
+            open_text_formatting_editor(self.winfo_toplevel(), self.current_id, simple_card_data)
             
             # Rafraîchir les données après fermeture de l'éditeur
             if callable(self.on_saved):
