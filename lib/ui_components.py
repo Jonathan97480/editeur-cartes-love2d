@@ -1118,7 +1118,8 @@ class CardList(ttk.Frame):
         ttk.Button(exp, text='🎭 Exporter Acteur', command=self.export_actor_selection).pack(side='left')
         ttk.Button(exp, text='📤 Exporter Tout', command=self.export_all_actors).pack(side='left', padx=6)
         ttk.Button(exp, text='🎮 Export Love2D+Format', command=self.export_love2d_with_formatting).pack(side='left', padx=6)
-        ttk.Button(exp, text='📦 Package Complet', command=self.export_game_package).pack(side='left', padx=6)
+        ttk.Button(exp, text='📦 Package Template', command=lambda: self.export_game_package_typed("template")).pack(side='left', padx=6)
+        ttk.Button(exp, text='📦 Package Complet', command=lambda: self.export_game_package_typed("complete")).pack(side='left', padx=6)
 
     def _side_value(self):
         v = self.side_filter.get()
@@ -1333,6 +1334,155 @@ class CardList(ttk.Frame):
             
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Erreur lors de l'export Love2D :\n{e}")
+
+    def export_game_package_typed(self, export_type: str):
+        """
+        Exporte un package complet de jeu avec le type spécifié.
+        
+        Args:
+            export_type: "template" (templates seuls) ou "complete" (avec texte fusionné)
+        """
+        try:
+            # Vérifier qu'il y a des cartes
+            cards = self.repo.list_cards()
+            if not cards:
+                messagebox.showwarning(APP_TITLE, "Aucune carte à exporter!")
+                return
+            
+            # Texte explicatif selon le type
+            if export_type == "template":
+                type_description = "Template seul (pour positioning dynamique dans Love2D)"
+                default_name = "templates_cartes"
+            else:
+                type_description = "Complet (images avec texte fusionné)"
+                default_name = "cartes_completes"
+            
+            # Dialog pour le nom du package
+            from tkinter import simpledialog
+            package_name = simpledialog.askstring(
+                f"Export Package - {type_description}", 
+                "Nom du package de jeu:",
+                initialvalue=default_name
+            )
+            
+            if not package_name:
+                return
+            
+            # Nettoyer le nom du package
+            package_name = package_name.strip().replace(' ', '_')
+            
+            # Choisir le dossier de destination
+            output_dir = filedialog.askdirectory(
+                title="Choisir le dossier de destination",
+                initialdir="exports"
+            )
+            
+            if not output_dir:
+                return
+            
+            # Créer une fenêtre de progression
+            progress_window = tk.Toplevel(self)
+            progress_window.title(f"Export {export_type} en cours...")
+            progress_window.geometry("400x150")
+            progress_window.resizable(False, False)
+            progress_window.transient(self)
+            progress_window.grab_set()
+            
+            # Centrer la fenêtre
+            progress_window.geometry("+%d+%d" % (
+                progress_window.winfo_toplevel().winfo_x() + 50,
+                progress_window.winfo_toplevel().winfo_y() + 50))
+            
+            # Texte d'info
+            ttk.Label(progress_window, text=f"🎮 Export du package {export_type} en cours...", 
+                     font=('Arial', 10, 'bold')).pack(pady=10)
+            
+            # Barre de progression
+            progress_bar = ttk.Progressbar(progress_window, mode='indeterminate', length=300)
+            progress_bar.pack(pady=10)
+            progress_bar.start()
+            
+            # Status
+            status_var = tk.StringVar(value="Initialisation...")
+            ttk.Label(progress_window, textvariable=status_var).pack(pady=5)
+            
+            def do_export():
+                try:
+                    # Import de l'exporteur avec gestion d'erreur
+                    status_var.set("Chargement de l'exporteur...")
+                    try:
+                        from game_package_exporter import GamePackageExporter
+                    except ImportError:
+                        # Essayer avec le chemin explicite
+                        import sys
+                        import os
+                        lib_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lib')
+                        if lib_path not in sys.path:
+                            sys.path.insert(0, lib_path)
+                        from game_package_exporter import GamePackageExporter
+                    
+                    # Créer l'exporteur avec le type spécifié
+                    status_var.set("Analyse des ressources...")
+                    exporter = GamePackageExporter(self.repo, output_dir, export_type)
+                    
+                    # Effectuer l'export
+                    status_var.set("Création du package...")
+                    package_path = exporter.export_complete_package(package_name)
+                    
+                    # Succès
+                    progress_window.after(0, lambda: export_success(package_path))
+                    
+                except Exception as e:
+                    error_msg = str(e)  # Capturer la valeur de l'erreur
+                    progress_window.after(0, lambda msg=error_msg: export_error(msg))
+            
+            def export_success(package_path):
+                progress_bar.stop()
+                progress_window.destroy()
+                
+                # Calculer les statistiques
+                import os
+                size_mb = os.path.getsize(package_path) / (1024 * 1024)
+                
+                # Message de succès adapté au type
+                if export_type == "template":
+                    success_msg = (
+                        f"Export Template réussi !\n\n"
+                        f"📍 Package: {os.path.basename(package_path)}\n"
+                        f"📊 Taille: {size_mb:.1f} MB\n"
+                        f"🎯 Type: Templates seuls (pour Love2D)\n\n"
+                        f"Les images contiennent uniquement les templates,\n"
+                        f"le texte sera positionné dynamiquement dans Love2D."
+                    )
+                else:
+                    success_msg = (
+                        f"Export Complet réussi !\n\n"
+                        f"📍 Package: {os.path.basename(package_path)}\n"
+                        f"📊 Taille: {size_mb:.1f} MB\n"
+                        f"🎯 Type: Images avec texte fusionné\n\n"
+                        f"Le package contient tout pour jouer immédiatement."
+                    )
+                
+                messagebox.showinfo(APP_TITLE, success_msg)
+                
+                # Ouvrir le dossier
+                if messagebox.askyesno("Ouvrir le dossier", "Voulez-vous ouvrir le dossier de destination?"):
+                    import subprocess
+                    import os
+                    package_folder = os.path.dirname(package_path)
+                    subprocess.Popen(f'explorer "{package_folder}"', shell=True)
+            
+            def export_error(error_msg):
+                progress_bar.stop()
+                progress_window.destroy()
+                messagebox.showerror(APP_TITLE, f"Erreur lors de l'export {export_type} :\n{error_msg}")
+            
+            # Lancer l'export dans un thread
+            import threading
+            threading.Thread(target=do_export, daemon=True).start()
+            
+        except Exception as e:
+            messagebox.showerror(APP_TITLE, f"Erreur lors de l'export {export_type} :\n{e}")
 
     def export_game_package(self):
         """Exporte un package complet de jeu avec fichier Lua, images fusionnées et polices."""

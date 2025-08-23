@@ -36,17 +36,19 @@ except ImportError:
 class GamePackageExporter:
     """Exporteur de package de jeu complet."""
     
-    def __init__(self, repo: CardRepo, output_dir: str = "game_packages"):
+    def __init__(self, repo: CardRepo, output_dir: str = "game_packages", export_type: str = "complete"):
         """
         Initialise l'exporteur de package.
         
         Args:
             repo: Repository des cartes
             output_dir: Dossier de sortie pour les packages
+            export_type: Type d'export ("complete" = avec texte, "template" = template seul)
         """
         self.repo = repo
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
+        self.export_type = export_type  # "complete" ou "template"
         
         # Gestionnaire de polices
         self.font_manager = FontManager()
@@ -343,6 +345,43 @@ class GamePackageExporter:
         
         return lines
     
+    def create_template_card_image(self, card, output_path: str) -> bool:
+        """
+        Crée une image template de la carte SANS texte (pour positioning dynamique dans Love2D).
+        
+        Args:
+            card: Carte à traiter
+            output_path: Chemin de sortie pour l'image
+            
+        Returns:
+            True si succès, False sinon
+        """
+        try:
+            # Dimensions standard d'une carte Love2D
+            card_width = 280
+            card_height = 392
+            
+            # Créer une image de base (template seul)
+            if hasattr(card, 'img') and card.img and os.path.exists(card.img):
+                # Charger l'image de base de la carte (template/fond)
+                base_image = Image.open(card.img)
+                base_image = base_image.resize((card_width, card_height), Image.Resampling.LANCZOS)
+            else:
+                # Créer une image par défaut
+                base_image = Image.new('RGB', (card_width, card_height), color='#f0f0f0')
+            
+            # Pour le template, on ne dessine RIEN par-dessus
+            # L'image reste juste le fond/template original
+            # Le texte sera positionné dynamiquement dans Love2D
+            
+            # Sauvegarder l'image template
+            base_image.save(output_path, "PNG", quality=90)
+            return True
+            
+        except Exception as e:
+            logging.error(f"Erreur lors de la création de l'image template: {e}")
+            return False
+
     def copy_used_fonts(self, fonts: Set[str], fonts_dir: Path) -> Dict[str, str]:
         """
         Copie les polices utilisées dans le package.
@@ -390,12 +429,17 @@ class GamePackageExporter:
         try:
             from lua_exporter_love2d import Love2DLuaExporter
         except ImportError:
-            # Import depuis le répertoire parent si import relatif échoue
-            import sys
-            import os
-            parent_dir = os.path.dirname(os.path.dirname(__file__))
-            sys.path.insert(0, parent_dir)
-            from lua_exporter_love2d import Love2DLuaExporter
+            try:
+                # Import relatif depuis lib
+                from .lua_exporter_love2d import Love2DLuaExporter
+            except ImportError:
+                # Import depuis le répertoire lib
+                import sys
+                import os
+                lib_dir = os.path.dirname(__file__)
+                if lib_dir not in sys.path:
+                    sys.path.insert(0, lib_dir)
+                from lua_exporter_love2d import Love2DLuaExporter
         
         exporter = Love2DLuaExporter(self.repo)
         content = exporter.export_all_cards_love2d()
@@ -413,6 +457,39 @@ class GamePackageExporter:
             package_dir: Dossier du package
             resources: Informations sur les ressources
         """
+        # Type d'export pour la documentation
+        export_type_info = ""
+        if self.export_type == "template":
+            export_type_info = f"""
+## 🎨 Type d'Export: Template
+
+Ce package contient des **templates seuls** (images sans texte fusionné).
+Le texte sera positionné dynamiquement dans Love2D en utilisant les données de `TextFormatting`.
+
+**Avantages:**
+- Flexibilité totale pour le positioning du texte
+- Possibilité de traductions dynamiques
+- Animations de texte possibles
+- Optimisé pour les interfaces responsives
+
+**Usage recommandé:** Jeux nécessitant un contrôle précis du texte et des animations.
+"""
+        else:
+            export_type_info = f"""
+## 🖼️ Type d'Export: Complet
+
+Ce package contient des **images fusionnées** (template + texte intégré).
+Les cartes sont prêtes à utiliser directement sans repositioning.
+
+**Avantages:**
+- Utilisation immédiate sans configuration
+- Rendu constant du texte
+- Performance optimisée (pas de rendering dynamique)
+- Compatible avec tous les systèmes
+
+**Usage recommandé:** Prototypage rapide ou jeux avec texte fixe.
+"""
+        
         readme_content = f"""# 🎮 Package de Cartes Love2D
 
 ## Description
@@ -421,12 +498,12 @@ class GamePackageExporter:
 **Version:** {self.package_config['version']}
 **Créé par:** {self.package_config['created_by']}
 **Compatible Love2D:** {self.package_config['love2d_version']}+
-
+{export_type_info}
 ## Structure du Package
 
 ```
 📁 {package_dir.name}/
-├── 📁 cards/               # Images fusionnées des cartes
+├── 📁 cards/               # Images des cartes ({self.export_type})
 ├── 📁 fonts/               # Polices utilisées
 ├── 📄 cards_data.lua       # Données des cartes
 ├── 📄 package_config.json  # Configuration du package
@@ -438,6 +515,7 @@ class GamePackageExporter:
 - **Cartes:** {resources['card_count']}
 - **Polices:** {len(resources['fonts'])}
 - **Images:** {len(resources['images'])}
+- **Type:** {self.export_type.capitalize()}
 
 ## Utilisation dans Love2D
 
@@ -593,16 +671,27 @@ end
             lua_size = self.export_lua_data(cards, lua_file)
             print(f"   ✅ Fichier Lua créé: {lua_size:,} caractères")
             
-            # 3. Créer les images fusionnées
-            print("🖼️  Création des images fusionnées...")
-            for i, card in enumerate(cards, 1):
-                image_name = f"carte_{i:03d}.png"
-                image_path = cards_dir / image_name
-                
-                if self.create_fused_card_image(card, str(image_path)):
-                    print(f"   ✅ Image créée: {image_name} ({card.name})")
-                else:
-                    print(f"   ⚠️  Erreur image: {image_name}")
+            # 3. Créer les images selon le type d'export
+            if self.export_type == "template":
+                print("🖼️  Création des images templates (sans texte)...")
+                for i, card in enumerate(cards, 1):
+                    image_name = f"carte_{i:03d}.png"
+                    image_path = cards_dir / image_name
+                    
+                    if self.create_template_card_image(card, str(image_path)):
+                        print(f"   ✅ Template créé: {image_name} ({card.name})")
+                    else:
+                        print(f"   ⚠️  Erreur template: {image_name}")
+            else:
+                print("🖼️  Création des images fusionnées (avec texte)...")
+                for i, card in enumerate(cards, 1):
+                    image_name = f"carte_{i:03d}.png"
+                    image_path = cards_dir / image_name
+                    
+                    if self.create_fused_card_image(card, str(image_path)):
+                        print(f"   ✅ Image créée: {image_name} ({card.name})")
+                    else:
+                        print(f"   ⚠️  Erreur image: {image_name}")
             
             # 4. Copier les polices utilisées
             print("🎨 Copie des polices...")
