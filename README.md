@@ -120,35 +120,39 @@
 Le système propose maintenant **deux types d'export de packages ZIP** pour répondre à différents besoins :
 
 ##### **🎨 Export Template (Images Seules)**
+![Template Example](docs/images/export-template-example.png)
+*Carte Template : Image sans texte pour positionnement dynamique*
+
 - **Images sans texte** : Templates purs pour positionnement dynamique dans Love2D
 - **Flexibilité maximale** : Texte positionné en temps réel selon les données
 - **Traductions supportées** : Changez le texte sans regénérer les images
 - **Animations possibles** : Effets de texte dynamiques dans le jeu
 - **Optimisé pour** : Interfaces responsives et multi-langues
 
-```
-🖼️ Image Template (sans texte)
-┌─────────────────────┐
-│ [Template visuel]   │ ← Image de fond pure
-│ [Position vide]     │ ← Zone texte définie par TextFormatting
-│ [Zone d'effet]      │ ← Positionnement dynamique Love2D
-└─────────────────────┘
-```
-
 ##### **🖼️ Export Complet (Images avec Texte)**
+![Complet Example](docs/images/export-complet-example.png)
+*Carte Complète : Image avec texte fusionné définitivement*
+
 - **Images prêtes à utiliser** : Texte déjà fusionné sur les cartes
 - **Rendu constant** : Apparence identique sur tous les systèmes
 - **Performance optimisée** : Pas de rendering de texte en temps réel
 - **Utilisation immédiate** : Intégration directe dans Love2D
 - **Optimisé pour** : Jeux finalisés et distribution
 
+##### **🔄 Comparaison Visuelle**
+
+| Type | Contenu | Usage Recommandé |
+|------|---------|------------------|
+| � **Template** | Image + Zone vide | Développement, traductions, animations |
+| 🖼️ **Complet** | Image + Texte fusionné | Distribution finale, performance |
+
 ```
-🎴 Image Complète (avec texte)
-┌─────────────────────┐
-│ [Template visuel]   │ ← Image de fond
-│ "Nom de Carte"      │ ← Texte fusionné
-│ "Description..."    │ ← Texte intégré définitivement
-└─────────────────────┘
+🖼️ Template                    🎴 Complet
+┌─────────────────────┐       ┌─────────────────────┐
+│ [Visuel de fond]    │       │ [Visuel de fond]    │
+│ [Zone vide pour]    │  VS   │ "Nom de Carte"      │
+│ [texte dynamique]   │       │ "Description..."    │
+└─────────────────────┘       └─────────────────────┘
 ```
 
 ##### **📦 Contenu des Packages ZIP**
