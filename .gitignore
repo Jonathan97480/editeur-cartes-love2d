@@ -12,6 +12,12 @@ __pycache__/
 *.pyd
 .Python
 
+# Cache Python dans les sous-dossiers
+**/__pycache__/
+tests/**/__pycache__/
+lib/__pycache__/
+scripts/**/__pycache__/
+
 # ===== BUILD ET DISTRIBUTION =====
 # Fichiers de build PyInstaller
 build/
@@ -61,11 +67,16 @@ tests/cartes.db.backup.*
 result_export_lua/
 lua_exports/export_*.lua
 lua_tests/test_*.lua
+exports/
+exports/**
+game_packages/
+game_packages/**
 
 # Fichiers de test temporaires
 temp/
 tmp/
 dev_temp/
+test_comparison/
 
 # ===== BACKUPS ET SAUVEGARDES =====
 # Dossiers de backups
@@ -92,6 +103,13 @@ test_config.json
 # Messages de commit temporaires
 commit_message*.txt
 commit_msg.txt
+tools/commit_message*.txt
+tools/commit_msg*.txt
+
+# Fichiers de test et développement
+test_*.py
+debug_*.py
+**/test_comparison/
 
 # ===== IMAGES (optionnel) =====
 # Décommentez pour ignorer les images générées
@@ -104,6 +122,18 @@ commit_msg.txt
 # Windows
 Thumbs.db
 desktop.ini
+
+# ===== IDE ET ÉDITEURS =====
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
 
 # ===== DOCUMENTATION PRÉSERVÉE =====
 # Note: docs/ et guides/ sont conservés dans Git
