@@ -14,8 +14,10 @@ from pathlib import Path
 # Pattern try/except pour imports relatifs/absolus
 try:
     from .font_manager import get_font_manager, get_available_fonts
+    from .favorites_manager import create_favorites_manager
 except ImportError:
     from font_manager import get_font_manager, get_available_fonts
+    from favorites_manager import create_favorites_manager
 
 class TextFormattingEditor:
     def __init__(self, parent, card_id=None, card_data=None, repo=None):
@@ -111,6 +113,9 @@ class TextFormattingEditor:
         self.window = tk.Toplevel(self.parent)
         self.window.title("🎨 Éditeur de Formatage de Texte")
         
+        # Initialiser les styles personnalisés pour les boutons favoris
+        self.init_custom_styles()
+        
         # Taille par défaut optimisée
         window_width = 1182
         window_height = 780
@@ -159,10 +164,31 @@ class TextFormattingEditor:
         button_frame = ttk.Frame(self.window)
         button_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
         
+        # Boutons principaux (gauche)
         ttk.Button(button_frame, text="💾 Sauvegarder", command=self.save_formatting).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(button_frame, text="🔄 Réinitialiser", command=self.reset_values).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="🎨 Actualiser polices", command=self.refresh_fonts).pack(side=tk.LEFT, padx=5)
+        
+        # Séparateur visuel
+        separator = ttk.Separator(button_frame, orient='vertical')
+        separator.pack(side=tk.LEFT, fill='y', padx=10)
+        
+        # Boutons favoris
+        ttk.Button(button_frame, text="★ Ajouter Favoris", command=self.add_to_favorites).pack(side=tk.LEFT, padx=5)
+        
+        # Stockage des boutons favoris pour mise à jour dynamique
+        self.favorite_buttons = {}
+        for i in [1, 2, 3]:
+            btn = ttk.Button(button_frame, text=f"⭐ Favori {i}", 
+                           command=lambda slot=i: self.load_favorite(slot))
+            btn.pack(side=tk.LEFT, padx=2)
+            self.favorite_buttons[i] = btn
+        
+        # Bouton annuler (droite)
         ttk.Button(button_frame, text="❌ Annuler", command=self.window.destroy).pack(side=tk.RIGHT)
+        
+        # Initialiser le gestionnaire de favoris
+        self.init_favorites_manager()
         
         # Mise à jour initiale (après chargement de l'image)
         self.update_preview()
@@ -906,6 +932,326 @@ class TextFormattingEditor:
             
         except Exception as e:
             messagebox.showerror("Erreur", f"Impossible d'actualiser les polices:\n{e}")
+
+    def init_custom_styles(self):
+        """Initialise les styles personnalisés pour les boutons favoris."""
+        try:
+            style = ttk.Style()
+            
+            # Style pour boutons favoris occupés (vert)
+            style.configure("Green.TButton",
+                          background="#4CAF50",   # Vert
+                          foreground="white",
+                          focuscolor="none")
+            
+            # Style pour boutons favoris corrompus (rouge)
+            style.configure("Red.TButton",
+                          background="#F44336",    # Rouge
+                          foreground="white", 
+                          focuscolor="none")
+            
+            # Styles pour les états hover
+            style.map("Green.TButton",
+                     background=[('active', '#45a049')])
+            
+            style.map("Red.TButton",
+                     background=[('active', '#da190b')])
+                     
+        except Exception as e:
+            print(f"⚠️ Impossible de créer les styles personnalisés: {e}")
+            # Les boutons utiliseront les emojis comme fallback
+
+    # ================================
+    # GESTION DES FAVORIS
+    # ================================
+    
+    def init_favorites_manager(self):
+        """Initialise le gestionnaire de favoris."""
+        try:
+            # Récupérer le chemin de la base depuis le repo
+            if hasattr(self.repo, 'db_file'):
+                db_path = self.repo.db_file
+            else:
+                # Fallback sur un chemin par défaut
+                db_path = 'data/cartes.db'
+            
+            self.favorites_manager = create_favorites_manager(db_path)
+            
+            if self.favorites_manager:
+                self.update_favorite_buttons()
+                print("🎯 Gestionnaire de favoris initialisé")
+            else:
+                print("⚠️ Impossible d'initialiser le gestionnaire de favoris")
+                
+        except Exception as e:
+            print(f"❌ Erreur initialisation favoris: {e}")
+            self.favorites_manager = None
+    
+    def update_favorite_buttons(self):
+        """Met à jour l'apparence des boutons favoris selon leur état."""
+        if not self.favorites_manager or not hasattr(self, 'favorite_buttons'):
+            return
+        
+        try:
+            status = self.favorites_manager.get_all_favorites_status()
+            
+            for slot, button in self.favorite_buttons.items():
+                slot_info = status.get(slot, {'status': 'empty', 'name': f'Favori {slot}'})
+                slot_status = slot_info['status']
+                slot_name = slot_info['name']
+                
+                if slot_status == 'filled':
+                    # Slot occupé - étoile pleine + nom
+                    button.configure(text=f"★ {slot_name}")
+                    # Changer la couleur de fond si possible
+                    try:
+                        button.configure(style="Green.TButton")
+                    except:
+                        # Fallback si le style n'existe pas
+                        button.configure(text=f"🟢 {slot_name}")
+                elif slot_status == 'corrupted':
+                    # Slot corrompu - croix rouge
+                    button.configure(text=f"❌ Favori {slot}")
+                    try:
+                        button.configure(style="Red.TButton")
+                    except:
+                        # Fallback
+                        button.configure(text=f"🔴 Favori {slot}")
+                else:
+                    # Slot vide - étoile vide
+                    button.configure(text=f"⭐ Favori {slot}")
+                    try:
+                        button.configure(style="TButton")
+                    except:
+                        pass
+                    
+        except Exception as e:
+            print(f"❌ Erreur mise à jour boutons favoris: {e}")
+    
+    def add_to_favorites(self):
+        """Dialogue pour ajouter les réglages actuels aux favoris."""
+        if not self.favorites_manager:
+            messagebox.showerror("Erreur", "Gestionnaire de favoris non disponible")
+            return
+        
+        try:
+            # Créer une fenêtre de dialogue personnalisée
+            dialog = tk.Toplevel(self.window)
+            dialog.title("★ Ajouter aux Favoris")
+            dialog.geometry("450x300")
+            dialog.resizable(False, False)
+            dialog.transient(self.window)
+            dialog.grab_set()
+            
+            # Centrer la fenêtre
+            dialog.update_idletasks()
+            x = (dialog.winfo_screenwidth() // 2) - (450 // 2)
+            y = (dialog.winfo_screenheight() // 2) - (300 // 2)
+            dialog.geometry(f"450x300+{x}+{y}")
+            
+            # Titre
+            title_label = ttk.Label(dialog, text="🎯 Sauvegarder la configuration actuelle", 
+                                  font=('Arial', 12, 'bold'))
+            title_label.pack(pady=10)
+            
+            # Nom du favori
+            name_frame = ttk.Frame(dialog)
+            name_frame.pack(fill=tk.X, padx=20, pady=5)
+            ttk.Label(name_frame, text="Nom du favori:").pack(anchor=tk.W)
+            name_var = tk.StringVar()
+            name_entry = ttk.Entry(name_frame, textvariable=name_var, font=('Arial', 10))
+            name_entry.pack(fill=tk.X, pady=5)
+            name_entry.focus()
+            
+            # État des slots
+            slots_frame = ttk.LabelFrame(dialog, text="📋 État des slots")
+            slots_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+            
+            status = self.favorites_manager.get_all_favorites_status()
+            slot_vars = {}
+            
+            for slot in [1, 2, 3]:
+                slot_info = status.get(slot, {'status': 'empty', 'name': f'Favori {slot}'})
+                slot_status = slot_info['status']
+                slot_name = slot_info['name']
+                
+                slot_frame = ttk.Frame(slots_frame)
+                slot_frame.pack(fill=tk.X, padx=10, pady=5)
+                
+                # Radio button pour sélection
+                slot_var = tk.BooleanVar()
+                slot_vars[slot] = slot_var
+                
+                if slot_status == 'filled':
+                    color_icon = "🟢"
+                    status_text = f"Occupé: {slot_name}"
+                elif slot_status == 'corrupted':
+                    color_icon = "🔴"
+                    status_text = f"Corrompu: {slot_name}"
+                else:
+                    color_icon = "⚪"
+                    status_text = "Vide"
+                
+                checkbox = ttk.Checkbutton(
+                    slot_frame, 
+                    text=f"{color_icon} Slot {slot} - {status_text}",
+                    variable=slot_var
+                )
+                checkbox.pack(anchor=tk.W)
+            
+            # Boutons
+            button_frame = ttk.Frame(dialog)
+            button_frame.pack(fill=tk.X, padx=20, pady=10)
+            
+            def save_to_slots():
+                selected_slots = [slot for slot, var in slot_vars.items() if var.get()]
+                
+                if not selected_slots:
+                    messagebox.showwarning("Attention", "Veuillez sélectionner au moins un slot")
+                    return
+                
+                name = name_var.get().strip() or "Configuration sans nom"
+                current_data = self.get_current_formatting_data()
+                
+                success_count = 0
+                for slot in selected_slots:
+                    # Vérifier si le slot est occupé et demander confirmation
+                    if self.favorites_manager.is_slot_occupied(slot):
+                        confirm = messagebox.askyesno(
+                            "Confirmation", 
+                            f"Le slot {slot} contient déjà des données.\n"
+                            f"Voulez-vous les remplacer par '{name}' ?"
+                        )
+                        if not confirm:
+                            continue
+                    
+                    # Sauvegarder
+                    success, message = self.favorites_manager.save_favorite(slot, current_data, name)
+                    if success:
+                        success_count += 1
+                    else:
+                        messagebox.showerror("Erreur", f"Slot {slot}: {message}")
+                
+                if success_count > 0:
+                    self.update_favorite_buttons()
+                    messagebox.showinfo("Succès", f"Configuration sauvegardée dans {success_count} slot(s)")
+                    dialog.destroy()
+                else:
+                    messagebox.showerror("Erreur", "Aucune sauvegarde effectuée")
+            
+            ttk.Button(button_frame, text="💾 Sauvegarder", command=save_to_slots).pack(side=tk.LEFT)
+            ttk.Button(button_frame, text="❌ Annuler", command=dialog.destroy).pack(side=tk.RIGHT)
+            
+        except Exception as e:
+            print(f"❌ Erreur dialogue favoris: {e}")
+            messagebox.showerror("Erreur", f"Impossible d'ouvrir le dialogue:\n{e}")
+    
+    def load_favorite(self, slot_number: int):
+        """Charge un favori et applique ses réglages."""
+        if not self.favorites_manager:
+            messagebox.showerror("Erreur", "Gestionnaire de favoris non disponible")
+            return
+        
+        try:
+            favorite, message = self.favorites_manager.load_favorite(slot_number)
+            
+            if not favorite:
+                if "corrompu" in message.lower():
+                    # Proposer de réparer
+                    repair = messagebox.askyesno(
+                        "Favori corrompu", 
+                        f"Le favori du slot {slot_number} est corrompu.\n"
+                        f"Voulez-vous le réinitialiser ?"
+                    )
+                    if repair:
+                        success, repair_msg = self.favorites_manager.repair_corrupted_favorite(slot_number)
+                        if success:
+                            self.update_favorite_buttons()
+                            messagebox.showinfo("Réparation", repair_msg)
+                        else:
+                            messagebox.showerror("Erreur", repair_msg)
+                else:
+                    messagebox.showinfo("Information", message)
+                return
+            
+            # Appliquer les données
+            self.apply_formatting_data(favorite)
+            messagebox.showinfo("Succès", f"Configuration '{favorite['name']}' appliquée")
+            
+        except Exception as e:
+            print(f"❌ Erreur chargement favori {slot_number}: {e}")
+            messagebox.showerror("Erreur", f"Impossible de charger le favori:\n{e}")
+    
+    def get_current_formatting_data(self) -> dict:
+        """Extrait toutes les valeurs actuelles des contrôles."""
+        try:
+            return {
+                # Titre
+                'title_x': float(self.title_x_var.get()),
+                'title_y': float(self.title_y_var.get()),
+                'title_font': self.title_font_var.get(),
+                'title_size': int(self.title_size_var.get()),
+                'title_color': self.title_color_var.get(),
+                
+                # Texte
+                'text_x': float(self.text_x_var.get()),
+                'text_y': float(self.text_y_var.get()),
+                'text_width': float(self.text_width_var.get()),
+                'text_height': float(self.text_height_var.get()),
+                'text_font': self.text_font_var.get(),
+                'text_size': int(self.text_size_var.get()),
+                'text_color': self.text_color_var.get(),
+                'text_align': self.text_align_var.get(),
+                'line_spacing': float(self.line_spacing_var.get()),
+                'text_wrap': int(self.text_wrap_var.get()),
+                
+                # Énergie
+                'energy_x': float(self.energy_x_var.get()),
+                'energy_y': float(self.energy_y_var.get()),
+                'energy_font': self.energy_font_var.get(),
+                'energy_size': int(self.energy_size_var.get()),
+                'energy_color': self.energy_color_var.get()
+            }
+        except Exception as e:
+            print(f"❌ Erreur extraction données: {e}")
+            return {}
+    
+    def apply_formatting_data(self, data: dict):
+        """Applique des données de formatage aux contrôles."""
+        try:
+            # Titre
+            self.title_x_var.set(data.get('title_x', 50))
+            self.title_y_var.set(data.get('title_y', 30))
+            self.title_font_var.set(data.get('title_font', 'Arial'))
+            self.title_size_var.set(data.get('title_size', 16))
+            self.title_color_var.set(data.get('title_color', '#000000'))
+            
+            # Texte
+            self.text_x_var.set(data.get('text_x', 50))
+            self.text_y_var.set(data.get('text_y', 100))
+            self.text_width_var.set(data.get('text_width', 200))
+            self.text_height_var.set(data.get('text_height', 150))
+            self.text_font_var.set(data.get('text_font', 'Arial'))
+            self.text_size_var.set(data.get('text_size', 12))
+            self.text_color_var.set(data.get('text_color', '#000000'))
+            self.text_align_var.set(data.get('text_align', 'left'))
+            self.line_spacing_var.set(data.get('line_spacing', 1.2))
+            self.text_wrap_var.set(data.get('text_wrap', 1))
+            
+            # Énergie
+            self.energy_x_var.set(data.get('energy_x', 25))
+            self.energy_y_var.set(data.get('energy_y', 25))
+            self.energy_font_var.set(data.get('energy_font', 'Arial'))
+            self.energy_size_var.set(data.get('energy_size', 14))
+            self.energy_color_var.set(data.get('energy_color', '#FFFFFF'))
+            
+            # Mettre à jour l'aperçu
+            self.update_preview()
+            
+        except Exception as e:
+            print(f"❌ Erreur application données: {e}")
+            messagebox.showerror("Erreur", f"Impossible d'appliquer les données:\n{e}")
+
 
 def open_text_formatting_editor(parent, card_id=None, card_data=None):
     """Fonction utilitaire pour ouvrir l'éditeur"""
