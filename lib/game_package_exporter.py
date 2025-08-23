@@ -442,7 +442,7 @@ class GamePackageExporter:
                 from lua_exporter_love2d import Love2DLuaExporter
         
         exporter = Love2DLuaExporter(self.repo)
-        content = exporter.export_all_cards_love2d()
+        content = exporter.export_cards_love2d(cards)
         
         with open(lua_file, 'w', encoding='utf-8') as f:
             f.write(content)
@@ -627,23 +627,40 @@ end
         with open(config_file, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=2, ensure_ascii=False)
     
-    def export_complete_package(self, package_name: str = "cards_package") -> str:
+    def export_complete_package(self, package_name_or_ids, package_name: str = None) -> str:
         """
         Exporte un package complet de jeu.
         
         Args:
-            package_name: Nom du package
+            package_name_or_ids: Nom du package (str) ou liste d'IDs de cartes (list)
+            package_name: Nom du package si le premier argument est une liste d'IDs
             
         Returns:
             Chemin vers le fichier ZIP créé
         """
-        print(f"🎮 Création du package complet: {package_name}")
+        # Déterminer si on a des IDs ou un nom de package
+        if isinstance(package_name_or_ids, list):
+            card_ids = package_name_or_ids
+            actual_package_name = package_name or str(card_ids)
+        else:
+            card_ids = None
+            actual_package_name = package_name_or_ids
+            
+        print(f"🎮 Création du package complet: {actual_package_name}")
         print("=" * 60)
         
         # Récupérer les cartes
-        cards = self.repo.list_cards()
-        if not cards:
-            raise ValueError("Aucune carte trouvée dans la base de données")
+        if card_ids:
+            # Filtrer les cartes par IDs
+            all_cards = self.repo.list_cards()
+            cards = [card for card in all_cards if card.id in card_ids]
+            if not cards:
+                raise ValueError(f"Aucune carte trouvée pour les IDs: {card_ids}")
+        else:
+            # Toutes les cartes
+            cards = self.repo.list_cards()
+            if not cards:
+                raise ValueError("Aucune carte trouvée dans la base de données")
         
         print(f"📝 Cartes trouvées: {len(cards)}")
         
@@ -653,7 +670,7 @@ end
         print(f"🖼️  Images utilisées: {len(resources['images'])}")
         
         # Créer le dossier temporaire
-        temp_dir = self.output_dir / f"{package_name}_temp"
+        temp_dir = self.output_dir / f"{actual_package_name}_temp"
         if temp_dir.exists():
             shutil.rmtree(temp_dir)
         temp_dir.mkdir(parents=True)
@@ -706,7 +723,7 @@ end
             
             # 6. Créer le fichier ZIP
             print("📦 Création du package ZIP...")
-            zip_path = self.output_dir / f"{package_name}.zip"
+            zip_path = self.output_dir / f"{actual_package_name}_{self.export_type}.zip"
             if zip_path.exists():
                 zip_path.unlink()
             

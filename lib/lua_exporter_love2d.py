@@ -116,7 +116,10 @@ class Love2DLuaExporter:
     def export_all_cards_love2d(self):
         """Exporte toutes les cartes au format Love2D avec formatage"""
         cards = self.repo.list_cards()
+        return self.export_cards_love2d(cards)
         
+    def export_cards_love2d(self, cards):
+        """Exporte une liste spécifique de cartes au format Love2D avec formatage"""
         lua_content = "local cards = {\n"
         
         for i, card in enumerate(cards, 1):
