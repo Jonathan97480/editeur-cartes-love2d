@@ -1394,9 +1394,18 @@ class CardList(ttk.Frame):
             # Effectuer l'export en arrière-plan
             def do_export():
                 try:
-                    # Import de l'exporteur
+                    # Import de l'exporteur avec gestion d'erreur
                     status_var.set("Chargement de l'exporteur...")
-                    from game_package_exporter import GamePackageExporter
+                    try:
+                        from game_package_exporter import GamePackageExporter
+                    except ImportError:
+                        # Essayer avec le chemin explicite
+                        import sys
+                        import os
+                        lib_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lib')
+                        if lib_path not in sys.path:
+                            sys.path.insert(0, lib_path)
+                        from game_package_exporter import GamePackageExporter
                     
                     # Créer l'exporteur
                     status_var.set("Analyse des ressources...")

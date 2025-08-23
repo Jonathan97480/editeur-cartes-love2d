@@ -271,16 +271,38 @@ class GamePackageExporter:
                     "Courier New": ["cour.ttf", "Courier New.ttf"],
                     "Verdana": ["verdana.ttf", "Verdana.ttf"],
                     "Calibri": ["calibri.ttf", "Calibri.ttf"],
+                    "Cambria": ["cambria.ttc", "cambria.ttf", "Cambria.ttf"],
                     "Tahoma": ["tahoma.ttf", "Tahoma.ttf"],
                     "Georgia": ["georgia.ttf", "Georgia.ttf"],
                     "Comic Sans MS": ["comic.ttf", "Comic Sans MS.ttf"],
                     "Impact": ["impact.ttf", "Impact.ttf"],
-                    "Trebuchet MS": ["trebuc.ttf", "Trebuchet MS.ttf"]
+                    "Trebuchet MS": ["trebuc.ttf", "Trebuchet MS.ttf"],
+                    "Segoe UI": ["segoeui.ttf", "Segoe UI.ttf"],
+                    "Microsoft Sans Serif": ["micross.ttf", "Microsoft Sans Serif.ttf"]
                 }
                 
                 if clean_font_name in system_font_mapping:
                     for font_filename in system_font_mapping[clean_font_name]:
                         font_path = windows_fonts_dir / font_filename
+                        if font_path.exists():
+                            return str(font_path)
+                
+                # 4. Recherche générale dans le dossier Windows Fonts
+                for ext in [".ttf", ".ttc", ".otf", ".TTF", ".TTC", ".OTF"]:
+                    # Essayer le nom exact
+                    font_path = windows_fonts_dir / f"{clean_font_name}{ext}"
+                    if font_path.exists():
+                        return str(font_path)
+                    
+                    # Essayer avec des variations courantes
+                    variations = [
+                        clean_font_name.lower(),
+                        clean_font_name.replace(" ", ""),
+                        clean_font_name.replace(" ", "").lower()
+                    ]
+                    
+                    for variation in variations:
+                        font_path = windows_fonts_dir / f"{variation}{ext}"
                         if font_path.exists():
                             return str(font_path)
         
