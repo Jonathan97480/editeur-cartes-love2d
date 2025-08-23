@@ -2,9 +2,17 @@
 
 Éditeur moderne d'interface française pour créer et gérer des cartes de jeu Love2D avec support des thèmes Windows 11.
 
-## 🚀 Dernières Améliorations (v2.1)
+## 🚀 Dernières Améliorations (v2.4.0)
 
-### ✨ **Correction Majeure : Superposition de Templates**
+### ⭐ **NOUVEAU : Système de Favoris de Formatage**
+- **4 boutons favoris** dans l'éditeur de formatage de texte
+- **Sauvegarde instantanée** : Bouton "★ Ajouter aux Favoris"
+- **Chargement rapide** : 3 boutons "⭐ Favori 1/2/3" pour accès immédiat
+- **Feedback visuel** : États colorés (vert=disponible, rouge=vide, normal=défaut)
+- **Persistance** : Favoris sauvegardés en base de données
+- **Validation robuste** : Gestion d'erreurs et corruption automatique
+
+### ✨ **Correction Majeure : Superposition de Templates (v2.1)**
 - **Problème résolu** : Plus de superposition lors des changements de rareté multiples
 - **Système perfectionné** : Séparation complète entre image source et image d'affichage
 - **Migration automatique** : Cartes existantes mises à jour transparente
@@ -19,6 +27,22 @@
 - **Base de données protégée** : Exclusion automatique du versioning Git
 - **Intégrité garantie** : Vérification automatique de la base
 - **Tests complets** : Validation du scénario utilisateur GitHub
+
+---
+
+## 🎯 Liens de Documentation
+
+### 📚 Documentation Complète
+- **[📖 Documentation Technique](docs/DOCUMENTATION_TECHNIQUE.md)** - Architecture et intégration pour développeurs
+- **[⭐ Guide Favoris Utilisateur](docs/GUIDE_FAVORIS_UTILISATEUR.md)** - Guide complet d'utilisation des favoris
+- **[📋 Changelog Détaillé](docs/CHANGELOG.md)** - Historique complet des versions
+- **[🚀 Guide d'Implémentation](docs/FAVORIS_FORMATAGE_IMPLEMENTATION.md)** - Détails techniques de l'implémentation
+
+### 🎯 Démarrage Rapide v2.4.0
+1. **Téléchargez** la dernière version (v2.4.0-favoris)
+2. **Lancez** avec `run.bat` (installation automatique)
+3. **Explorez** les favoris de formatage dans l'éditeur de texte
+4. **Consultez** le guide utilisateur pour maximiser votre productivité
 
 ---
 
@@ -48,6 +72,18 @@
 - Support des types multiples (Attaque, Défense, Soin, etc.)
 - Système de rareté complet (Commun, Rare, Légendaire, Mythique)
 - Édition complète des effets héros et ennemis
+
+### ⭐ **Système de Favoris de Formatage (NOUVEAU !)**
+- **Éditeur de formatage amélioré** : 4 boutons favoris intégrés
+- **Sauvegarde rapide** : "★ Ajouter aux Favoris" pour sauvegarder le formatage actuel
+- **Chargement instantané** : "⭐ Favori 1/2/3" pour accès immédiat aux configurations
+- **Feedback visuel intelligent** :
+  - 🟢 **Vert** : Favori sauvegardé et prêt à charger
+  - 🔴 **Rouge** : Slot vide ou erreur de chargement
+  - ⚪ **Normal** : État par défaut
+- **Persistance garantie** : Favoris sauvegardés en base de données SQLite
+- **Validation robuste** : Gestion automatique des erreurs et corruptions
+- **Support complet** : Toutes les options de formatage (police, taille, couleur, position, etc.)
 
 ### 🖼️ **Système d'Images Avancé**
 - **Fusion automatique d'images avec templates** (✨ Amélioré !)
@@ -142,6 +178,32 @@ python test_compat.py --compat    # Force le mode compatibilité
 2. **Configurer les images** : Menu `Réglages > Configuration des images`
 3. **Créer votre première carte** avec le formulaire à gauche
 4. **Migration automatique** : Si vous avez des cartes existantes, elles seront automatiquement mises à jour
+
+### ⭐ **Utiliser les Favoris de Formatage**
+
+#### **🎨 Sauvegarder un Formatage Favori**
+1. **Ouvrez l'éditeur de formatage** d'une carte (bouton "Éditer Formatage")
+2. **Configurez le formatage** : police, taille, couleur, position, etc.
+3. **Cliquez "★ Ajouter aux Favoris"** pour sauvegarder la configuration
+4. **Choisissez un nom** descriptif pour le favori
+5. **Confirmation** : Le bouton correspondant devient vert 🟢
+
+#### **⚡ Charger un Favori**
+1. **Dans l'éditeur de formatage**, repérez les boutons "⭐ Favori 1/2/3"
+2. **Bouton vert** 🟢 : Favori disponible, cliquez pour charger instantanément
+3. **Bouton rouge** 🔴 : Slot vide, sauvegardez d'abord un favori
+4. **Chargement automatique** : Tous les paramètres sont appliqués immédiatement
+
+#### **🔄 États des Boutons Favoris**
+- **🟢 Vert** : Favori sauvegardé et prêt à charger
+- **🔴 Rouge** : Slot vide ou erreur de chargement  
+- **⚪ Normal** : État par défaut ou en cours de traitement
+
+#### **💡 Conseils d'Utilisation**
+- **Organisez vos favoris** : Favori 1 pour titres, Favori 2 pour texte, Favori 3 pour effets
+- **Sauvegardez plusieurs styles** : Différents thèmes, polices ou layouts
+- **Gain de temps** : Plus besoin de reconfigurer manuellement le formatage
+- **Persistance garantie** : Vos favoris sont sauvegardés entre les sessions
 
 ### � **Nouveau : Export de Package Complet**
 
