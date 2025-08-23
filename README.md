@@ -2,7 +2,14 @@
 
 Éditeur moderne d'interface française pour créer et gérer des cartes de jeu Love2D avec support des thèmes Windows 11.
 
-## 🚀 Dernières Améliorations (v2.4.0)
+## 🚀 Dernières Améliorations (v2.5.0)
+
+### 🎯 **NOUVEAU : Système d'Export Template vs Complet**
+- **Deux types d'export package** : Template (images seules) et Complet (avec texte fusionné)
+- **Export Template** : Images pures pour positionnement dynamique, animations et traductions
+- **Export Complet** : Images prêtes à utiliser avec texte intégré définitivement
+- **Tests unitaires complets** : 8/8 tests validant le filtrage de cartes et génération ZIP
+- **Documentation intégrée** : README automatique dans chaque package expliquant l'utilisation
 
 ### ⭐ **NOUVEAU : Système de Favoris de Formatage**
 - **4 boutons favoris** dans l'éditeur de formatage de texte
@@ -109,13 +116,49 @@
 - Support complet des effets et statistiques
 
 #### **📦 Export de Package Complet (✨ Nouveau !)**
+
+Le système propose maintenant **deux types d'export de packages ZIP** pour répondre à différents besoins :
+
+##### **🎨 Export Template (Images Seules)**
+- **Images sans texte** : Templates purs pour positionnement dynamique dans Love2D
+- **Flexibilité maximale** : Texte positionné en temps réel selon les données
+- **Traductions supportées** : Changez le texte sans regénérer les images
+- **Animations possibles** : Effets de texte dynamiques dans le jeu
+- **Optimisé pour** : Interfaces responsives et multi-langues
+
+```
+🖼️ Image Template (sans texte)
+┌─────────────────────┐
+│ [Template visuel]   │ ← Image de fond pure
+│ [Position vide]     │ ← Zone texte définie par TextFormatting
+│ [Zone d'effet]      │ ← Positionnement dynamique Love2D
+└─────────────────────┘
+```
+
+##### **🖼️ Export Complet (Images avec Texte)**
+- **Images prêtes à utiliser** : Texte déjà fusionné sur les cartes
+- **Rendu constant** : Apparence identique sur tous les systèmes
+- **Performance optimisée** : Pas de rendering de texte en temps réel
+- **Utilisation immédiate** : Intégration directe dans Love2D
+- **Optimisé pour** : Jeux finalisés et distribution
+
+```
+🎴 Image Complète (avec texte)
+┌─────────────────────┐
+│ [Template visuel]   │ ← Image de fond
+│ "Nom de Carte"      │ ← Texte fusionné
+│ "Description..."    │ ← Texte intégré définitivement
+└─────────────────────┘
+```
+
+##### **📦 Contenu des Packages ZIP**
 - **Package ZIP complet** : Jeu Love2D prêt à jouer
-- **Images fusionnées** : Cartes avec templates déjà appliqués
-- **Polices incluses** : Fonts système utilisées automatiquement détectées
+- **Images optimisées** : Format PNG avec compression automatique
+- **Polices incluses** : Fonts système automatiquement détectées et copiées
 - **Documentation Love2D** : Guide d'intégration et exemples de code
 - **Structure organisée** : Dossiers séparés (cards/, fonts/, docs/)
-- **Optimisation automatique** : Images PNG optimisées, police TTF/OTF
-- **Interface intégrée** : Bouton "📦 Package Complet" avec progression
+- **Configuration JSON** : Métadonnées du package
+- **Interface intégrée** : Bouton "📦 Template" ou "📦 Complet" avec progression
 
 ## 🚀 Installation et Lancement
 
@@ -205,26 +248,43 @@ python test_compat.py --compat    # Force le mode compatibilité
 - **Gain de temps** : Plus besoin de reconfigurer manuellement le formatage
 - **Persistance garantie** : Vos favoris sont sauvegardés entre les sessions
 
-### � **Nouveau : Export de Package Complet**
+### 🎯 **Nouveau : Exports Template et Complet**
 
-#### **🚀 Créer un Package Love2D Complet**
-1. **Cliquez sur "📦 Package Complet"** dans la section Export
-2. **Choisissez le dossier de destination** 
-3. **Laissez l'outil travailler** : 
-   - ✅ Fusion automatique des images avec templates
-   - ✅ Détection et copie des polices utilisées
-   - ✅ Génération des fichiers Lua Love2D
-   - ✅ Création de la documentation
-   - ✅ Package ZIP prêt à jouer
+#### **🚀 Créer un Package Love2D**
+
+##### **Option 1 : Export Template (Recommandé pour le développement)**
+1. **Cliquez sur "🎨 Template"** dans la section Export
+2. **Choisissez les cartes** à exporter (ou toutes)
+3. **Laissez l'outil générer** :
+   - ✅ Images sans texte pour positionnement dynamique
+   - ✅ Données TextFormatting complètes
+   - ✅ Polices système copiées
+   - ✅ Documentation Template avec exemples Love2D
+   - ✅ Package ZIP optimisé pour flexibilité
+
+##### **Option 2 : Export Complet (Recommandé pour la distribution)**
+1. **Cliquez sur "📦 Complet"** dans la section Export  
+2. **Choisissez les cartes** à exporter (ou toutes)
+3. **Laissez l'outil générer** :
+   - ✅ Images avec texte fusionné définitivement
+   - ✅ Rendu final constant sur tous systèmes
+   - ✅ Polices système incluses pour référence
+   - ✅ Documentation Complet avec intégration directe
+   - ✅ Package ZIP prêt pour distribution
 
 #### **📁 Structure du Package Généré**
 ```
-📦 game_package.zip
-├── 📄 main.lua           # Point d'entrée Love2D
-├── 📄 conf.lua           # Configuration du jeu
-├── 📁 cards/             # Images de cartes fusionnées
-│   ├── 🖼️ joueur_*.png   # Cartes du joueur
-│   └── 🖼️ ia_*.png       # Cartes de l'IA
+📦 [IDs]_template.zip  OU  [IDs]_complete.zip
+├── 📄 README.md              # Documentation type-spécifique
+├── 📄 package_config.json    # Métadonnées du package  
+├── 📄 cards_data.lua         # Données Love2D avec TextFormatting
+├── 📁 cards/                 # Images de cartes
+│   ├── 🖼️ carte_001.png      # Template OU Complet selon choix
+│   ├── 🖼️ carte_002.png      # Optimisées et prêtes à utiliser
+│   └── 🖼️ carte_003.png      # Format PNG avec compression
+└── 📁 fonts/                 # Polices utilisées
+    └── 📝 cambria.ttc         # Polices système détectées
+```
 ├── 📁 fonts/             # Polices détectées automatiquement
 │   ├── 🔤 arial.ttf      # Polices système utilisées
 │   └── 🔤 custom.otf     # Polices personnalisées
