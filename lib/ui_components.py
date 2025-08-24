@@ -233,10 +233,10 @@ class CardForm(ttk.Frame):
         
         # Variables pour tous les champs ennemi
         self.e_heal = tk.IntVar(value=0)
+        self.e_shield = tk.IntVar(value=0)
+        self.e_epine = tk.IntVar(value=0)
         self.e_attack = tk.IntVar(value=0)
         self.e_areduc = tk.IntVar(value=0)
-        self.e_epine = tk.IntVar(value=0)
-        self.e_shield = tk.IntVar(value=0)
         self.e_shield_pass = tk.IntVar(value=0)
         self.e_chpass = tk.IntVar(value=0)
         self.e_energy_cost = tk.IntVar(value=0)
@@ -248,10 +248,10 @@ class CardForm(ttk.Frame):
 
         labels = [
             ("Soin (heal)", self.e_heal),
+            ("Bouclier (shield)", self.e_shield),
+            ("Épine (Epine)", self.e_epine),
             ("Dégâts (attack)", self.e_attack),
             ("Réduc. attaque (%)", self.e_areduc),
-            ("Épine (Epine)", self.e_epine),
-            ("Bouclier (shield)", self.e_shield),
             ("Ignore bouclier (0/1)", self.e_shield_pass),
             ("% passer le tour", self.e_chpass),
             ("Augmente coût énergie", self.e_energy_cost),
