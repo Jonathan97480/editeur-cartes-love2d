@@ -171,10 +171,10 @@ class CardForm(ttk.Frame):
         self.desc_txt = tk.Text(self, height=5, wrap='word'); self.desc_txt.pack(fill='x', padx=8)
         self.desc_txt.configure(font=('TkFixedFont', 10))
 
-        # Notebook : Héros / Ennemi / Types&Image / Action
+        # Notebook : Caster / Target / Types&Image / Action
         nb = ttk.Notebook(self); nb.pack(fill='both', expand=True, **pad)
-        nb.add(self._tab_hero(), text='Effets Héros')
-        nb.add(self._tab_enemy(), text='Effets Ennemi')
+        nb.add(self._tab_hero(), text='Caster')
+        nb.add(self._tab_enemy(), text='Target')
         nb.add(self._tab_types_image(), text='Types & Image')
         nb.add(self._tab_action(), text='Action (Lua)')
 
@@ -189,7 +189,7 @@ class CardForm(ttk.Frame):
         c = ttk.Frame(self)
         pad = dict(padx=10, pady=6)
         
-        # Variables pour tous les champs héros
+        # Variables pour tous les champs caster (héros)
         self.h_heal = tk.IntVar(value=0)
         self.h_shield = tk.IntVar(value=0)
         self.h_epine = tk.IntVar(value=0)
@@ -231,7 +231,7 @@ class CardForm(ttk.Frame):
         c = ttk.Frame(self)
         pad = dict(padx=10, pady=6)
         
-        # Variables pour tous les champs ennemi
+        # Variables pour tous les champs target (ennemi)
         self.e_heal = tk.IntVar(value=0)
         self.e_shield = tk.IntVar(value=0)
         self.e_epine = tk.IntVar(value=0)
@@ -552,14 +552,14 @@ class CardForm(ttk.Frame):
         self.rarity_var.set('Commun')
         self.previous_rarity = 'Commun'  # Initialiser le tracker
         
-        # Tous les champs héros
+        # Tous les champs caster (héros)
         self.h_heal.set(0); self.h_shield.set(0); self.h_epine.set(0)
         self.h_attack.set(0); self.h_areduc.set(0); self.h_shield_pass.set(0)
         self.h_chpass.set(0); self.h_energy_cost.set(0); self.h_energy_decrease.set(0)
         self.h_b_value.set(0); self.h_b_turns.set(0)
         self.h_f_value.set(0); self.h_f_turns.set(0)
         
-        # Tous les champs ennemi
+        # Tous les champs target (ennemi)
         self.e_heal.set(0); self.e_attack.set(0); self.e_areduc.set(0); self.e_epine.set(0)
         self.e_shield.set(0); self.e_shield_pass.set(0); self.e_chpass.set(0)
         self.e_energy_cost.set(0); self.e_energy_decrease.set(0)
@@ -627,7 +627,7 @@ class CardForm(ttk.Frame):
         self.rarity_var.set(current_rarity)
         self.previous_rarity = current_rarity  # Tracker pour détecter les changements
         
-        # Tous les champs héros
+        # Tous les champs caster (héros)
         self.h_heal.set(to_int(card.hero.get('heal', 0)))
         self.h_shield.set(to_int(card.hero.get('shield', 0)))
         self.h_epine.set(to_int(card.hero.get('Epine', 0)))
@@ -644,7 +644,7 @@ class CardForm(ttk.Frame):
         self.h_f_value.set(to_int(h_f.get('value', 0)))
         self.h_f_turns.set(to_int(h_f.get('number_turns', 0)))
         
-        # Tous les champs ennemi
+        # Tous les champs target (ennemi)
         self.e_heal.set(to_int(card.enemy.get('heal', 0)))
         self.e_attack.set(to_int(card.enemy.get('attack', 0)))
         self.e_areduc.set(to_int(card.enemy.get('AttackReduction', 0)))
@@ -708,7 +708,7 @@ class CardForm(ttk.Frame):
             "energyCostDecrease": int(self.h_energy_decrease.get())
         }
         
-        # Tous les champs ennemi
+        # Tous les champs target (ennemi)
         c.enemy = {
             "heal": int(self.e_heal.get()),
             "attack": int(self.e_attack.get()),
