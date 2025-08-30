@@ -112,8 +112,24 @@ debug_*.py
 **/test_comparison/
 
 # ===== IMAGES (optionnel) =====
-# Décommentez pour ignorer les images générées
-# images/
+# Fichiers images (JPG, JPEG, PNG, GIF, etc.)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+*.svg
+
+# Mais conserver les dossiers et leurs README
+!**/README.md
+!**/README.txt
+!**/LISEZMOI.md
+
+# Garder les images de documentation importantes
+!docs/images/*.png
+!docs/images/*.jpg
 
 # ===== SYSTÈME D'EXPLOITATION =====
 # macOS
