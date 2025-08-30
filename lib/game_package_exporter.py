@@ -55,7 +55,11 @@ class GamePackageExporter:
         
         # Gestionnaire de polices
         self.font_manager = FontManager()
-        logging.info(f"FontManager initialisé: {len(self.font_manager.available_fonts)} polices disponibles")
+        try:
+            font_info = self.font_manager.get_font_info()
+            logging.info(f"FontManager initialisé: {font_info.get('total_fonts', 0)} polices disponibles")
+        except Exception as e:
+            logging.warning(f"Erreur lors de l'initialisation du FontManager: {e}")
         
         # Collections pour suivre les ressources utilisées
         self.used_fonts: Set[str] = set()
