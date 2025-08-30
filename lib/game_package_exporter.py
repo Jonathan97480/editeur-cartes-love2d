@@ -365,6 +365,90 @@ class GamePackageExporter:
         logging.warning(f"Police personnalisée '{clean_font_name}' non trouvée dans le dossier fonts/")
         return None
     
+    def _find_system_font_file(self, font_name: str) -> Optional[str]:
+        """
+        Trouve le fichier de police système correspondant au nom.
+        
+        Args:
+            font_name: Nom de la police
+            
+        Returns:
+            Chemin vers le fichier de police système ou None
+        """
+        import platform
+        import glob
+        
+        # Nettoyer le nom de police
+        clean_font_name = font_name.replace("🎨 ", "").strip()
+        
+        # Vérifier si c'est une police système connue
+        if self.font_manager and clean_font_name in self.font_manager.get_system_fonts():
+            system = platform.system()
+            
+            if system == "Windows":
+                # Dossiers de polices Windows
+                font_dirs = [
+                    "C:/Windows/Fonts",
+                    "C:/Program Files/Common Files/Microsoft Shared/Fonts",
+                    os.path.expanduser("~/AppData/Local/Microsoft/Windows/Fonts")
+                ]
+                
+                # Extensions de polices communes
+                extensions = [".ttf", ".otf", ".ttc", ".fon"]
+                
+                for font_dir in font_dirs:
+                    if os.path.exists(font_dir):
+                        for ext in extensions:
+                            # Chercher avec le nom exact
+                            pattern = os.path.join(font_dir, f"{clean_font_name}*{ext}")
+                            matches = glob.glob(pattern, recursive=False)
+                            if matches:
+                                logging.info(f"Police système trouvée: {matches[0]}")
+                                return matches[0]
+                            
+                            # Chercher sans casse
+                            pattern = os.path.join(font_dir, f"*{ext}")
+                            for file_path in glob.glob(pattern):
+                                if clean_font_name.lower() in os.path.basename(file_path).lower():
+                                    logging.info(f"Police système trouvée: {file_path}")
+                                    return file_path
+            
+            elif system == "Darwin":  # macOS
+                font_dirs = [
+                    "/System/Library/Fonts",
+                    "/Library/Fonts",
+                    os.path.expanduser("~/Library/Fonts")
+                ]
+                
+                for font_dir in font_dirs:
+                    if os.path.exists(font_dir):
+                        for ext in [".ttf", ".otf", ".ttc"]:
+                            pattern = os.path.join(font_dir, f"{clean_font_name}*{ext}")
+                            matches = glob.glob(pattern, recursive=False)
+                            if matches:
+                                logging.info(f"Police système trouvée: {matches[0]}")
+                                return matches[0]
+            
+            elif system == "Linux":
+                font_dirs = [
+                    "/usr/share/fonts",
+                    "/usr/local/share/fonts",
+                    os.path.expanduser("~/.fonts"),
+                    os.path.expanduser("~/.local/share/fonts")
+                ]
+                
+                for font_dir in font_dirs:
+                    if os.path.exists(font_dir):
+                        for ext in [".ttf", ".otf"]:
+                            pattern = os.path.join(font_dir, f"**/*{clean_font_name}*{ext}")
+                            matches = glob.glob(pattern, recursive=True)
+                            if matches:
+                                logging.info(f"Police système trouvée: {matches[0]}")
+                                return matches[0]
+        
+        logging.warning(f"Police système '{clean_font_name}' non trouvée")
+        return None
+    
     def _wrap_text(self, text: str, font: ImageFont.FreeTypeFont, 
                    max_width: int, draw: ImageDraw.Draw) -> List[str]:
         """
@@ -455,8 +539,12 @@ class GamePackageExporter:
             # Nettoyer le nom de police pour supprimer le préfixe 🎨
             clean_font_name = font_name.replace("🎨 ", "")
             
-            # Chercher le fichier de police
+            # 1. D'abord chercher dans les polices personnalisées
             font_file = self._find_font_file(clean_font_name)
+            
+            # 2. Si pas trouvé, chercher dans les polices système
+            if not font_file and self.font_manager:
+                font_file = self._find_system_font_file(clean_font_name)
             
             if font_file and os.path.exists(font_file):
                 # Copier le fichier
