@@ -1411,7 +1411,7 @@ class CardList(ttk.Frame):
                     # Import de l'exporteur avec gestion d'erreur
                     status_var.set("Chargement de l'exporteur...")
                     try:
-                        from game_package_exporter import GamePackageExporter
+                        from .game_package_exporter import GamePackageExporter
                     except ImportError:
                         # Essayer avec le chemin explicite
                         import sys
@@ -1547,7 +1547,7 @@ class CardList(ttk.Frame):
                     # Import de l'exporteur avec gestion d'erreur
                     status_var.set("Chargement de l'exporteur...")
                     try:
-                        from game_package_exporter import GamePackageExporter
+                        from .game_package_exporter import GamePackageExporter
                     except ImportError:
                         # Essayer avec le chemin explicite
                         import sys
