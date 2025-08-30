@@ -50,8 +50,12 @@ class GamePackageExporter:
         self.output_dir.mkdir(exist_ok=True)
         self.export_type = export_type  # "complete" ou "template"
         
+        # Configuration du logging pour les diagnostics
+        logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+        
         # Gestionnaire de polices
         self.font_manager = FontManager()
+        logging.info(f"FontManager initialisé: {len(self.font_manager.available_fonts)} polices disponibles")
         
         # Collections pour suivre les ressources utilisées
         self.used_fonts: Set[str] = set()
@@ -132,6 +136,8 @@ class GamePackageExporter:
                     title_font_size = getattr(card, 'title_size', 16)
                     title_font_name = getattr(card, 'title_font', 'Arial')
                     
+                    logging.info(f"Chargement police titre: '{title_font_name}' taille {title_font_size}")
+                    
                     # Essayer de charger la police
                     title_font = self._load_font_for_image(title_font_name, title_font_size)
                     
@@ -139,6 +145,8 @@ class GamePackageExporter:
                     title_x = getattr(card, 'title_x', 20)
                     title_y = getattr(card, 'title_y', 20)
                     title_color = getattr(card, 'title_color', '#000000')
+                    
+                    logging.info(f"Dessin titre '{card.name}' à ({title_x}, {title_y}) couleur {title_color}")
                     
                     # Dessiner le titre
                     draw.text((title_x, title_y), card.name, 
@@ -181,12 +189,17 @@ class GamePackageExporter:
                 try:
                     text_font_size = getattr(card, 'text_size', 12)
                     text_font_name = getattr(card, 'text_font', 'Arial')
+                    
+                    logging.info(f"Chargement police texte: '{text_font_name}' taille {text_font_size}")
+                    
                     text_font = self._load_font_for_image(text_font_name, text_font_size)
                     
                     text_x = getattr(card, 'text_x', 20)
                     text_y = getattr(card, 'text_y', 200)
                     text_width = getattr(card, 'text_width', card_width - 40)
                     text_color = getattr(card, 'text_color', '#333333')
+                    
+                    logging.info(f"Dessin description à ({text_x}, {text_y}) largeur {text_width} couleur {text_color}")
                     
                     # Diviser le texte en lignes
                     lines = self._wrap_text(card.description, text_font, text_width, draw)
@@ -220,16 +233,83 @@ class GamePackageExporter:
             Police chargée ou police par défaut
         """
         try:
+            # Nettoyer le nom de police (enlever l'emoji et espaces)
+            clean_font_name = font_name.replace("🎨 ", "").strip()
+            
+            # D'abord essayer d'utiliser le FontManager
+            try:
+                font_path = self.font_manager.get_font_path(clean_font_name)
+                if font_path and os.path.exists(font_path):
+                    logging.info(f"Police trouvée via FontManager: {font_path}")
+                    return ImageFont.truetype(font_path, size)
+            except Exception as e:
+                logging.warning(f"FontManager failed for {clean_font_name}: {e}")
+            
             # Essayer de charger une police personnalisée
-            font_path = self._find_font_file(font_name)
+            font_path = self._find_font_file(clean_font_name)
             if font_path and os.path.exists(font_path):
+                logging.info(f"Police trouvée: {font_path}")
                 return ImageFont.truetype(font_path, size)
             
-            # Police par défaut
+            # Essayer les polices système Windows
+            if os.name == 'nt':
+                system_path = self._find_windows_system_font(clean_font_name)
+                if system_path:
+                    logging.info(f"Police système trouvée: {system_path}")
+                    return ImageFont.truetype(system_path, size)
+            
+            # Si rien ne fonctionne, utiliser la police par défaut
+            logging.warning(f"Police '{clean_font_name}' non trouvée, utilisation de la police par défaut")
             return ImageFont.load_default()
             
-        except Exception:
+        except Exception as e:
+            logging.error(f"Erreur lors du chargement de la police '{font_name}': {e}")
             return ImageFont.load_default()
+    
+    def _find_windows_system_font(self, font_name: str) -> Optional[str]:
+        """
+        Trouve une police dans le dossier système Windows.
+        
+        Args:
+            font_name: Nom de la police
+            
+        Returns:
+            Chemin vers la police système ou None
+        """
+        windows_fonts_dir = Path("C:/Windows/Fonts")
+        if not windows_fonts_dir.exists():
+            return None
+        
+        # Mapping des noms de polices vers leurs fichiers
+        system_font_mapping = {
+            "Arial": ["arial.ttf", "Arial.ttf"],
+            "Times New Roman": ["times.ttf", "timesbd.ttf", "Times New Roman.ttf"],
+            "Courier New": ["cour.ttf", "Courier New.ttf"],
+            "Verdana": ["verdana.ttf", "Verdana.ttf"],
+            "Calibri": ["calibri.ttf", "Calibri.ttf"],
+            "Cambria": ["cambria.ttc", "cambria.ttf", "Cambria.ttf"],
+            "Tahoma": ["tahoma.ttf", "Tahoma.ttf"],
+            "Georgia": ["georgia.ttf", "Georgia.ttf"],
+            "Comic Sans MS": ["comic.ttf", "Comic Sans MS.ttf"],
+            "Impact": ["impact.ttf", "Impact.ttf"],
+            "Trebuchet MS": ["trebuc.ttf", "Trebuchet MS.ttf"],
+            "Segoe UI": ["segoeui.ttf", "Segoe UI.ttf"],
+            "Microsoft Sans Serif": ["micross.ttf", "Microsoft Sans Serif.ttf"]
+        }
+        
+        if font_name in system_font_mapping:
+            for font_filename in system_font_mapping[font_name]:
+                font_path = windows_fonts_dir / font_filename
+                if font_path.exists():
+                    return str(font_path)
+        
+        # Recherche générale dans le dossier Windows Fonts
+        for ext in [".ttf", ".ttc", ".otf", ".TTF", ".TTC", ".OTF"]:
+            font_path = windows_fonts_dir / f"{font_name}{ext}"
+            if font_path.exists():
+                return str(font_path)
+        
+        return None
     
     def _find_font_file(self, font_name: str) -> Optional[str]:
         """
@@ -242,17 +322,19 @@ class GamePackageExporter:
             Chemin vers le fichier de police ou None
         """
         # Nettoyer le nom de police pour supprimer le préfixe 🎨
-        clean_font_name = font_name.replace("🎨 ", "")
+        clean_font_name = font_name.replace("🎨 ", "").strip()
         
         # 1. Chercher dans le dossier fonts personnalisées
         fonts_dir = Path("fonts")
         
+        # Chercher dans tous les sous-dossiers
         for subdir in ["titre", "texte", "special"]:
             subdir_path = fonts_dir / subdir
             if subdir_path.exists():
                 for ext in [".ttf", ".otf", ".TTF", ".OTF"]:
                     font_file = subdir_path / f"{clean_font_name}{ext}"
                     if font_file.exists():
+                        logging.info(f"Police personnalisée trouvée: {font_file}")
                         return str(font_file)
         
         # 2. Chercher dans le dossier fonts racine
@@ -260,54 +342,21 @@ class GamePackageExporter:
             for ext in [".ttf", ".otf", ".TTF", ".OTF"]:
                 font_file = fonts_dir / f"{clean_font_name}{ext}"
                 if font_file.exists():
+                    logging.info(f"Police trouvée dans fonts/: {font_file}")
                     return str(font_file)
         
-        # 3. Pour les polices système courantes, essayer de les trouver dans Windows
-        if os.name == 'nt':  # Windows
-            windows_fonts_dir = Path("C:/Windows/Fonts")
-            if windows_fonts_dir.exists():
-                # Mapping des noms de polices vers leurs fichiers
-                system_font_mapping = {
-                    "Arial": ["arial.ttf", "Arial.ttf"],
-                    "Times New Roman": ["times.ttf", "timesbd.ttf", "Times New Roman.ttf"],
-                    "Courier New": ["cour.ttf", "Courier New.ttf"],
-                    "Verdana": ["verdana.ttf", "Verdana.ttf"],
-                    "Calibri": ["calibri.ttf", "Calibri.ttf"],
-                    "Cambria": ["cambria.ttc", "cambria.ttf", "Cambria.ttf"],
-                    "Tahoma": ["tahoma.ttf", "Tahoma.ttf"],
-                    "Georgia": ["georgia.ttf", "Georgia.ttf"],
-                    "Comic Sans MS": ["comic.ttf", "Comic Sans MS.ttf"],
-                    "Impact": ["impact.ttf", "Impact.ttf"],
-                    "Trebuchet MS": ["trebuc.ttf", "Trebuchet MS.ttf"],
-                    "Segoe UI": ["segoeui.ttf", "Segoe UI.ttf"],
-                    "Microsoft Sans Serif": ["micross.ttf", "Microsoft Sans Serif.ttf"]
-                }
-                
-                if clean_font_name in system_font_mapping:
-                    for font_filename in system_font_mapping[clean_font_name]:
-                        font_path = windows_fonts_dir / font_filename
-                        if font_path.exists():
-                            return str(font_path)
-                
-                # 4. Recherche générale dans le dossier Windows Fonts
-                for ext in [".ttf", ".ttc", ".otf", ".TTF", ".TTC", ".OTF"]:
-                    # Essayer le nom exact
-                    font_path = windows_fonts_dir / f"{clean_font_name}{ext}"
-                    if font_path.exists():
-                        return str(font_path)
-                    
-                    # Essayer avec des variations courantes
-                    variations = [
-                        clean_font_name.lower(),
-                        clean_font_name.replace(" ", ""),
-                        clean_font_name.replace(" ", "").lower()
-                    ]
-                    
-                    for variation in variations:
-                        font_path = windows_fonts_dir / f"{variation}{ext}"
-                        if font_path.exists():
-                            return str(font_path)
+        # 3. Chercher récursivement dans tous les sous-dossiers de fonts
+        if fonts_dir.exists():
+            for font_file in fonts_dir.rglob("*"):
+                if font_file.is_file() and font_file.suffix.lower() in ['.ttf', '.otf']:
+                    # Vérifier si le nom correspond (avec ou sans extension)
+                    if (font_file.stem.lower() == clean_font_name.lower() or 
+                        font_file.name.lower() == f"{clean_font_name.lower()}.ttf" or
+                        font_file.name.lower() == f"{clean_font_name.lower()}.otf"):
+                        logging.info(f"Police trouvée (recherche récursive): {font_file}")
+                        return str(font_file)
         
+        logging.warning(f"Police personnalisée '{clean_font_name}' non trouvée dans le dossier fonts/")
         return None
     
     def _wrap_text(self, text: str, font: ImageFont.FreeTypeFont, 
