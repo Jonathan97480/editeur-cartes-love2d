@@ -7,6 +7,8 @@ Inclut les données de formatage de texte
 
 from lib.database import CardRepo
 from lib.config import DB_FILE
+from pathlib import Path
+import os
 
 def lua_escape(text):
     """Escape special characters for Lua strings."""
@@ -19,6 +21,64 @@ def lua_escape(text):
     text = text.replace('\r', '\\r')
     text = text.replace('\t', '\\t')
     return f"'{text}'"
+
+def get_font_path_with_extension(font_name):
+    """
+    Retourne le chemin de la police avec son extension pour Love2D.
+    
+    Args:
+        font_name: Nom de la police (peut inclure 🎨 préfixe)
+        
+    Returns:
+        Chemin de la police avec extension ou nom original si non trouvé
+    """
+    if not font_name or font_name.strip() == '':
+        return 'fonts/Arial.ttf'  # Police par défaut
+    
+    # Nettoyer le nom de police
+    clean_name = font_name.replace("🎨 ", "").strip()
+    
+    # Si c'est déjà un chemin avec extension, le retourner tel quel
+    if '.' in clean_name and clean_name.lower().endswith(('.ttf', '.otf')):
+        return clean_name
+    
+    # Chercher dans les dossiers de polices
+    fonts_base = Path("fonts")
+    
+    # 1. Chercher dans les sous-dossiers (titre, texte, special)
+    for subdir in ["titre", "texte", "special"]:
+        subdir_path = fonts_base / subdir
+        if subdir_path.exists():
+            for ext in [".ttf", ".otf"]:
+                font_file = subdir_path / f"{clean_name}{ext}"
+                if font_file.exists():
+                    return str(font_file).replace('\\', '/')
+    
+    # 2. Chercher dans le dossier fonts racine
+    if fonts_base.exists():
+        for ext in [".ttf", ".otf"]:
+            font_file = fonts_base / f"{clean_name}{ext}"
+            if font_file.exists():
+                return str(font_file).replace('\\', '/')
+    
+    # 3. Pour les polices système communes, retourner un chemin Love2D standard
+    system_fonts_mapping = {
+        "Arial": "fonts/Arial.ttf",
+        "Times New Roman": "fonts/Times.ttf", 
+        "Courier New": "fonts/Courier.ttf",
+        "Verdana": "fonts/Verdana.ttf",
+        "Calibri": "fonts/Calibri.ttf",
+        "Georgia": "fonts/Georgia.ttf",
+        "Trebuchet MS": "fonts/Trebuchet.ttf",
+        "Comic Sans MS": "fonts/Comic.ttf",
+        "Impact": "fonts/Impact.ttf"
+    }
+    
+    if clean_name in system_fonts_mapping:
+        return system_fonts_mapping[clean_name]
+    
+    # 4. Dernier recours : ajouter .ttf par défaut
+    return f"fonts/{clean_name}.ttf"
 
 class Love2DLuaExporter:
     def __init__(self, repo):
@@ -69,7 +129,7 @@ class Love2DLuaExporter:
             title = {{
                 x = {card.title_x},
                 y = {card.title_y},
-                font = {lua_escape(card.title_font)},
+                font = {lua_escape(get_font_path_with_extension(card.title_font))},
                 size = {card.title_size},
                 color = {lua_escape(card.title_color)}
             }},
@@ -78,7 +138,7 @@ class Love2DLuaExporter:
                 y = {card.text_y},
                 width = {card.text_width},
                 height = {card.text_height},
-                font = {lua_escape(card.text_font)},
+                font = {lua_escape(get_font_path_with_extension(card.text_font))},
                 size = {card.text_size},
                 color = {lua_escape(card.text_color)},
                 align = {lua_escape(card.text_align)},
@@ -88,7 +148,7 @@ class Love2DLuaExporter:
             energy = {{
                 x = {card.energy_x},
                 y = {card.energy_y},
-                font = {lua_escape(card.energy_font)},
+                font = {lua_escape(get_font_path_with_extension(card.energy_font))},
                 size = {card.energy_size},
                 color = {lua_escape(card.energy_color)}
             }}
