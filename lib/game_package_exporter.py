@@ -27,11 +27,13 @@ try:
     from .database import CardRepo
     from .font_manager import FontManager
     from .config import DB_FILE
+    from .lua_exporter_love2d import sanitize_filename
 except ImportError:
     # Import direct pour utilisation standalone
     from database import CardRepo
     from font_manager import FontManager
     from config import DB_FILE
+    from lua_exporter_love2d import sanitize_filename
 
 class GamePackageExporter:
     """Exporteur de package de jeu complet."""
@@ -745,7 +747,9 @@ end
             if self.export_type == "template":
                 print("🖼️  Création des images templates (sans texte)...")
                 for i, card in enumerate(cards, 1):
-                    image_name = f"carte_{i:03d}.png"
+                    # Utiliser le nom de la carte pour le fichier
+                    safe_name = sanitize_filename(card.name)
+                    image_name = f"{safe_name}.png"
                     image_path = cards_dir / image_name
                     
                     if self.create_template_card_image(card, str(image_path)):
@@ -755,7 +759,9 @@ end
             else:
                 print("🖼️  Création des images fusionnées (avec texte)...")
                 for i, card in enumerate(cards, 1):
-                    image_name = f"carte_{i:03d}.png"
+                    # Utiliser le nom de la carte pour le fichier
+                    safe_name = sanitize_filename(card.name)
+                    image_name = f"{safe_name}.png"
                     image_path = cards_dir / image_name
                     
                     if self.create_fused_card_image(card, str(image_path)):

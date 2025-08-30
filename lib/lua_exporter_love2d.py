@@ -22,7 +22,101 @@ def lua_escape(text):
     text = text.replace('\t', '\\t')
     return f"'{text}'"
 
+def sanitize_filename(name):
+    """
+    Convertit un nom de carte en nom de fichier valide.
+    
+    Args:
+        name: Nom de la carte
+        
+    Returns:
+        Nom de fichier sécurisé
+    """
+    import re
+    if not name:
+        return "carte_sans_nom"
+    
+    # Supprimer les caractères spéciaux et remplacer par des underscores
+    clean_name = re.sub(r'[^\w\s-]', '', name.strip())
+    # Remplacer les espaces par des underscores
+    clean_name = re.sub(r'\s+', '_', clean_name)
+    # Supprimer les underscores multiples
+    clean_name = re.sub(r'_+', '_', clean_name)
+    # Supprimer les underscores en début et fin
+    clean_name = clean_name.strip('_')
+    
+    return clean_name if clean_name else "carte_sans_nom"
+
+def get_card_image_name(card):
+    """
+    Génère le nom d'image pour une carte dans l'export.
+    
+    Args:
+        card: Objet carte
+        
+    Returns:
+        Nom de fichier pour l'image de la carte
+    """
+    safe_name = sanitize_filename(card.name)
+    return f"cards/{safe_name}.png"
+
 def get_font_path_with_extension(font_name):
+    """
+    Retourne le chemin de la police avec son extension pour Love2D.
+    
+    Args:
+        font_name: Nom de la police (peut inclure 🎨 préfixe)
+        
+    Returns:
+        Chemin de la police avec extension ou nom original si non trouvé
+    """
+    if not font_name or font_name.strip() == '':
+        return 'fonts/Arial.ttf'  # Police par défaut
+    
+    # Nettoyer le nom de police
+    clean_name = font_name.replace("🎨 ", "").strip()
+    
+    # Si c'est déjà un chemin avec extension, le retourner tel quel
+    if '.' in clean_name and clean_name.lower().endswith(('.ttf', '.otf')):
+        return clean_name
+    
+    # Chercher dans les dossiers de polices
+    fonts_base = Path("fonts")
+    
+    # 1. Chercher dans les sous-dossiers (titre, texte, special)
+    for subdir in ["titre", "texte", "special"]:
+        subdir_path = fonts_base / subdir
+        if subdir_path.exists():
+            for ext in [".ttf", ".otf"]:
+                font_file = subdir_path / f"{clean_name}{ext}"
+                if font_file.exists():
+                    return str(font_file).replace('\\', '/')
+    
+    # 2. Chercher dans le dossier fonts racine
+    if fonts_base.exists():
+        for ext in [".ttf", ".otf"]:
+            font_file = fonts_base / f"{clean_name}{ext}"
+            if font_file.exists():
+                return str(font_file).replace('\\', '/')
+    
+    # 3. Pour les polices système communes, retourner un chemin Love2D standard
+    system_fonts_mapping = {
+        "Arial": "fonts/Arial.ttf",
+        "Times New Roman": "fonts/Times.ttf", 
+        "Courier New": "fonts/Courier.ttf",
+        "Verdana": "fonts/Verdana.ttf",
+        "Calibri": "fonts/Calibri.ttf",
+        "Georgia": "fonts/Georgia.ttf",
+        "Trebuchet MS": "fonts/Trebuchet.ttf",
+        "Comic Sans MS": "fonts/Comic.ttf",
+        "Impact": "fonts/Impact.ttf"
+    }
+    
+    if clean_name in system_fonts_mapping:
+        return system_fonts_mapping[clean_name]
+    
+    # 4. Dernier recours : ajouter .ttf par défaut
+    return f"fonts/{clean_name}.ttf"
     """
     Retourne le chemin de la police avec son extension pour Love2D.
     
@@ -160,10 +254,13 @@ class Love2DLuaExporter:
         effect = self.build_effect_section(card)
         formatting = self.build_text_formatting_section(card)
         
+        # Utiliser le nom de la carte pour générer le nom d'image
+        image_name = get_card_image_name(card)
+        
         return f"""    --[[ CARTE {card_number} - 🎮 Joueur ]]
     {{
         name = {lua_escape(card.name)},
-        ImgIlustration = {lua_escape(card.img)},
+        ImgIlustration = {lua_escape(image_name)},
         Description = {lua_escape(card.description)},
         PowerBlow = {card.powerblow},
         Rarete = {lua_escape(card.rarity)},
