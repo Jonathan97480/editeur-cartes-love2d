@@ -191,12 +191,12 @@ class Love2DLuaExporter:
 
     def build_effect_section(self, card):
         """Construit la section Effect au format Love2D"""
-        actor_data = card.hero
-        enemy_data = card.enemy
+        caster_data = card.hero
+        target_data = card.enemy
         
         effect = f"""Effect = {{
-            Actor = {{ heal = {actor_data['heal']}, shield = {actor_data['shield']}, Epine = {actor_data['Epine']}, attack = {actor_data['attack']}, AttackReduction = {actor_data['AttackReduction']}, shield_pass = {actor_data['shield_pass']}, bleeding = {{ value = {actor_data['bleeding']['value']}, number_turns = {actor_data['bleeding']['number_turns']} }}, force_augmented = {{ value = {actor_data['force_augmented']['value']}, number_turns = {actor_data['force_augmented']['number_turns']} }}, chancePassedTour = {actor_data['chancePassedTour']}, energyCostIncrease = {actor_data['energyCostIncrease']}, energyCostDecrease = {actor_data['energyCostDecrease']} }},
-            Enemy = {{ heal = {enemy_data['heal']}, attack = {enemy_data['attack']}, AttackReduction = {enemy_data['AttackReduction']}, Epine = {enemy_data['Epine']}, shield = {enemy_data['shield']}, shield_pass = {enemy_data['shield_pass']}, bleeding = {{ value = {enemy_data['bleeding']['value']}, number_turns = {enemy_data['bleeding']['number_turns']} }}, force_augmented = {{ value = {enemy_data['force_augmented']['value']}, number_turns = {enemy_data['force_augmented']['number_turns']} }}, chancePassedTour = {enemy_data['chancePassedTour']}, energyCostIncrease = {enemy_data['energyCostIncrease']}, energyCostDecrease = {enemy_data['energyCostDecrease']} }},
+            Caster = {{ heal = {caster_data['heal']}, shield = {caster_data['shield']}, Epine = {caster_data['Epine']}, attack = {caster_data['attack']}, AttackReduction = {caster_data['AttackReduction']}, shield_pass = {caster_data['shield_pass']}, bleeding = {{ value = {caster_data['bleeding']['value']}, number_turns = {caster_data['bleeding']['number_turns']} }}, force_augmented = {{ value = {caster_data['force_augmented']['value']}, number_turns = {caster_data['force_augmented']['number_turns']} }}, chancePassedTour = {caster_data['chancePassedTour']}, energyCostIncrease = {caster_data['energyCostIncrease']}, energyCostDecrease = {caster_data['energyCostDecrease']} }},
+            Target = {{ heal = {target_data['heal']}, attack = {target_data['attack']}, AttackReduction = {target_data['AttackReduction']}, Epine = {target_data['Epine']}, shield = {target_data['shield']}, shield_pass = {target_data['shield_pass']}, bleeding = {{ value = {target_data['bleeding']['value']}, number_turns = {target_data['bleeding']['number_turns']} }}, force_augmented = {{ value = {target_data['force_augmented']['value']}, number_turns = {target_data['force_augmented']['number_turns']} }}, chancePassedTour = {target_data['chancePassedTour']}, energyCostIncrease = {target_data['energyCostIncrease']}, energyCostDecrease = {target_data['energyCostDecrease']} }},
             action = function()"""
         
         if card.action and card.action.strip():
